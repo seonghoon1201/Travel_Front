@@ -1,4 +1,3 @@
-// src/pages/Splash.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
@@ -13,7 +12,7 @@ const Splash = () => {
     }, 1500);
 
     const navTimer = setTimeout(() => {
-      navigate("/login");
+      navigate("/home");
     }, 2500);
 
     return () => {
