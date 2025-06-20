@@ -6,7 +6,7 @@ const HomePage = () => {
     <>
       <Header />
       <main className="p-4">
-        <h2 className="text-2xl font-semibold">홈 화면</h2>
+        <h2 className="text-2xl font-semibold">test 홈 화면</h2>
       </main>
     </>
   );
