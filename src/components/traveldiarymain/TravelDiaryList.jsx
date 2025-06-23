@@ -4,7 +4,7 @@ const { Meta } = Card;
 
 const TravelDiaryList = ({ diaries = [], title, showMore }) => {
   return (
-    <div className="mb-8">
+    <div>
       {/* 제목과 더보기 버튼 */}
       <div className="flex justify-between items-center px-1 mb-2">
         <h2 className="text-lg font-jalnongothic">{title}</h2>
@@ -14,7 +14,7 @@ const TravelDiaryList = ({ diaries = [], title, showMore }) => {
           </button>
         )}
       </div>
-      <section className="flex gap-4 px-4 py-4 overflow-x-auto whitespace-nowrap scrollbar-hide">
+      <section className="flex gap-4 px-3 py-2 overflow-x-auto whitespace-nowrap scrollbar-hide">
         {diaries.slice(0, 5).map((diary) => (
           <Card
             key={diary.id}
