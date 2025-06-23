@@ -36,7 +36,7 @@ const SignUpPage = () => {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen w-full flex justify-center px-4">
+    <div className="bg-background min-h-screen w-full flex justify-center px-4">
       <div className="w-full max-w-sm py-6 overflow-y-auto">
         <BackHeader title="회원가입" />
         <p className="font-noonnu font-semibold mb-4 text-center">
@@ -49,7 +49,7 @@ const SignUpPage = () => {
               <img
                 src={profileImage || profileDefault}
                 alt="기본 프로필"
-                className="w-20 h-20 rounded-full bg-gray-200 object-cover"
+                className="w-20 h-20 rounded-full bg-white object-cover"
               />
               <label className="text-blue-500 mt-1 text-sm cursor-pointer">
                 업로드
