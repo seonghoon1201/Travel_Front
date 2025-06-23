@@ -3,9 +3,9 @@ const LocationSection = ({ title, locations, showMore }) => {
     <section className=" mb-8">
       {/* 게시글 이름, 더보기 버튼 */}
       <div className="flex justify-between items-center px-3">
-        <h2 className="text-lg font-bold">{title}</h2>
+        <h2 className="text-lg font-jalnongothic">{title}</h2>
         {showMore && (
-          <button className="text-sm text-blue-500 border rounded-full px-2 py-0.5">
+          <button className="font-pretendard text-sm text-blue-500 border rounded-full px-2 py-0.5">
             + 더보기
           </button>
         )}
@@ -22,7 +22,7 @@ const LocationSection = ({ title, locations, showMore }) => {
               alt={loc.name}
               className="w-20 h-20 rounded-full object-cover"
             />
-            <p className="text-semibold mt-1">{loc.name}</p>
+            <p className="text-semibold font-noonnu mt-1">{loc.name}</p>
           </div>
         ))}
       </div>
