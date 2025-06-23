@@ -5,6 +5,7 @@ import '../styles/HomePage.css';
 import kakaoIcon from '../assets/kakao_icon.png';
 import MainHeader from '../components/header/MainHeader';
 import LocationSection from '../components/location/LocationSection';
+import TravelDiaryList from '../components/traveldiarymain/TravelDiaryList';
 
 const HomePage = () => {
   //더미값 test
@@ -21,6 +22,39 @@ const HomePage = () => {
     { name: '강릉', image: kakaoIcon },
     { name: '강릉', image: kakaoIcon },
   ];
+  const dummyDiaries = [
+    {
+      id: 1,
+      title: '6월의 제주',
+      image: '/images/jeju.png',
+    },
+    {
+      id: 2,
+      title: '6월의 제주',
+      image: '',
+    },
+    {
+      id: 3,
+      title: '6월의 제주',
+      image: '/images/jeju.png',
+    },
+    {
+      id: 4,
+      title: '6월의 제주',
+      image: '/images/jeju.png',
+    },
+    {
+      id: 5,
+      title: '6월의 제주',
+      image: '/images/jeju.png',
+    },
+    {
+      id: 6,
+      title: '6월의 제주',
+      image: '/images/jeju.png',
+    },
+  ];
+
   return (
     <>
       <MainHeader />
@@ -33,6 +67,11 @@ const HomePage = () => {
         <LocationSection
           title="저예산 추천 여행지"
           locations={dummyLocations}
+          showMore={true}
+        />
+        <TravelDiaryList
+          title="여행 일기"
+          diaries={dummyDiaries}
           showMore={true}
         />
       </main>
