@@ -1,6 +1,6 @@
 const LocationSection = ({ title, locations, showMore }) => {
   return (
-    <section className=" mb-8">
+    <section className=" mb-5">
       {/* 게시글 이름, 더보기 버튼 */}
       <div className="flex justify-between items-center px-3">
         <h2 className="text-lg font-jalnongothic">{title}</h2>
