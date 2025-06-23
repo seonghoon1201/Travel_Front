@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CalendarPlus } from 'lucide-react';
 import '../styles/HomePage.css';
 
@@ -6,10 +6,12 @@ import '../styles/HomePage.css';
 import kakaoIcon from '../assets/kakao_icon.png';
 
 import MainHeader from '../components/header/MainHeader';
+import SideMenu from '../components/modal/SideMenu';
 import LocationSection from '../components/location/LocationSection';
 import TravelDiaryList from '../components/traveldiarymain/TravelDiaryList';
 
 const HomePage = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   //더미값 test
   const dummyLocations = [
     { name: '제주도', image: kakaoIcon },
@@ -59,7 +61,8 @@ const HomePage = () => {
 
   return (
     <>
-      <MainHeader />
+      <MainHeader isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+      {isMenuOpen && <SideMenu onClose={() => setIsMenuOpen(false)} />}
       <main className="w-full max-w-screen-sm mx-auto px-4 py-6">
         <LocationSection
           title="요즘 핫플"
