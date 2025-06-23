@@ -3,7 +3,7 @@ import { Search, Menu } from 'lucide-react';
 
 import logo from '../../assets/main_logo.png';
 
-const Main = () => {
+const MainHeader = () => {
   return (
     <header className="flex items-center justify-between px-4 py-2 bg-[#E2F2FA]">
       {/* 왼쪽: 전체 로고 이미지 */}
@@ -22,4 +22,4 @@ const Main = () => {
   );
 };
 
-export default Main;
+export default MainHeader;
