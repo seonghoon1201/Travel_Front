@@ -12,7 +12,7 @@ const Splash = () => {
     }, 1500);
 
     const navTimer = setTimeout(() => {
-      navigate("/signup");
+      navigate("/login");
     }, 2500);
 
     return () => {
