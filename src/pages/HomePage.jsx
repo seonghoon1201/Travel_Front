@@ -1,15 +1,41 @@
 import React from 'react';
-import Main from '../components/header/Main';
+import '../styles/HomePage.css';
+
+//test용
+import kakaoIcon from '../assets/kakao_icon.png';
+import MainHeader from '../components/header/MainHeader';
+import LocationSection from '../components/location/LocationSection';
 
 const HomePage = () => {
+  //더미값 test
+  const dummyLocations = [
+    { name: '제주도', image: kakaoIcon },
+    { name: '부산', image: kakaoIcon },
+    { name: '강릉', image: kakaoIcon },
+    { name: '강릉', image: kakaoIcon },
+    { name: '강릉', image: kakaoIcon },
+    { name: '강릉', image: kakaoIcon },
+    { name: '강릉', image: kakaoIcon },
+    { name: '강릉', image: kakaoIcon },
+    { name: '강릉', image: kakaoIcon },
+    { name: '강릉', image: kakaoIcon },
+    { name: '강릉', image: kakaoIcon },
+  ];
   return (
     <>
-      <Main className="w-full max-w-screen-sm mx-auto px-4 py-6">
-        <h2 className="text-lg font-bold text-gray-800">홈 화면</h2>
-        <p className="mt-2 text-sm text-gray-600">
-          여기는 모바일 화면을 기준으로 구성된 홈입니다.
-        </p>
-      </Main>
+      <MainHeader />
+      <main className="w-full max-w-screen-sm mx-auto px-4 py-6">
+        <LocationSection
+          title="요즘 핫플"
+          locations={dummyLocations}
+          showMore={true}
+        />
+        <LocationSection
+          title="저예산 추천 여행지"
+          locations={dummyLocations}
+          showMore={true}
+        />
+      </main>
     </>
   );
 };
