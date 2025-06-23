@@ -10,7 +10,7 @@ const BackHeader = ({ title = '' }) => {
       <button onClick={() => navigate(-1)}>
         <ArrowLeft className="w-5 h-5 text-black" />
       </button>
-      <h1 className="text-2xl absolute left-1/2 -translate-x-1/2 font-extrabold">
+      <h1 className="font-noonnu text-2xl absolute left-1/2 -translate-x-1/2 font-extrabold">
         {title}
       </h1>
     </header>
