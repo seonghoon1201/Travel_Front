@@ -3,6 +3,10 @@ import logo from '../../assets/logo.png';
 import { useNavigate } from 'react-router-dom';
 import PrimaryButton from '../../components/common/PrimaryButton';
 
+const handleKakaoLogin = () => {
+  window.location.href = 'http://localhost:8080/auth/kakao/login';
+};
+
 const LoginPage = () => {
   const navigate = useNavigate();
 
@@ -31,7 +35,10 @@ const LoginPage = () => {
 
         <PrimaryButton>로그인</PrimaryButton>
 
-        <button className="w-full mt-3 py-2.5 rounded-xl bg-yellow-300 text-sm font-semibold text-black hover:brightness-95 transition flex items-center justify-center gap-2">
+        <button
+          className="w-full mt-3 py-2.5 rounded-xl bg-yellow-300 text-sm font-semibold text-black hover:brightness-95 transition flex items-center justify-center gap-2"
+          onClick={handleKakaoLogin}
+        >
           <img
             src={require('../../assets/kakao_icon.png')}
             alt="kakao"
