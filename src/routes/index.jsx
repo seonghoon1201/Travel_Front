@@ -7,6 +7,7 @@ import FindPasswordPage from '../pages/Login_and_Signup/FindPasswordPage';
 import VerifyCodePage from '../pages/Login_and_Signup/VerifyCodePage';
 import ResetPasswordPage from '../pages/Login_and_Signup/ResetPasswordPage';
 import MyPage from '../pages/MyPage';
+import EditProfile from '../pages/EditProfile';
 
 const AppRoutes = () => (
   <Router>
@@ -19,6 +20,7 @@ const AppRoutes = () => (
       <Route path="/find-password/verify" element={<VerifyCodePage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/mypage" element={<MyPage />} />
+      <Route path="/edit/profile" element={<EditProfile />} />
     </Routes>
   </Router>
 );
