@@ -4,6 +4,7 @@ import CommonModal from "../../components/modal/CommonModal";
 import { LockKeyhole } from "lucide-react";
 import BackHeader from "../../components/header/BackHeader";
 import PrimaryButton from "../../components/common/PrimaryButton";
+import DefaultLayout from "../../layouts/DefaultLayout";
 
 const ResetPasswordPage = () => {
   const [newPassword, setNewPassword] = useState("");
@@ -23,8 +24,7 @@ const ResetPasswordPage = () => {
   };
 
   return (
-    <div className="bg-background min-h-screen w-full flex flex-col items-center px-4">
-      <div className="w-full max-w-sm py-6">
+    <DefaultLayout>
         <BackHeader title="비밀번호 재설정" />
 
         <div className="text-center mt-6 mb-6">
@@ -64,8 +64,7 @@ const ResetPasswordPage = () => {
           message={`비밀번호 재설정이 완료되었습니다.\n재로그인을 진행해주세요.`}
           onConfirm={handleConfirm}
         />
-      </div>
-    </div>
+      </DefaultLayout>
   );
 };
 

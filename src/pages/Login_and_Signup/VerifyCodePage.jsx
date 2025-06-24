@@ -3,6 +3,7 @@ import { KeyRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BackHeader from "../../components/header/BackHeader";
 import PrimaryButton from "../../components/common/PrimaryButton";
+import DefaultLayout from "../../layouts/DefaultLayout";
 
 const VerifyCodePage = () => {
   const navigate = useNavigate();
@@ -13,8 +14,7 @@ const VerifyCodePage = () => {
   };
 
   return (
-    <div className="bg-background min-h-screen w-full flex flex-col items-center px-4">
-      <div className="w-full max-w-sm py-6">
+    <DefaultLayout>
         <BackHeader title="비밀번호 찾기" />
 
         <div className="text-center mt-6 mb-6">
@@ -36,8 +36,7 @@ const VerifyCodePage = () => {
         </div>
 
         <PrimaryButton onClick={handleSubmit}>다음</PrimaryButton>
-      </div>
-    </div>
+      </DefaultLayout>
   );
 };
 
