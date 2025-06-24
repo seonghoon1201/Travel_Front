@@ -1,12 +1,6 @@
 import React from 'react';
 
-const TravelDiary = ({
-  title = '여행 제목',
-  nickname = '닉네임',
-  period = '3박 4일',
-  tags = [],
-  imageUrl = '',
-}) => {
+const TravelDiary = ({ title, nickname, period, tags = [], imageUrl }) => {
   return (
     <div className="bg-white rounded-xl overflow-hidden shadow-md w-full max-w-md">
       {imageUrl && (
