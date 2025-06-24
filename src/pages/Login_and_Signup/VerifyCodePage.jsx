@@ -13,7 +13,7 @@ const VerifyCodePage = () => {
   };
 
   return (
-    <div className="font-pretendard bg-background min-h-screen w-full flex flex-col items-center px-4">
+    <div className="bg-background min-h-screen w-full flex flex-col items-center px-4">
       <div className="w-full max-w-sm py-6">
         <BackHeader title="비밀번호 찾기" />
 
