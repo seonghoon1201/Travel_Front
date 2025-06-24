@@ -8,7 +8,7 @@ import kakaoIcon from '../assets/kakao_icon.png';
 import MainHeader from '../components/header/MainHeader';
 import SideMenu from '../components/modal/SideMenu';
 import LocationSection from '../components/location/LocationSection';
-import TravelDiaryList from '../components/traveldiarymain/TravelDiaryList';
+import TravelDiaryList from '../components/traveldiary/TravelDiaryList';
 
 const HomePage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

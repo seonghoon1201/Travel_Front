@@ -4,8 +4,9 @@ import Splash from '../pages/Splash';
 import LoginPage from '../pages/Login_and_Signup/LoginPage';
 import SignUpPage from '../pages/Login_and_Signup/SignUpPage';
 import FindPasswordPage from '../pages/Login_and_Signup/FindPasswordPage';
-import VerifyCodePage from "../pages/Login_and_Signup/VerifyCodePage";
+import VerifyCodePage from '../pages/Login_and_Signup/VerifyCodePage';
 import ResetPasswordPage from '../pages/Login_and_Signup/ResetPasswordPage';
+import MyPage from '../pages/MyPage';
 
 const AppRoutes = () => (
   <Router>
@@ -17,6 +18,7 @@ const AppRoutes = () => (
       <Route path="/find-password" element={<FindPasswordPage />} />
       <Route path="/find-password/verify" element={<VerifyCodePage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/mypage" element={<MyPage />} />
     </Routes>
   </Router>
 );
