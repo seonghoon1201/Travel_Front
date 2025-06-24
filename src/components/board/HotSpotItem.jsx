@@ -27,8 +27,9 @@ const HotSpotItem = ({
           이용 시간 : {opentime} ~ {closetime}
         </p>
         <div>
-          <span className="text-xs px-2 mr-2 bg-gray-400">{location}</span>
-          <span className="text-xs px-2 mr-2 bg-gray-400">{category}</span>
+          <span className="text-xs text-gray-500">
+            {location} | {category}
+          </span>
         </div>
       </div>
     </div>

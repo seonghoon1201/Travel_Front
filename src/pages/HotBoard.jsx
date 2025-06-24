@@ -5,10 +5,12 @@ import BackHeader from '../components/header/BackHeader';
 import SearchBar from '../components/common/SearchBar';
 import CategoryButtonSection from '../components/mypage/CategoryButtonSection';
 import HotSpotItem from '../components/board/HotSpotItem';
+import DefaultLayout from '../layouts/DefaultLayout';
 
 const HotBoard = () => {
   const [activeCategory, setActiveCategory] = useState('전체');
   const [searchTerm, setSearchTerm] = useState('');
+
   const bookmarks = [
     {
       destination: '아쿠아플라넷 제주',
@@ -45,48 +47,49 @@ const HotBoard = () => {
       : bookmarks.filter((item) => item.category === activeCategory);
 
   return (
-    <div className="min-h-screen bg-background">
-      <BackHeader title="핫플 여행지" />
-      <div className="p-4">
+    <DefaultLayout>
+      <BackHeader />
+
+      {/* 검색창 */}
+      <div className="w-full mb-4">
         <SearchBar
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      <div className="px-4">
-        <CategoryButtonSection
-          activeCategory={activeCategory}
-          setActiveCategory={setActiveCategory}
-        />
-        {/* 핫플 여행지 상단 영역 */}
-        <div className="flex items-start justify-between px-2 pt-4 py-2">
-          {/* 왼쪽 문구 */}
-          <div>
-            <p className="text-lg font-semibold text-[#222]">📍핫플 여행지</p>
-            <p className="text-sm text-gray-500 mt-1">
-              사람들이 많이 가는 곳으로 추천해드려요!
-            </p>
-          </div>
+      {/* 카테고리 */}
+      <CategoryButtonSection
+        activeCategory={activeCategory}
+        setActiveCategory={setActiveCategory}
+      />
 
-          {/* 오른쪽 문구 */}
-          <div className="text-right pt-3 pr-2">
-            <p className="text-xs font-medium text-[#333] flex items-center justify-end gap-1">
-              <SlidersHorizontal className="w-4 h-4" />
-              금액 조정하기
-            </p>
-            <p className="text-sm text-gray-500 mt-1">
-              예산 : <span className="font-semibold text-black">원</span>
-            </p>
-          </div>
+      {/* 상단 설명 영역 */}
+      <div className="flex items-start justify-between px-2 pt-4 py-2">
+        <div>
+          <p className="text-lg font-semibold text-[#222]">📍핫플 여행지</p>
+          <p className="text-sm text-gray-500 mt-1">
+            사람들이 많이 가는 곳으로 추천해드려요!
+          </p>
         </div>
-        <div className="space-y-4 mt-4">
-          {filteredBookmarks.map((item, index) => (
-            <HotSpotItem key={index} {...item} />
-          ))}
+        <div className="text-right pt-3 pr-2">
+          <p className="text-xs font-medium text-[#333] flex items-center justify-end gap-1">
+            <SlidersHorizontal className="w-4 h-4" />
+            금액 조정하기
+          </p>
+          <p className="text-sm text-gray-500 mt-1">
+            예산 : <span className="font-semibold text-black">원</span>
+          </p>
         </div>
       </div>
-    </div>
+
+      {/* 핫플 리스트 */}
+      <div className="space-y-4 mt-4">
+        {filteredBookmarks.map((item, index) => (
+          <HotSpotItem key={index} {...item} />
+        ))}
+      </div>
+    </DefaultLayout>
   );
 };
 
