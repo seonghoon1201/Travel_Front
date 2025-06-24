@@ -6,6 +6,7 @@ import PrimaryButton from '../../components/common/PrimaryButton';
 import profileDefault from '../../assets/profile_default.png';
 import BackHeader from '../../components/header/BackHeader';
 import { Eye, EyeOff } from 'lucide-react';
+import DefaultLayout from '../../layouts/DefaultLayout';
 
 const SignUpPage = () => {
   const [terms, setTerms] = useState(false);
@@ -157,13 +158,11 @@ const SignUpPage = () => {
   };
 
   return (
-    <div className="bg-background min-h-screen flex w-full justify-center px-4">
-      <div className="w-full max-w-sm py-6 overflow-y-auto">
+    <DefaultLayout>
         <BackHeader title="회원가입" />
         <p className="font-noonnu font-semibold mb-4 text-center">
           반갑습니다!
         </p>
-
         <div className="flex justify-center mb-4">
           <div className="flex flex-col items-center">
             <img
@@ -365,8 +364,7 @@ const SignUpPage = () => {
           message={`여담의 여행자가 되신 걸 진심으로 환영합니다.\n이제, 여행 준비는 저희가 도와드릴게요 🎉`}
           onConfirm={handleConfirm}
         />
-      </div>
-    </div>
+      </DefaultLayout>
   );
 };
 

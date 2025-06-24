@@ -8,6 +8,7 @@ import VerifyCodePage from '../pages/Login_and_Signup/VerifyCodePage';
 import ResetPasswordPage from '../pages/Login_and_Signup/ResetPasswordPage';
 import MyPage from '../pages/MyPage';
 import EditProfile from '../pages/EditProfile';
+import HotBoard from '../pages/HotBoard';
 
 const AppRoutes = () => (
   <Router>
@@ -21,6 +22,7 @@ const AppRoutes = () => (
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/mypage" element={<MyPage />} />
       <Route path="/edit/profile" element={<EditProfile />} />
+      <Route path="/board/hot" element={<HotBoard />} />
     </Routes>
   </Router>
 );
