@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import BookmarkItem from './BookmarkItem';
+import CategoryButtonSection from './CategoryButtonSection';
 
 const MyBookmarkSection = () => {
+  const [activeCategory, setActiveCategory] = useState('전체');
+
   const bookmarks = [
     {
       destination: '섭지코지',
@@ -23,12 +26,33 @@ const MyBookmarkSection = () => {
       tel: '064-783-0959',
       imageUrl: '/assets/jeju_sample.jpg',
     },
+    {
+      destination: '강릉서핑',
+      category: '레저',
+      location: '강릉',
+      address: '강원특별자치도 강릉시 해변로 100',
+      opentime: '08:00',
+      closetime: '19:00',
+      tel: '033-123-4567',
+      imageUrl: '/assets/gangneung_sample.jpg',
+    },
   ];
+
+  // 카테고리 필터링
+  const filteredBookmarks =
+    activeCategory === '전체'
+      ? bookmarks
+      : bookmarks.filter((item) => item.category === activeCategory);
 
   return (
     <div className="p-4 space-y-4">
-      {bookmarks.length > 0 ? (
-        bookmarks.map((bookmark, index) => (
+      <CategoryButtonSection
+        activeCategory={activeCategory}
+        setActiveCategory={setActiveCategory}
+      />
+
+      {filteredBookmarks.length > 0 ? (
+        filteredBookmarks.map((bookmark, index) => (
           <BookmarkItem
             key={index}
             destination={bookmark.destination}
