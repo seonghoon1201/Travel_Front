@@ -1,9 +1,16 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, MapPinned, Notebook, Heart } from 'lucide-react';
-import profileDefault from '../../assets/profile_default.png'; // 이미지 경로 수정
+import profileDefault from '../../assets/profile_default.png';
 
 const SideMenu = ({ onClose }) => {
   const isLoggedIn = true;
+  const navigate = useNavigate();
+
+  const handleProfileEdit = () => {
+    navigate('/edit/profile');
+    onClose(); // 사이드 메뉴 닫기
+  };
 
   return (
     <>
@@ -15,7 +22,6 @@ const SideMenu = ({ onClose }) => {
 
       {/* 사이드 메뉴 */}
       <div className="fixed top-0 right-0 h-full w-4/5 bg-white z-50 shadow-lg transition-transform duration-300 p-4">
-        {/* 닫기 버튼 */}
         <div className="flex justify-start">
           <button onClick={onClose}>
             <X className="w-7 h-7" />
@@ -29,7 +35,12 @@ const SideMenu = ({ onClose }) => {
                 {/* 왼쪽 텍스트 */}
                 <div className="w-3/5">
                   <p className="font-noonnu">안녕하세요, 닉네임님</p>
-                  <p className="text-sm text-gray-500">프로필편집 &gt;</p>
+                  <p
+                    className="text-sm text-gray-500 cursor-pointer"
+                    onClick={handleProfileEdit}
+                  >
+                    프로필편집 &gt;
+                  </p>
                 </div>
 
                 {/* 오른쪽 이미지 */}
