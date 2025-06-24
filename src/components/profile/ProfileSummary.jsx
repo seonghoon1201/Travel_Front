@@ -3,7 +3,7 @@ import defaultImage from '../../assets/profile_default.png';
 
 const ProfileSummary = ({ nickname = '닉네임', profileImage }) => {
   return (
-    <div className="flex flex-col items-center justify-center py-8 bg-white">
+    <div className="flex flex-col items-center justify-center py-3 bg-white">
       <img
         src={profileImage ? profileImage : defaultImage}
         alt="프로필"
