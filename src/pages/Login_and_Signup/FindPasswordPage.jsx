@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import BackHeader from '../../components/header/BackHeader';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import logo from '../../assets/logo.png';
+import DefaultLayout from '../../layouts/DefaultLayout';
 
 const FindPasswordPage = () => {
   const navigate = useNavigate();
@@ -14,9 +15,8 @@ const FindPasswordPage = () => {
   };
 
   return (
-    <div className="bg-background min-h-screen w-full flex flex-col items-center px-4">
-      <div className="w-full max-w-sm py-6">
-        <BackHeader />
+    <DefaultLayout>
+        <BackHeader title="비밀번호 찾기" />
 
         <div className="flex flex-col items-center mt-4">
           <img src={logo} alt="여담 로고" className="w-48 h-auto" />
@@ -35,8 +35,7 @@ const FindPasswordPage = () => {
         </div>
 
         <PrimaryButton onClick={handleNext}>다음</PrimaryButton>
-      </div>
-    </div>
+      </DefaultLayout>
   );
 };
 
