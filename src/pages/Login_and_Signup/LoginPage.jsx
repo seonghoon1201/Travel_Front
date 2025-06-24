@@ -7,7 +7,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="font-pretendard flex items-center justify-center h-screen bg-background">
+    <div className="flex items-center justify-center h-screen bg-background">
       <div className="w-[90%] max-w-sm mx-auto text-center">
         <img src={logo} alt="여담 로고" className="w-60 mx-auto mb-3" />
 
