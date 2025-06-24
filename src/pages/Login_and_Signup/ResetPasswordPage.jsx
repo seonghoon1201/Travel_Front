@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import CommonModal from "../../components/modal/CommonModal";
 import { LockKeyhole } from "lucide-react";
 import BackHeader from "../../components/header/BackHeader";
 import PrimaryButton from "../../components/common/PrimaryButton";
@@ -6,14 +8,22 @@ import PrimaryButton from "../../components/common/PrimaryButton";
 const ResetPasswordPage = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleConfirm = () => {
+    setIsModalOpen(false);
+    navigate("/login"); // 로그인 페이지로 이동
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("비밀번호 재설정:", newPassword);
+    // TODO: 비밀번호 조건 통과 및 서버 요청 성공 시
+    setIsModalOpen(true);
   };
 
   return (
-    <div className="font-pretendard bg-background min-h-screen w-full flex flex-col items-center px-4">
+    <div className="bg-background min-h-screen w-full flex flex-col items-center px-4">
       <div className="w-full max-w-sm py-6">
         <BackHeader title="비밀번호 재설정" />
 
@@ -49,6 +59,11 @@ const ResetPasswordPage = () => {
 
           <PrimaryButton type="submit">비밀번호 변경</PrimaryButton>
         </form>
+        <CommonModal
+          isOpen={isModalOpen}
+          message={`비밀번호 재설정이 완료되었습니다.\n재로그인을 진행해주세요.`}
+          onConfirm={handleConfirm}
+        />
       </div>
     </div>
   );

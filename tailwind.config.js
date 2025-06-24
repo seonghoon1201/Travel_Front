@@ -29,9 +29,12 @@ module.exports = {
         fadeOut: 'fadeOut 1s ease-in',
       },
       fontFamily: {
+        /* 언제 쓰징 */
         jalnongothic: ['JalnanGothic', 'sans-serif'],
+        /* 제목들은 이 폰트 이용 */
         noonnu: ['NoonnuBasicGothicRegular', 'sans-serif'],
-        pretendard: ['Pretendard-Regular', 'sans-serif'],
+        /* 대부분의 모든 글씨체들 디폴트 */
+        sans: ['Pretendard-Regular', 'sans-serif'],
       },
     },
   },

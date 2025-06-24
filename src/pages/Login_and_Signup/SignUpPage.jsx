@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from "react-router-dom";
+import CommonModal from "../../components/modal/CommonModal";
 import PrimaryButton from '../../components/common/PrimaryButton';
 import profileDefault from '../../assets/profile_default.png';
 import BackHeader from '../../components/header/BackHeader';
@@ -15,7 +17,9 @@ const SignUpPage = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
+ 
   const handleAllAgreeChange = () => {
     const next = !allChecked;
     setAllChecked(next);
@@ -35,21 +39,29 @@ const SignUpPage = () => {
     }
   };
 
+  const handleSignUpSuccess = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleConfirm = () => {
+    setIsModalOpen(false);
+    navigate("/");
+  };
+
   return (
-    <div className="bg-gray-50 min-h-screen w-full flex justify-center px-4">
+    <div className="bg-background min-h-screen w-full flex justify-center px-4">
       <div className="w-full max-w-sm py-6 overflow-y-auto">
         <BackHeader title="회원가입" />
         <p className="font-noonnu font-semibold mb-4 text-center">
           반갑습니다!
         </p>
 
-        <div className="font-pretendard">
           <div className="flex justify-center mb-4">
             <div className="flex flex-col items-center">
               <img
                 src={profileImage || profileDefault}
                 alt="기본 프로필"
-                className="w-20 h-20 rounded-full bg-gray-200 object-cover"
+                className="w-20 h-20 rounded-full bg-white object-cover"
               />
               <label className="text-blue-500 mt-1 text-sm cursor-pointer">
                 업로드
@@ -63,7 +75,11 @@ const SignUpPage = () => {
             </div>
           </div>
 
-          <form>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            // TODO: 백엔드 통신 성공 시
+            handleSignUpSuccess(); // 모달 띄우기
+          }}>
             <label className="block text-sm font-medium mb-1">
               이메일 <span className="text-red-500">*</span>
             </label>
@@ -220,9 +236,13 @@ const SignUpPage = () => {
               <PrimaryButton type="submit">여담 가입하기</PrimaryButton>
             </div>
           </form>
+          <CommonModal
+            isOpen={isModalOpen}
+            message={`여담의 여행자가 되신 걸 진심으로 환영합니다.\n이제, 여행 준비는 저희가 도와드릴게요 🎉`}
+            onConfirm={handleConfirm}
+          />
         </div>
       </div>
-    </div>
   );
 };
 
