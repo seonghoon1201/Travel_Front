@@ -7,9 +7,16 @@ const SideMenu = ({ onClose }) => {
   const isLoggedIn = true;
   const navigate = useNavigate();
 
+  // 모달 닫기
   const handleProfileEdit = () => {
     navigate('/edit/profile');
-    onClose(); // 사이드 메뉴 닫기
+    onClose();
+  };
+
+  // 탭 클릭 시 URL 변경
+  const handleTabClick = (tab) => {
+    navigate(`/mypage?tab=${tab}`);
+    onClose();
   };
 
   return (
@@ -55,15 +62,24 @@ const SideMenu = ({ onClose }) => {
 
               {/* 아이콘 영역 */}
               <div className="flex justify-between items-center pt-7 pb-7 px-2 border-t border-b border-gray-200">
-                <div className="flex flex-col items-center gap-1">
+                <div
+                  className="flex flex-col items-center gap-1"
+                  onClick={() => handleTabClick('myTrip')}
+                >
                   <MapPinned className="w-6 h-6" />
                   <span>내 여행</span>
                 </div>
-                <div className="flex flex-col items-center gap-1">
+                <div
+                  className="flex flex-col items-center gap-1"
+                  onClick={() => handleTabClick('myDiary')}
+                >
                   <Notebook className="w-6 h-6" />
                   <span>내 여행 일기</span>
                 </div>
-                <div className="flex flex-col items-center gap-1">
+                <div
+                  className="flex flex-col items-center gap-1"
+                  onClick={() => handleTabClick('myBookmark')}
+                >
                   <Heart className="w-6 h-6" />
                   <span>내 저장</span>
                 </div>

@@ -1,11 +1,18 @@
-const LocationSection = ({ title, locations, showMore }) => {
+import { useNavigate } from 'react-router-dom';
+
+const LocationSection = ({ title, locations, showMore, navigateTo }) => {
+  const navigate = useNavigate();
+
   return (
     <section className=" mb-5">
       {/* 게시글 이름, 더보기 버튼 */}
       <div className="flex justify-between items-center px-3">
         <h2 className="text-lg font-jalnongothic">{title}</h2>
         {showMore && (
-          <button className="font-pretendard text-sm text-blue-500 border rounded-full px-2 py-0.5">
+          <button
+            className="font-pretendard text-sm text-blue-500 border rounded-full px-2 py-0.5"
+            onClick={() => navigate(navigateTo)}
+          >
             + 더보기
           </button>
         )}

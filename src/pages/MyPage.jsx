@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 
 import BackHeader from '../components/header/BackHeader';
@@ -10,7 +11,19 @@ import MyBookmarkSection from '../components/mypage/MyBookmarkSection';
 
 const MyPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('myTrip');
+
+  useEffect(() => {
+    const tabFromURL = searchParams.get('tab');
+    if (
+      tabFromURL === 'myTrip' ||
+      tabFromURL === 'myDiary' ||
+      tabFromURL === 'myBookmark'
+    ) {
+      setActiveTab(tabFromURL);
+    }
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen font-pretendard">
