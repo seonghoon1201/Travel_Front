@@ -7,7 +7,7 @@ const SideMenu = ({ onClose }) => {
   const isLoggedIn = true;
   const navigate = useNavigate();
 
-  // 모달 닫기
+  // 프로필 편집 이동 및 모달 닫기
   const handleProfileEdit = () => {
     navigate('/edit/profile');
     onClose();
@@ -16,6 +16,12 @@ const SideMenu = ({ onClose }) => {
   // 탭 클릭 시 URL 변경
   const handleTabClick = (tab) => {
     navigate(`/mypage?tab=${tab}`);
+    onClose();
+  };
+
+  // list 이동 및 모달 닫기
+  const goTo = (path) => {
+    navigate(path);
     onClose();
   };
 
@@ -87,10 +93,16 @@ const SideMenu = ({ onClose }) => {
 
               {/* 메뉴 리스트 */}
               <ul className="mt-7 space-y-4 text-sm text-gray-700">
-                <li className="flex justify-between items-center border-b pb-3">
+                <li
+                  className="flex justify-between items-center border-b pb-3"
+                  onClick={() => goTo('/edit/profile')}
+                >
                   프로필 편집 <span>&gt;</span>
                 </li>
-                <li className="flex justify-between items-center border-b pb-3">
+                <li
+                  className="flex justify-between items-center border-b pb-3"
+                  onClick={() => goTo('/mypage')}
+                >
                   마이페이지 <span>&gt;</span>
                 </li>
                 <li className="flex justify-between items-center border-b pb-3">
