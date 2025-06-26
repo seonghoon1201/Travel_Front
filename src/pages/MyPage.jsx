@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import BackHeader from '../components/header/BackHeader';
 import ProfileSummary from '../components/profile/ProfileSummary';
@@ -11,19 +10,22 @@ import MyBookmarkSection from '../components/mypage/MyBookmarkSection';
 
 const MyPage = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState('myTrip');
 
+  // URL 쿼리로 activeTab 갱신
   useEffect(() => {
-    const tabFromURL = searchParams.get('tab');
-    if (
-      tabFromURL === 'myTrip' ||
-      tabFromURL === 'myDiary' ||
-      tabFromURL === 'myBookmark'
-    ) {
-      setActiveTab(tabFromURL);
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab === 'myTrip' || tab === 'myDiary' || tab === 'myBookmark') {
+      setActiveTab(tab);
     }
-  }, [searchParams]);
+  }, [location]);
+
+  // 탭 상태에 따라 URL 변경
+  useEffect(() => {
+    navigate(`/mypage?tab=${activeTab}`, { replace: true });
+  }, [activeTab, navigate]);
 
   return (
     <div className="min-h-screen font-pretendard">
