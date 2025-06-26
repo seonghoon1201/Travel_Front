@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CalendarPlus } from 'lucide-react';
 import '../styles/HomePage.css';
 
@@ -11,6 +12,7 @@ import LocationSection from '../components/location/LocationSection';
 import TravelDiaryList from '../components/traveldiary/TravelDiaryList';
 
 const HomePage = () => {
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   //더미값 test
   const dummyLocations = [
@@ -82,7 +84,7 @@ const HomePage = () => {
           showMore={true}
         />
         {/* 하단 여행하기 section */}
-        <div className="w-full flex items-center justify-between px-2 mt-3">
+        <div className="w-full flex items-center justify-between px-2">
           {/* 왼쪽 텍스트  (60%) */}
           <div className="w-3/5 flex flex-col items-start">
             <h3 className="font-jalnongothic text-xl text-[#143447] mb-2">
@@ -91,7 +93,10 @@ const HomePage = () => {
             <p className="font-noonnu text-gray-500 mb-2">
               여행 경비 공유하고 일정짜기
             </p>
-            <button className="font-pretendard bg-primary text-white px-5 py-2 rounded-full shadow transition flex items-center gap-x-2">
+            <button
+              className="font-pretendard bg-primary text-white px-5 py-2 rounded-full shadow transition flex items-center gap-x-2"
+              onClick={() => navigate('/plan/location')}
+            >
               <CalendarPlus className="w-5 h-5" />
               <span>일정 짜기</span>
             </button>
