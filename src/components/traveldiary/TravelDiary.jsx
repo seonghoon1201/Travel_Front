@@ -1,12 +1,20 @@
 import React from 'react';
 import profileDefault from '../../assets/profile_default.png';
+import { useNavigate } from 'react-router-dom';
 
-const TravelDiary = ({ title, userProfileImage = '', nickname, period, tags = [], imageUrl, variant = "default" }) => {
+const TravelDiary = ({ id, title, userProfileImage = '', nickname, period, tags = [], imageUrl, variant = "default" }) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/board/travel/diary/${id}`);
+  };
+
   //UI compact 모드일 경우 작은 카드 스타일로 렌더링
   const isCompact = variant === "compact"; 
   
   return (
     <div
+      onClick={handleClick}
       className={`bg-white rounded-xl overflow-hidden shadow-md ${
         isCompact ? 'w-[160px] min-w-[160px]' : 'w-full '
       }`}

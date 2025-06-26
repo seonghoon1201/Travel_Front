@@ -63,6 +63,7 @@ const TravelDiaryBoard = () => {
         {filteredDiaries.map((diary) => (
           <TravelDiary
             key={diary.id}
+            id={diary.id}
             title={diary.title}
             nickname={diary.nickname}
             period={diary.period}

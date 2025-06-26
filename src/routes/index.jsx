@@ -9,10 +9,13 @@ import VerifyCodePage from '../pages/Login_and_Signup/VerifyCodePage';
 import ResetPasswordPage from '../pages/Login_and_Signup/ResetPasswordPage';
 import MyPage from '../pages/MyPage';
 import EditProfile from '../pages/EditProfile';
+
 import HotBoard from '../pages/HotBoard';
 import BudgetBoard from '../pages/BudgetBoard';
-import TravelDiaryBoard from '../pages/TravelDiary/TravelDiaryBoard';
-import WriteTravelDiary from '../pages/TravelDiary/WriteTravelDiary';
+
+import TravelDiaryBoard from '../pages/Travel_Diary/TravelDiaryBoard';
+import TravelDiaryDetail from '../pages/Travel_Diary/TravelDiaryDetail';
+import WriteTravelDiary from '../pages/Travel_Diary/WriteTravelDiary';
 import PlanLocationPage from '../pages/Plan/PlanLocationPage';
 import PlanDatePage from '../pages/Plan/PlanDatePage';
 import PlanStylePage from '../pages/Plan/PlanStylePage';
@@ -35,6 +38,7 @@ const AppRoutes = () => (
       <Route path="/board/hot" element={<HotBoard />} />
       <Route path="/board/budget" element={<BudgetBoard />} />
       <Route path="/board/travel/diary" element={<TravelDiaryBoard />} />
+      <Route path="/board/travel/diary/:id" element={<TravelDiaryDetail />} />
       <Route path="/write/travel/diary" element={<WriteTravelDiary />} />
       <Route path="/plan/location" element={<PlanLocationPage />} />
       <Route path="/kakao/callback" element={<KakaoCallbackPage />} />
