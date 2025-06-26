@@ -14,6 +14,8 @@ import PlanLocationPage from '../pages/Plan/PlanLocationPage';
 import PlanDatePage from '../pages/Plan/PlanDatePage';
 import PlanStylePage from '../pages/Plan/PlanStylePage';
 import PlanInvitePage from '../pages/Plan/PlanInvitePage';
+import PlanBudgetPage from '../pages/Plan/PlanBudgetPage';
+import PlanCartPage from '../pages/Plan/PlanCartPage';
 
 const AppRoutes = () => (
   <Router>
@@ -33,6 +35,8 @@ const AppRoutes = () => (
       <Route path="/plan/date" element={<PlanDatePage />} />
       <Route path="/plan/style" element={<PlanStylePage />} />
       <Route path="/plan/invite" element={<PlanInvitePage />} />
+      <Route path="/plan/budget" element={<PlanBudgetPage />} />
+      <Route path="/plan/cart" element={<PlanCartPage />} />
     </Routes>
   </Router>
 );
