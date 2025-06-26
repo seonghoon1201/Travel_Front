@@ -1,13 +1,14 @@
 import React from 'react';
+import profileDefault from '../../assets/profile_default.png';
 
-const TravelDiary = ({ title, nickname, period, tags = [], imageUrl, variant = "default" }) => {
+const TravelDiary = ({ title, userProfileImage = '', nickname, period, tags = [], imageUrl, variant = "default" }) => {
   //UI compact 모드일 경우 작은 카드 스타일로 렌더링
   const isCompact = variant === "compact"; 
   
   return (
     <div
       className={`bg-white rounded-xl overflow-hidden shadow-md ${
-        isCompact ? 'w-[160px] min-w-[160px]' : 'w-full max-w-md'
+        isCompact ? 'w-[160px] min-w-[160px]' : 'w-full '
       }`}
     >
       {imageUrl ? (
@@ -22,10 +23,26 @@ const TravelDiary = ({ title, nickname, period, tags = [], imageUrl, variant = "
         />
       )}
 
-      <div className="p-2">
-        <h2 className={`text-sm font-semibold ${isCompact ? 'truncate' : ''}`}>
-          {title}
-        </h2>
+    <div className="p-4">
+        <div className="flex items-center gap-2 mb-1">
+          {/* 프로필 이미지 */}
+          {!isCompact && (
+            <img
+              src={
+                userProfileImage ||profileDefault
+              }
+              alt="profile"
+              className="w-12 h-12 rounded-full object-cover -mt-12"
+            />
+          )}
+          <h2
+            className={` font-semibold ${
+              isCompact ? 'truncate' : ''
+            }`}
+          >
+            {title}
+          </h2>
+        </div>
         {!isCompact && (
           <>
             <p className="text-sm text-gray-600">
