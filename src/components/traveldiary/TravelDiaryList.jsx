@@ -1,15 +1,18 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from 'antd';
 const { Meta } = Card;
 
 const TravelDiaryList = ({ diaries = [], title, showMore }) => {
+  const navigate = useNavigate();
   return (
     <div>
       {/* 제목과 더보기 버튼 */}
       <div className="flex justify-between items-center px-1 mb-2">
         <h2 className="text-lg font-jalnongothic">{title}</h2>
         {showMore && (
-          <button className="font-pretendard text-sm text-blue-500 border rounded-full px-2 py-0.5">
+          <button className="font-pretendard text-sm text-blue-500 border rounded-full px-2 py-0.5"
+          onClick={() => navigate('/board/travel/diary')}>
             + 더보기
           </button>
         )}
