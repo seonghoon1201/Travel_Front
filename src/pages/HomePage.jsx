@@ -68,11 +68,13 @@ const HomePage = () => {
           title="요즘 핫플"
           locations={dummyLocations}
           showMore={true}
+          navigateTo="/board/hot"
         />
         <LocationSection
           title="저예산 추천 여행지"
           locations={dummyLocations}
           showMore={true}
+          navigateTo="/board/budget"
         />
         <TravelDiaryList
           title="여행 일기"

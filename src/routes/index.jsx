@@ -10,6 +10,7 @@ import ResetPasswordPage from '../pages/Login_and_Signup/ResetPasswordPage';
 import MyPage from '../pages/MyPage';
 import EditProfile from '../pages/EditProfile';
 import HotBoard from '../pages/HotBoard';
+import BudgetBoard from '../pages/BudgetBoard';
 import PlanLocationPage from '../pages/Plan/PlanLocationPage';
 import PlanDatePage from '../pages/Plan/PlanDatePage';
 import PlanStylePage from '../pages/Plan/PlanStylePage';
@@ -30,6 +31,7 @@ const AppRoutes = () => (
       <Route path="/mypage" element={<MyPage />} />
       <Route path="/edit/profile" element={<EditProfile />} />
       <Route path="/board/hot" element={<HotBoard />} />
+      <Route path="/board/budget" element={<BudgetBoard />} />
       <Route path="/plan/location" element={<PlanLocationPage />} />
       <Route path="/kakao/callback" element={<KakaoCallbackPage />} />
       <Route path="/plan/date" element={<PlanDatePage />} />
