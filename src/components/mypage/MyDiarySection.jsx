@@ -14,7 +14,7 @@ const MyDiarySection = () => {
   ];
 
   return (
-    <div className="p-4">
+    <div className="p-4 flex justify-center">
       {diaryList.length === 0 ? (
         <p className="text-center text-gray-400 mt-8">
           작성된 여행일기가 없습니다.

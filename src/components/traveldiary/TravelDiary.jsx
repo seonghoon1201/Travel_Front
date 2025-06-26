@@ -2,7 +2,7 @@ import React from 'react';
 
 const TravelDiary = ({ title, nickname, period, tags = [], imageUrl }) => {
   return (
-    <div className="bg-white rounded-xl overflow-hidden shadow-md w-full max-w-md">
+    <div className="bg-white rounded-xl overflow-hidden shadow-md w-full ">
       {imageUrl && (
         <img src={imageUrl} alt={title} className="w-full h-40 object-cover" />
       )}
