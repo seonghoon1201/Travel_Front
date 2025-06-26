@@ -18,7 +18,7 @@ const MyPage = () => {
         <BackHeader
           showRightButton={true}
           rightButtonText="프로필 편집"
-          onRightButtonClick={() => navigate('/edit-profile')}
+          onRightButtonClick={() => navigate('/edit/profile')}
         />
       </div>
 
