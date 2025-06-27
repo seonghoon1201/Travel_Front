@@ -5,6 +5,7 @@ import { Ellipsis , CalendarDays } from 'lucide-react';
 import profileDefault from '../../assets/profile_default.png';
 import BackHeader from '../../components/header/BackHeader';
 import DefaultLayout from '../../layouts/DefaultLayout';
+import PostActionModal from '../../components/modal/PostActionModal';
 
 const TravelDiaryDetail = () => {
   const { id } = useParams();
@@ -39,7 +40,7 @@ const TravelDiaryDetail = () => {
             </div>
           </div>
           {/* 수정, 삭제, 신고 모달 추가 */}
-          <button className="text-gray-400 text-xl font-bold"><Ellipsis /></button>
+          <button className="text-gray-400 text-xl font-bold"><PostActionModal /></button>
         </div>
 
         {/* 본문 내용 */}
