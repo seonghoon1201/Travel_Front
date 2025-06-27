@@ -1,14 +1,15 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
-import { Ellipsis , CalendarDays } from 'lucide-react';
+import { CalendarDays } from 'lucide-react';
 
 import profileDefault from '../../assets/profile_default.png';
 import BackHeader from '../../components/header/BackHeader';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import PostActionModal from '../../components/modal/PostActionModal';
+import KakaoMap from '../../components/map/KakaoMap';
 
 const TravelDiaryDetail = () => {
-  const { id } = useParams();
+  // 나중에 쿼리값 id로 게시글 url 부여
+  // const { id } = useParams();
 
   const dummyData = {
     title: '6월의 제주',
@@ -40,7 +41,7 @@ const TravelDiaryDetail = () => {
             </div>
           </div>
           {/* 수정, 삭제, 신고 모달 추가 */}
-          <button className="text-gray-400 text-xl font-bold"><PostActionModal /></button>
+          <div className="text-gray-400 text-xl font-bold"><PostActionModal /></div>
         </div>
 
         {/* 본문 내용 */}
@@ -64,7 +65,7 @@ const TravelDiaryDetail = () => {
       </div>
       {/* 댓글 구현 */}
       <div>댓글 구현</div>
-      <div>여행 일정 구현(지도 + 일정)</div>
+      <div ><KakaoMap lat={37.5665} lng={126.9780} /></div>
 
     </DefaultLayout>
   );
