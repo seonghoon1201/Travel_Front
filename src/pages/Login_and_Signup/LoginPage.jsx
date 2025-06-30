@@ -5,15 +5,17 @@ import { setItem } from '../../utils/localStorage';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import axios from 'axios';
 import DefaultLayout from '../../layouts/DefaultLayout';
+import useUserStore from '../../store/userStore';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const login = useUserStore((state) => state.login);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleKakaoLogin = () => {
-    window.location.href = 'http://localhost:8080/auth/kakao/login';
+    window.location.href = 'http://124.49.210.216/auth/kakao/login';
   };
 
   const handleLogin = async () => {
@@ -23,25 +25,20 @@ const LoginPage = () => {
     }
 
     try {
-      const res = await axios.post('http://localhost:8080/user/login', {
+      const res = await axios.post('http://124.49.210.216/user/login', {
         email,
         password,
       });
 
       const { accessToken, refreshToken, nickname, profileImageUrl } = res.data;
 
-      setItem('accessToken', accessToken);
-      setItem('refreshToken', refreshToken);
-      setItem('nickname', nickname);
-      setItem('profileImageUrl', profileImageUrl);
+      login({ accessToken, refreshToken, nickname, profileImageUrl }); // store 갱신
 
       alert('로그인 성공!');
       navigate('/');
     } catch (error) {
       console.error('로그인 실패:', error);
-      alert(
-        error?.response?.data?.message || '이메일 또는 비밀번호가 올바르지 않습니다.'
-      );
+      alert(error?.response?.data?.message || '이메일 또는 비밀번호가 올바르지 않습니다.');
     }
   };
 

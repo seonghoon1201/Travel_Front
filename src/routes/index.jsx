@@ -9,6 +9,7 @@ import VerifyCodePage from '../pages/Login_and_Signup/VerifyCodePage';
 import ResetPasswordPage from '../pages/Login_and_Signup/ResetPasswordPage';
 import MyPage from '../pages/MyPage';
 import EditProfile from '../pages/EditProfile';
+import AuthChecker from '../components/auth/AuthChecker';
 
 import HotBoard from '../pages/HotBoard';
 import BudgetBoard from '../pages/BudgetBoard';
@@ -22,9 +23,11 @@ import PlanStylePage from '../pages/Plan/PlanStylePage';
 import PlanInvitePage from '../pages/Plan/PlanInvitePage';
 import PlanBudgetPage from '../pages/Plan/PlanBudgetPage';
 import PlanCartPage from '../pages/Plan/PlanCartPage';
+import RegionDetailPage from '../pages/RegionDetailPage';
 
 const AppRoutes = () => (
   <Router>
+    <AuthChecker />
     <Routes>
       <Route path="/" element={<Splash />} />
       <Route path="/home" element={<HomePage />} />
@@ -36,6 +39,8 @@ const AppRoutes = () => (
       <Route path="/mypage" element={<MyPage />} />
       <Route path="/edit/profile" element={<EditProfile />} />
       <Route path="/board/hot" element={<HotBoard />} />
+      <Route path="/board/detail" element={<RegionDetailPage />} />
+
       <Route path="/board/budget" element={<BudgetBoard />} />
       <Route path="/board/travel/diary" element={<TravelDiaryBoard />} />
       <Route path="/board/travel/diary/:id" element={<TravelDiaryDetail />} />
