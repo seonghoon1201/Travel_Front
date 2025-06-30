@@ -17,7 +17,7 @@ const HotBoard = () => {
       Province: '제주도',
       summary:
         '서귀포에 대한 내용 요약 부분서귀포에 대한 내용 요약 부분서귀포에 대한 내용 요약 부분서귀포에 대한 내용 요약 부분서귀포에 대한 내용 요약 부분서귀포에 대한 내용 요약 부분',
-      locations: ['아쿠아플라넷', '감귤 농장'],
+      locations: ['아쿠아플라넷', '감귤 농장', '올레시장', '몰라', '어렵네'],
     },
     {
       imageUrl: 'https://example.com/gangneung.jpg',

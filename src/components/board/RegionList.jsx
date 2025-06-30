@@ -22,11 +22,13 @@ const RegionList = ({ imageUrl, City, Province, summary, locations = [] }) => {
         <p className="text-base font-semibold text-gray-900">
           {City} <span className="text-sm text-gray-500">· {Province}</span>
         </p>
+        {/* 30자 후 ... 표시 */}
         <p className="text-sm text-gray-500">{truncateText(summary, 30)}</p>
 
         {/* 관광지 태그 */}
         <div className="flex gap-2 mt-2 flex-wrap">
-          {locations.map((place, idx) => (
+          {/* 3개까지만 노출 */}
+          {locations.slice(0, 5).map((place, idx) => (
             <span
               key={idx}
               className="text-xs bg-gray-200 text-gray-700 px-2 py-1"
