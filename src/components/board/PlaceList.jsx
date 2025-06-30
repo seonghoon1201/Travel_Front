@@ -1,6 +1,6 @@
 import React from 'react';
 
-const HotSpotItem = ({
+const PlaceList = ({
   destination,
   category,
   location,
@@ -36,4 +36,4 @@ const HotSpotItem = ({
   );
 };
 
-export default HotSpotItem;
+export default PlaceList;
