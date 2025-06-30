@@ -133,7 +133,7 @@ const SignUpPage = () => {
 
   const handleConfirm = () => {
     setIsModalOpen(false);
-    navigate('/home');
+    navigate('/login');
   };
 
   const handleSubmit = async (e) => {
@@ -389,7 +389,7 @@ const SignUpPage = () => {
 
       <CommonModal
         isOpen={isModalOpen}
-        message={`여담의 여행자가 되신 걸 진심으로 환영합니다.\n이제, 여행 준비는 저희가 도와드릴게요 🎉`}
+        message={`여담의 여행자가 되신 걸 진심으로 환영합니다.\n 로그인을 진행해 주세요! \n이제, 여행 준비는 저희가 도와드릴게요 🎉`}
         onConfirm={handleConfirm}
       />
     </DefaultLayout>
