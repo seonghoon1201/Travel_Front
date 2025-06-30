@@ -9,6 +9,7 @@ import VerifyCodePage from '../pages/Login_and_Signup/VerifyCodePage';
 import ResetPasswordPage from '../pages/Login_and_Signup/ResetPasswordPage';
 import MyPage from '../pages/MyPage';
 import EditProfile from '../pages/EditProfile';
+import AuthChecker from '../components/auth/AuthChecker';
 
 import HotBoard from '../pages/HotBoard';
 import BudgetBoard from '../pages/BudgetBoard';
@@ -25,6 +26,7 @@ import PlanCartPage from '../pages/Plan/PlanCartPage';
 
 const AppRoutes = () => (
   <Router>
+    <AuthChecker/>
     <Routes>
       <Route path="/" element={<Splash />} />
       <Route path="/home" element={<HomePage />} />
