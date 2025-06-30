@@ -23,10 +23,11 @@ import PlanStylePage from '../pages/Plan/PlanStylePage';
 import PlanInvitePage from '../pages/Plan/PlanInvitePage';
 import PlanBudgetPage from '../pages/Plan/PlanBudgetPage';
 import PlanCartPage from '../pages/Plan/PlanCartPage';
+import RegionDetailPage from '../pages/RegionDetailPage';
 
 const AppRoutes = () => (
   <Router>
-    <AuthChecker/>
+    <AuthChecker />
     <Routes>
       <Route path="/" element={<Splash />} />
       <Route path="/home" element={<HomePage />} />
@@ -38,6 +39,8 @@ const AppRoutes = () => (
       <Route path="/mypage" element={<MyPage />} />
       <Route path="/edit/profile" element={<EditProfile />} />
       <Route path="/board/hot" element={<HotBoard />} />
+      <Route path="/board/detail" element={<RegionDetailPage />} />
+
       <Route path="/board/budget" element={<BudgetBoard />} />
       <Route path="/board/travel/diary" element={<TravelDiaryBoard />} />
       <Route path="/board/travel/diary/:id" element={<TravelDiaryDetail />} />
