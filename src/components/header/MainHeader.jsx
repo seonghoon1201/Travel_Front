@@ -26,7 +26,6 @@ const MainHeader = ({ isMenuOpen, setIsMenuOpen }) => {
         </div>
       </header>
 
-      {/* ✅ 헤더 바깥에 위치해야 fixed 오버레이가 전체 덮음 */}
       {isMenuOpen && <SideMenu onClose={() => setIsMenuOpen(false)} />}
     </>
   );
