@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CalendarPlus } from 'lucide-react';
 import '../styles/HomePage.css';
@@ -11,9 +11,27 @@ import SideMenu from '../components/modal/SideMenu';
 import LocationSection from '../components/location/LocationSection';
 import TravelDiaryList from '../components/traveldiary/TravelDiaryList';
 
+import useUserStore from '../store/userStore';
+import { getItem } from '../utils/localStorage';
+
 const HomePage = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const setState = useUserStore.setState;
+
+  useEffect(() => {
+    const token = getItem('accessToken');
+    if (token) {
+      setState({
+        accessToken: token,
+        refreshToken: getItem('refreshToken'),
+        nickname: getItem('nickname'),
+        profileImageUrl: getItem('profileImageUrl'),
+        isLoggedIn: true,
+      });
+    }
+  }, []);
+
   //더미값 test
   const dummyLocations = [
     { name: '제주도', image: kakaoIcon },
@@ -28,6 +46,7 @@ const HomePage = () => {
     { name: '강릉', image: kakaoIcon },
     { name: '강릉', image: kakaoIcon },
   ];
+  //더미값 test
   const dummyDiaries = [
     {
       id: 1,
