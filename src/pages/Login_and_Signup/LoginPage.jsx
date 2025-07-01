@@ -29,16 +29,34 @@ const LoginPage = () => {
         email,
         password,
       });
+      // console.log(' 로그인 응답 전체:', res.data);
 
-      const { accessToken, refreshToken, nickname, profileImageUrl } = res.data;
+      const {
+        jwtDto: { accessToken, refreshToken },
+        userNickname: nickname,
+        userProfileImage: profileImageUrl,
+      } = res.data;
 
       login({ accessToken, refreshToken, nickname, profileImageUrl }); // store 갱신
 
       alert('로그인 성공!');
+      // console.log(' login 호출 시 전달값:', {
+      //   accessToken,
+      //   refreshToken,
+      //   nickname,
+      //   profileImageUrl,
+      // });
+
+      login({ accessToken, refreshToken, nickname, profileImageUrl });
+      console.log('login 호출 완료');
       navigate('/');
     } catch (error) {
       console.error('로그인 실패:', error);
-      alert(error?.response?.data?.message || '이메일 또는 비밀번호가 올바르지 않습니다.');
+
+      alert(
+        error?.response?.data?.message ||
+          '이메일 또는 비밀번호가 올바르지 않습니다.'
+      );
     }
   };
 
@@ -85,11 +103,17 @@ const LoginPage = () => {
           </button>
 
           <div className="mt-5 text-sm text-gray-500 flex justify-center space-x-4">
-            <button className="hover:underline" onClick={() => navigate('/find-password')}>
+            <button
+              className="hover:underline"
+              onClick={() => navigate('/find-password')}
+            >
               비밀번호 찾기
             </button>
             <span className="text-gray-300">|</span>
-            <button className="hover:underline" onClick={() => navigate('/signup')}>
+            <button
+              className="hover:underline"
+              onClick={() => navigate('/signup')}
+            >
               회원가입
             </button>
           </div>

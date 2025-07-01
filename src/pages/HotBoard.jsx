@@ -3,48 +3,35 @@ import { SlidersHorizontal } from 'lucide-react';
 
 import BackHeader from '../components/header/BackHeader';
 import SearchBar from '../components/common/SearchBar';
-import CategoryButtonSection from '../components/mypage/CategoryButtonSection';
-import HotSpotItem from '../components/board/HotSpotItem';
+import RegionList from '../components/board/RegionList';
 import DefaultLayout from '../layouts/DefaultLayout';
 
 const HotBoard = () => {
-  const [activeCategory, setActiveCategory] = useState('전체');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const bookmarks = [
+  // 🔹 예시 지역 데이터
+  const regionData = [
     {
-      destination: '아쿠아플라넷 제주',
-      category: '관광',
-      location: '제주',
-      opentime: '09:30',
-      closetime: '18:00',
-      tel: '1833-7001',
-      imageUrl: '/assets/.jpg',
+      imageUrl: 'https://example.com/seogwipo.jpg',
+      City: '서귀포시',
+      Province: '제주도',
+      summary:
+        '서귀포에 대한 내용 요약 부분서귀포에 대한 내용 요약 부분서귀포에 대한 내용 요약 부분서귀포에 대한 내용 요약 부분서귀포에 대한 내용 요약 부분서귀포에 대한 내용 요약 부분',
+      locations: ['아쿠아플라넷', '감귤 농장', '올레시장', '몰라', '어렵네'],
     },
     {
-      destination: '아쿠아플라넷 제주',
-      category: '관광',
-      location: '제주',
-      opentime: '09:30',
-      closetime: '18:00',
-      tel: '1833-7001',
-      imageUrl: '/assets/.jpg',
-    },
-    {
-      destination: '아쿠아플라넷 제주',
-      category: '관광',
-      location: '제주',
-      opentime: '09:30',
-      closetime: '18:00',
-      tel: '1833-7001',
-      imageUrl: '/assets/.jpg',
+      imageUrl: 'https://example.com/gangneung.jpg',
+      City: '강릉시',
+      Province: '강원도',
+      summary: '30자 이상 넘어가면 ... ',
+      locations: ['경포해변', '안목해변'],
     },
   ];
 
-  const filteredBookmarks =
-    activeCategory === '전체'
-      ? bookmarks
-      : bookmarks.filter((item) => item.category === activeCategory);
+  // 🔹 City 기준 검색 필터
+  const filteredRegionData = regionData.filter((item) =>
+    item.City.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <DefaultLayout>
@@ -57,12 +44,6 @@ const HotBoard = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
-
-      {/* 카테고리 */}
-      <CategoryButtonSection
-        activeCategory={activeCategory}
-        setActiveCategory={setActiveCategory}
-      />
 
       {/* 상단 설명 영역 */}
       <div className="flex items-start justify-between px-2 pt-4 py-2">
@@ -84,10 +65,23 @@ const HotBoard = () => {
       </div>
 
       {/* 핫플 리스트 */}
-      <div className="space-y-4 mt-4">
-        {filteredBookmarks.map((item, index) => (
-          <HotSpotItem key={index} {...item} />
-        ))}
+      <div className="space-y-4 mt-4 px-2">
+        {filteredRegionData.length > 0 ? (
+          filteredRegionData.map((item, index) => (
+            <RegionList
+              key={index}
+              imageUrl={item.imageUrl}
+              City={item.City}
+              Province={item.Province}
+              summary={item.summary}
+              locations={item.locations}
+            />
+          ))
+        ) : (
+          <p className="text-sm text-center text-gray-400">
+            검색 결과가 없습니다.
+          </p>
+        )}
       </div>
     </DefaultLayout>
   );

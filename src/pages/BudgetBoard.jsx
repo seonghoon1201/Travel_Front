@@ -4,7 +4,7 @@ import { SlidersHorizontal } from 'lucide-react';
 import BackHeader from '../components/header/BackHeader';
 import SearchBar from '../components/common/SearchBar';
 import CategoryButtonSection from '../components/mypage/CategoryButtonSection';
-import HotSpotItem from '../components/board/HotSpotItem';
+import PlaceList from '../components/board/PlaceList';
 import DefaultLayout from '../layouts/DefaultLayout';
 
 const BudgetBoard = () => {
@@ -88,7 +88,7 @@ const BudgetBoard = () => {
       {/* 핫플 리스트 */}
       <div className="space-y-4 mt-4">
         {filteredBookmarks.map((item, index) => (
-          <HotSpotItem key={index} {...item} />
+          <PlaceList key={index} {...item} />
         ))}
       </div>
     </DefaultLayout>

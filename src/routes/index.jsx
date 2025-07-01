@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from '../pages/HomePage';
+import SearchPage from '../pages/SearchPage';
 import Splash from '../pages/Splash';
 import LoginPage from '../pages/Login_and_Signup/LoginPage';
 import SignUpPage from '../pages/Login_and_Signup/SignUpPage';
@@ -23,25 +24,35 @@ import PlanStylePage from '../pages/Plan/PlanStylePage';
 import PlanInvitePage from '../pages/Plan/PlanInvitePage';
 import PlanBudgetPage from '../pages/Plan/PlanBudgetPage';
 import PlanCartPage from '../pages/Plan/PlanCartPage';
+import RegionDetailPage from '../pages/RegionDetailPage';
 
 const AppRoutes = () => (
   <Router>
-    <AuthChecker/>
+    <AuthChecker />
     <Routes>
       <Route path="/" element={<Splash />} />
       <Route path="/home" element={<HomePage />} />
+
+      <Route path="/search" element={<SearchPage />} />
+
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignUpPage />} />
+
       <Route path="/find-password" element={<FindPasswordPage />} />
       <Route path="/find-password/verify" element={<VerifyCodePage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+
       <Route path="/mypage" element={<MyPage />} />
       <Route path="/edit/profile" element={<EditProfile />} />
+
       <Route path="/board/hot" element={<HotBoard />} />
+      <Route path="/board/detail" element={<RegionDetailPage />} />
       <Route path="/board/budget" element={<BudgetBoard />} />
+
       <Route path="/board/travel/diary" element={<TravelDiaryBoard />} />
       <Route path="/board/travel/diary/:id" element={<TravelDiaryDetail />} />
       <Route path="/write/travel/diary" element={<WriteTravelDiary />} />
+
       <Route path="/plan/location" element={<PlanLocationPage />} />
       <Route path="/kakao/callback" element={<KakaoCallbackPage />} />
       <Route path="/plan/date" element={<PlanDatePage />} />
