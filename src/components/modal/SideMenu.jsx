@@ -16,35 +16,6 @@ const SideMenu = ({ onClose }) => {
   const isLoggedIn = useUserStore((state) => state.isLoggedIn);
   const logout = useUserStore((state) => state.logout);
 
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      if (!accessToken || nickname) {
-        return;
-      }
-
-      try {
-        const res = await axios.get('/api/user/me', {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-
-        const { nickname, profileImageUrl } = res.data;
-
-        useUserStore.getState().login({
-          accessToken,
-          refreshToken,
-          nickname,
-          profileImageUrl,
-        });
-      } catch (err) {
-        console.error('유저 정보 가져오기 실패:', err);
-      }
-    };
-
-    fetchUserInfo();
-  }, [accessToken, nickname]);
-
   const handleProfileEdit = () => {
     navigate('/edit/profile');
     onClose();

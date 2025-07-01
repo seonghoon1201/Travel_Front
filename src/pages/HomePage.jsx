@@ -20,17 +20,8 @@ const HomePage = () => {
   const setState = useUserStore.setState;
 
   useEffect(() => {
-    const token = getItem('accessToken');
-    if (token) {
-      setState({
-        accessToken: token,
-        refreshToken: getItem('refreshToken'),
-        nickname: getItem('nickname'),
-        profileImageUrl: getItem('profileImageUrl'),
-        isLoggedIn: true,
-      });
-    }
-  }, []);
+  useUserStore.getState().initializeFromStorage();
+}, []);
 
   //더미값 test
   const dummyLocations = [
