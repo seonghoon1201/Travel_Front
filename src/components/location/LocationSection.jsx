@@ -23,6 +23,7 @@ const LocationSection = ({ title, locations, showMore, navigateTo }) => {
           <div
             key={idx}
             className="flex-shrink-0 flex flex-col items-center w-20"
+            onClick={() => navigate('/board/detail')}
           >
             <img
               src={loc.image}

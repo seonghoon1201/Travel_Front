@@ -23,6 +23,7 @@ const TravelDiaryList = ({ diaries = [], title, showMore }) => {
             key={diary.id}
             hoverable
             style={{ width: 160 }}
+            onClick={() => navigate(`/board/travel/diary/${diary.id}`)} 
             cover={
               diary.image ? (
                 <img

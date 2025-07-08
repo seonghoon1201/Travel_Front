@@ -15,9 +15,10 @@ import AuthChecker from '../components/auth/AuthChecker';
 import HotBoardPage from '../pages/Board/HotBoardPage';
 import BudgetBoardPage from '../pages/Board/BudgetBoardPage';
 
-import TravelDiaryBoard from '../pages/Travel_Diary/TravelDiaryBoard';
-import TravelDiaryDetail from '../pages/Travel_Diary/TravelDiaryDetail';
-import WriteTravelDiary from '../pages/Travel_Diary/WriteTravelDiary';
+import TravelDiaryBoardPage from '../pages/Travel_Diary/TravelDiaryBoardPage';
+import TravelDiaryDetailPage from '../pages/Travel_Diary/TravelDiaryDetailPage';
+import WriteTravelDiaryPage from '../pages/Travel_Diary/WriteTravelDiaryPage';
+import UpdateTravelDiaryPage from '../pages/Travel_Diary/UpdateTravelDiaryPage';
 import PlanLocationPage from '../pages/Plan/PlanLocationPage';
 import PlanDatePage from '../pages/Plan/PlanDatePage';
 import PlanStylePage from '../pages/Plan/PlanStylePage';
@@ -49,9 +50,10 @@ const AppRoutes = () => (
       <Route path="/board/detail" element={<RegionDetailPage />} />
       <Route path="/board/budget" element={<BudgetBoardPage />} />
 
-      <Route path="/board/travel/diary" element={<TravelDiaryBoard />} />
-      <Route path="/board/travel/diary/:id" element={<TravelDiaryDetail />} />
-      <Route path="/write/travel/diary" element={<WriteTravelDiary />} />
+      <Route path="/board/travel/diary" element={<TravelDiaryBoardPage />} />
+      <Route path="/board/travel/diary/:id" element={<TravelDiaryDetailPage />} />
+      <Route path="/write/travel/diary" element={<WriteTravelDiaryPage />} />
+      <Route path="/uptae/travel/diary/:id" element={<UpdateTravelDiaryPage />} />
 
       <Route path="/plan/location" element={<PlanLocationPage />} />
       <Route path="/kakao/callback" element={<KakaoCallbackPage />} />
