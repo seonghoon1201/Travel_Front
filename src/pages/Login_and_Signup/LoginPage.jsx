@@ -35,9 +35,10 @@ const LoginPage = () => {
         jwtDto: { accessToken, refreshToken },
         userNickname: nickname,
         userProfileImage: profileImageUrl,
+        userRole,
       } = res.data;
 
-      login({ accessToken, refreshToken, nickname, profileImageUrl }); // store 갱신
+      login({ accessToken, refreshToken, nickname, profileImageUrl, userRole }); // store 갱신
 
       alert('로그인 성공!');
       // console.log(' login 호출 시 전달값:', {
@@ -46,8 +47,6 @@ const LoginPage = () => {
       //   nickname,
       //   profileImageUrl,
       // });
-
-      login({ accessToken, refreshToken, nickname, profileImageUrl });
       console.log('login 호출 완료');
       navigate('/');
     } catch (error) {
