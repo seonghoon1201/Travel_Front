@@ -1,7 +1,7 @@
 import React from 'react';
 import BackHeader from '../components/header/BackHeader';
 import PrimaryButton from '../components/common/PrimaryButton';
-import { Pencil } from 'lucide-react';
+import { Pencil, X } from 'lucide-react';
 import useUserStore from '../store/userStore';
 import profileDefault from '../assets/profile_default.png';
 
@@ -30,11 +30,32 @@ const EditProfile = () => {
             </button>
           </div>
 
-          <p className="mt-4 font-semibold text-lg">{nickname}</p>
+          {/* 닉네임 입력 필드 */}
+          <div className="w-full relative mt-6">
+            <input
+              type="text"
+              value={nickname}
+              // onChange={(e) => setNickname(e.target.value)}
+              placeholder="닉네임을 입력하세요"
+              className="w-full border-b border-gray-300 py-2 text-center text-lg font-semibold bg-transparent focus:outline-none"
+            />
+            {nickname && (
+              <button
+                className="absolute right-0 top-1/2 transform -translate-y-1/2 pr-2"
+                // onClick={() => setNickname('')}
+              >
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            )}
+          </div>
 
-          <PrimaryButton className="w-full m-4">닉네임 변경</PrimaryButton>
+          <PrimaryButton
+            className="w-full m-4"
+            //  onClick={handleUpdate}
+          >
+            닉네임 변경
+          </PrimaryButton>
 
-          {/* 안내 문구 */}
           <p className="mt-4 text-xs text-gray-400 text-center leading-relaxed">
             유효성에 따라 닉네임 변경
             <br />
