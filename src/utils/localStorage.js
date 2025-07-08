@@ -1,11 +1,20 @@
 export const setItem = (key, value) => {
   if (value === undefined) return;
-  localStorage.setItem(key, JSON.stringify(value));
+
+  
+  const toStore = typeof value === 'string' ? value : JSON.stringify(value);
+  localStorage.setItem(key, toStore);
 };
 
 export const getItem = (key, defaultValue = null) => {
   const value = localStorage.getItem(key);
-  return value ? JSON.parse(value) : defaultValue;
+  if (!value) return defaultValue;
+
+  try {
+    return JSON.parse(value);
+  } catch (e) {
+    return value;
+  }
 };
 
 export const removeItem = (key) => {
