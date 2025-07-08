@@ -75,7 +75,7 @@ const HomePage = () => {
     <>
       <MainHeader isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
       {isMenuOpen && <SideMenu onClose={() => setIsMenuOpen(false)} />}
-      <main className="w-full max-w-screen-sm p-2">
+      <main className="w-full p-2">
         <CreateScheduleCard />
 
         <LocationSection
@@ -85,7 +85,7 @@ const HomePage = () => {
           navigateTo="/board/hot"
         />
         <LocationSection
-          title="저예산 추천 여행지"
+          title="저예산 추천 여행m지"
           locations={dummyLocations}
           showMore={true}
           navigateTo="/board/budget"
