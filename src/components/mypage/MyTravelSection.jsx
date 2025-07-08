@@ -33,10 +33,8 @@ const MyTravelSection = () => {
 
   return (
     <div className="bg-white">
-      <CreateScheduleCard onClick={() => console.log('일정 만들기 이동')} />
-
-      <div className="px-4 pt-2">
-        <p className="text-sm font-semibold text-gray-600 mb-1">
+      <div className="px-4 pt-2 m-2">
+        <p className="text-sm font-semibold text-gray-600 mb-3 m-2">
           다가오는 여행
         </p>
         {upcomingTrips.map((trip) => (
@@ -49,7 +47,7 @@ const MyTravelSection = () => {
           />
         ))}
 
-        <p className="text-sm font-semibold text-gray-600 mt-4 mb-1">
+        <p className="text-sm font-semibold text-gray-600 mt-4 mb-3 m-2">
           지난 여행
         </p>
         {pastTrips.map((trip) => (
