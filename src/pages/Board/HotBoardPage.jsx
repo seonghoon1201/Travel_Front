@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 
-import BackHeader from '../components/header/BackHeader';
-import SearchBar from '../components/common/SearchBar';
-import RegionList from '../components/board/RegionList';
-import DefaultLayout from '../layouts/DefaultLayout';
+import BackHeader from '../../components/header/BackHeader';
+import SearchBar from '../../components/common/SearchBar';
+import RegionList from '../../components/board/RegionList';
+import DefaultLayout from '../../layouts/DefaultLayout';
 
 const HotBoard = () => {
   const [searchTerm, setSearchTerm] = useState('');

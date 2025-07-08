@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 
-import BackHeader from '../components/header/BackHeader';
-import SearchBar from '../components/common/SearchBar';
-import CategoryButtonSection from '../components/mypage/CategoryButtonSection';
-import PlaceList from '../components/board/PlaceList';
-import DefaultLayout from '../layouts/DefaultLayout';
+import BackHeader from '../../components/header/BackHeader';
+import SearchBar from '../../components/common/SearchBar';
+import CategoryButtonSection from '../../components/mypage/CategoryButtonSection';
+import PlaceList from '../../components/board/PlaceList';
+import DefaultLayout from '../../layouts/DefaultLayout';
 
 const BudgetBoard = () => {
   const [activeCategory, setActiveCategory] = useState('전체');
