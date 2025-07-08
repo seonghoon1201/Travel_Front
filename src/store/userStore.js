@@ -29,6 +29,14 @@ const useUserStore = create((set) => ({
     });
     set(cleared);
   },
+
+  initializeFromStorage: () => {
+    const restored = {};
+    Object.keys(initialState).forEach((key) => {
+      restored[key] = getItem(key, '');
+    });
+    set(restored);
+  },
 }));
 
 export default useUserStore;
