@@ -13,7 +13,7 @@ const HotBoard = () => {
   const regionData = [
     {
       imageUrl: 'https://example.com/seogwipo.jpg',
-      City: '서귀포시',
+      city: '서귀포시',
       Province: '제주도',
       summary:
         '서귀포에 대한 내용 요약 부분서귀포에 대한 내용 요약 부분서귀포에 대한 내용 요약 부분서귀포에 대한 내용 요약 부분서귀포에 대한 내용 요약 부분서귀포에 대한 내용 요약 부분',
@@ -21,7 +21,7 @@ const HotBoard = () => {
     },
     {
       imageUrl: 'https://example.com/gangneung.jpg',
-      City: '강릉시',
+      city: '강릉시',
       Province: '강원도',
       summary: '30자 이상 넘어가면 ... ',
       locations: ['경포해변', '안목해변'],
@@ -30,7 +30,7 @@ const HotBoard = () => {
 
   // 🔹 City 기준 검색 필터
   const filteredRegionData = regionData.filter((item) =>
-    item.City.toLowerCase().includes(searchTerm.toLowerCase())
+    item.city.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -71,7 +71,7 @@ const HotBoard = () => {
             <RegionList
               key={index}
               imageUrl={item.imageUrl}
-              City={item.City}
+              city={item.city}
               Province={item.Province}
               summary={item.summary}
               locations={item.locations}

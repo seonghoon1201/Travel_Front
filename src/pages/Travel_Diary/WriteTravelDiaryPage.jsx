@@ -3,6 +3,7 @@ import { CalendarDays, X } from 'lucide-react';
 
 import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
+import PrimaryButton from '../../components/common/PrimaryButton';
 
 const WriteTravelDiary = () => {
   const [tags, setTags] = useState([]);
@@ -78,16 +79,30 @@ const WriteTravelDiary = () => {
           className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
         />
 
-        {/* 일정 보기 버튼 */}
-        <div className="w-full flex justify-end">
+        {/* 이미지 추가 + 일정보기 버튼 */}
+        <div className="w-full flex justify-between">
+          <button className="flex items-center gap-1 text-sm text-white bg-gray-300 px-3 py-1.5 rounded-full">
+            이미지 추가
+          </button>
+
           <button className="flex items-center gap-1 text-sm text-white bg-sky-300 px-3 py-1.5 rounded-full">
             <CalendarDays className="w-4 h-4" />
             일정 보기
           </button>
         </div>
       </div>
+
       <div className="text-center pt-10">아래에 일정 관련 UI 구현 </div>
+
+      {/* 작성하기 버튼 */}
+      <div className="w-full mt-6 px-4">
+        <PrimaryButton className="w-full py-3 text-sm rounded-xl shadow">
+          작성 완료하기
+        </PrimaryButton>
+      </div>
     </div>
+
+
     </DefaultLayout>
   );
 };
