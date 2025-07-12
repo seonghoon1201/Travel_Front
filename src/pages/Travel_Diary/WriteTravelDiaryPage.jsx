@@ -94,10 +94,10 @@ const WriteTravelDiary = () => {
 
       <div className="text-center pt-10">아래에 일정 관련 UI 구현 </div>
 
-      {/* 일정 만들기 버튼 */}
+      {/* 작성하기 버튼 */}
       <div className="w-full mt-6 px-4">
         <PrimaryButton className="w-full py-3 text-sm rounded-xl shadow">
-          일정 만들기
+          작성 완료하기
         </PrimaryButton>
       </div>
     </div>

@@ -6,6 +6,7 @@ import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
 import PlaceList from '../../components/board/PlaceList';
 import RegionSummary from '../../components/board/RegionSummary';
+import PrimaryButton from '../../components/common/PrimaryButton';
 
 const RegionDetailPage = () => {
   const { city } = useParams();
@@ -49,12 +50,12 @@ const RegionDetailPage = () => {
           </div>
         </div>
 
-       {/* 일정 만들기 버튼  */}
+        {/* 일정 만들기 버튼 */}
         <div className="fixed bottom-4 left-0 w-full px-4 z-50">
-          <button className="w-full flex items-center justify-center gap-2 bg-blue-500 text-white py-3 rounded-xl text-sm shadow">
+          <PrimaryButton className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm shadow">
             <CalendarPlus className="w-4 h-4" />
             이 지역으로 일정 만들기
-          </button>
+          </PrimaryButton>
         </div>
       </div>
     </DefaultLayout>

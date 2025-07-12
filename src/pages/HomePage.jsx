@@ -80,12 +80,14 @@ const HomePage = () => {
 
         <LocationSection
           title="요즘 핫플"
+          type="hot"
           locations={dummyLocations}
           showMore={true}
           navigateTo="/board/hot"
         />
         <LocationSection
           title="저예산 추천 여행지"
+          type="budget"
           locations={dummyLocations}
           showMore={true}
           navigateTo="/board/budget"
