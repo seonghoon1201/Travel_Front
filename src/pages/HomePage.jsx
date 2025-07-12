@@ -85,7 +85,7 @@ const HomePage = () => {
           navigateTo="/board/hot"
         />
         <LocationSection
-          title="저예산 추천 여행m지"
+          title="저예산 추천 여행지"
           locations={dummyLocations}
           showMore={true}
           navigateTo="/board/budget"

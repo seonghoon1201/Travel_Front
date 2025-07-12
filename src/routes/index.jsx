@@ -13,7 +13,9 @@ import EditProfile from '../pages/EditProfilePage';
 import AuthChecker from '../components/auth/AuthChecker';
 
 import HotBoardPage from '../pages/Board/HotBoardPage';
+import RegionDetailPage from '../pages/Board/RegionDetailPage';
 import BudgetBoardPage from '../pages/Board/BudgetBoardPage';
+import PlaceDetail from '../pages/Board/PlaceDetail';
 
 import TravelDiaryBoardPage from '../pages/Travel_Diary/TravelDiaryBoardPage';
 import TravelDiaryDetailPage from '../pages/Travel_Diary/TravelDiaryDetailPage';
@@ -25,7 +27,7 @@ import PlanStylePage from '../pages/Plan/PlanStylePage';
 import PlanInvitePage from '../pages/Plan/PlanInvitePage';
 import PlanBudgetPage from '../pages/Plan/PlanBudgetPage';
 import PlanCartPage from '../pages/Plan/PlanCartPage';
-import RegionDetailPage from '../pages/RegionDetailPage';
+
 
 const AppRoutes = () => (
   <Router>
@@ -47,8 +49,10 @@ const AppRoutes = () => (
       <Route path="/edit/profile" element={<EditProfile />} />
 
       <Route path="/board/hot" element={<HotBoardPage />} />
-      <Route path="/board/detail" element={<RegionDetailPage />} />
+      <Route path="/region/detail/:city" element={<RegionDetailPage />} />      
       <Route path="/board/budget" element={<BudgetBoardPage />} />
+      <Route path="/place/detail/:contentID" element={<PlaceDetail />} />
+
 
       <Route path="/board/travel/diary" element={<TravelDiaryBoardPage />} />
       <Route path="/board/travel/diary/:id" element={<TravelDiaryDetailPage />} />

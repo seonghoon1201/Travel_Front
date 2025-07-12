@@ -1,16 +1,19 @@
 import React from 'react';
+import { useParams } from 'react-router-dom';
 
 import { CalendarPlus } from 'lucide-react';
-import DefaultLayout from '../layouts/DefaultLayout';
-import BackHeader from '../components/header/BackHeader';
-import PlaceList from '../components/board/PlaceList';
-import RegionSummary from '../components/board/RegionSummary';
+import DefaultLayout from '../../layouts/DefaultLayout';
+import BackHeader from '../../components/header/BackHeader';
+import PlaceList from '../../components/board/PlaceList';
+import RegionSummary from '../../components/board/RegionSummary';
 
 const RegionDetailPage = () => {
-  console.log('🧭 RegionDetailPage 렌더링 중');
-  // 예시 데이터 (실제는 fetch해서 내려받아도 됨)
+  const { city } = useParams();
+  console.log(' RegionDetailPage 렌더링 중');
+  console.log(city.toLowerCase());
+  // 더미 데이터 
   const region = {
-    name: '제주특별자치도',
+    city: '제주특별자치도',
     weather: {
       icon: '☀️',
       temp: '27°C',
@@ -39,17 +42,18 @@ const RegionDetailPage = () => {
           <h3 className="text-base font-semibold text-gray-800 mb-2">
             즐길거리
           </h3>
-          <div>
+          <div >
             {region.places.map((place, idx) => (
               <PlaceList key={idx} name={place} />
             ))}
           </div>
         </div>
 
-        {/* 일정 만들기 버튼 */}
-        <div className="px-4 mt-6">
+       {/* 일정 만들기 버튼  */}
+        <div className="fixed bottom-4 left-0 w-full px-4 z-50">
           <button className="w-full flex items-center justify-center gap-2 bg-blue-500 text-white py-3 rounded-xl text-sm shadow">
-            <CalendarPlus className="w-4 h-4" />이 지역으로 일정 만들기
+            <CalendarPlus className="w-4 h-4" />
+            이 지역으로 일정 만들기
           </button>
         </div>
       </div>

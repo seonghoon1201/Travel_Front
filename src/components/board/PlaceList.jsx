@@ -1,6 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const PlaceList = ({
+  contentId,
   destination,
   category,
   location,
@@ -9,8 +11,13 @@ const PlaceList = ({
   tel,
   imageUrl,
 }) => {
+  const navigate = useNavigate();
+  const handleClick = () => {
+    navigate(`/place/detail/${contentId}`);
+  };
+
   return (
-    <div className="flex bg-white rounded-xl overflow-hidden shadow pt-6 pb-6 pr-3 pl-3 gap-5">
+    <div className="flex bg-white rounded-xl overflow-hidden shadow pt-6 pb-6 pr-3 pl-3 gap-5 mb-3" onClick={handleClick}>
       <div className="w-24 h-24 flex-shrink-0">
         <img
           src={imageUrl}
