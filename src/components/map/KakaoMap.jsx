@@ -1,28 +1,34 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { loadKakaoMapScript } from '../../utils/kakaoMapLoader';
 
-const KakaoMap = () => {
+const KakaoMap = ({ latitude, longitude }) => {
+  const mapRef = useRef(null);
+
   useEffect(() => {
     loadKakaoMapScript(() => {
-        console.log('지도 콜백 시작');
-        // container: 지도가 들어갈 <div id="map">
-        const container = document.getElementById('map');
-        // 추후에 api 연동해서 위도 경도값 변수로 받아와서 해야할 듯 !
-        //LatLng: 위도 경도, level: 줌 레벨, Map: 지도를 생성해서 넣기
-        const options = {
-            center: new window.kakao.maps.LatLng(33.450701, 126.570667),
-            level: 3,
-        };
-        const map = new window.kakao.maps.Map(container, options);
+      console.log('지도 콜백 시작');
+      if (!mapRef.current) return;
 
-        new window.kakao.maps.Marker({
-            map,
-            position: new window.kakao.maps.LatLng(33.450701, 126.570667),
-        });
-        });
-  }, []);
+      const options = {
+        center: new window.kakao.maps.LatLng(latitude, longitude),
+        level: 3,
+      };
 
-  return <div id="map" style={{ width: '100%', height: '400px' }}></div>;
+      const map = new window.kakao.maps.Map(mapRef.current, options);
+
+      new window.kakao.maps.Marker({
+        map,
+        position: new window.kakao.maps.LatLng(latitude, longitude),
+      });
+    });
+  }, [latitude, longitude]);
+
+  return (
+    <div
+      ref={mapRef}
+      className="w-full h-64 rounded-lg"
+    />
+  );
 };
 
 export default KakaoMap;
