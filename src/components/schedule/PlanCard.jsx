@@ -1,6 +1,9 @@
+import { useState } from 'react';
+import PlaceDetailModal from './PlaceDetailModal';
 
 const PlanCard = ({ plan, index, isLast  }) => {
-const colorList = ['#5E87EB', '#F97316', '#10B981', '#EC4899', '#FACC15'];
+  const [showModal, setShowModal] = useState(false);
+  const colorList = ['#5E87EB', '#F97316', '#10B981', '#EC4899', '#FACC15'];
   const color = colorList[index % colorList.length];
 
   return (
@@ -14,7 +17,7 @@ const colorList = ['#5E87EB', '#F97316', '#10B981', '#EC4899', '#FACC15'];
           {index + 1}
         </div>
 
-        {/* 거리 + 화살표 (다음 계획이 있다면) */}
+        {/* 거리 표시 (다음 계획이 있다면) */}
         {plan.distance && (
           <>
             <div className="h-6 border-l border-gray-300 mt-1"></div>
@@ -23,16 +26,19 @@ const colorList = ['#5E87EB', '#F97316', '#10B981', '#EC4899', '#FACC15'];
         )}
       </div>
 
-      {/* 카드 본문 */}
-        <div className="ml-16 bg-white rounded-lg border border-[#E5E7EB] px-4 py-3 shadow-sm">
-            <p className="font-medium text-sm">{plan.name}</p>
-            <p className="text-[11px] text-gray-400 mt-1">관광 | 제주</p>
+        {/* 카드 본문 */}
+        <div
+          onClick={() => setShowModal(true)}
+          className="ml-16 bg-white rounded-lg border border-[#E5E7EB] px-4 py-3 shadow-sm cursor-pointer"
+        >
+          <p className="font-medium text-sm">{plan.name}</p>
+          <p className="text-[11px] text-gray-400 mt-1">관광 | 제주</p>
 
-            {plan.memo && (
+          {plan.memo && (
             <div className="text-xs text-gray-600 mt-2 whitespace-pre-line">
-                {plan.memo}
+              {plan.memo}
             </div>
-            )}
+          )}
         </div>
         {/* isLast 마지막 index에만 추가 */}
         <div className="ml-16">
@@ -47,6 +53,9 @@ const colorList = ['#5E87EB', '#F97316', '#10B981', '#EC4899', '#FACC15'];
         </div>
         )}
         </div>
+        {showModal && (
+          <PlaceDetailModal place={plan} onClose={() => setShowModal(false)} />
+        )}
     </div>
   );
 };
