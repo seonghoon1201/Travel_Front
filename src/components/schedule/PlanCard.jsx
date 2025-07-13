@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PlaceDetailModal from './PlaceDetailModal';
 
 const PlanCard = ({ plan, index, isLast  }) => {
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const colorList = ['#5E87EB', '#F97316', '#10B981', '#EC4899', '#FACC15'];
   const color = colorList[index % colorList.length];
@@ -44,8 +46,11 @@ const PlanCard = ({ plan, index, isLast  }) => {
         <div className="ml-16">
         {isLast && (
           <div className="mt-2 flex gap-2">
-            <button className="flex-1 text-xs text-gray-400 border border-gray-200 py-1 rounded">
-            장소 추가
+            <button
+              className="flex-1 text-xs text-gray-400 border border-gray-200 py-1 rounded"
+              onClick={() => navigate('/plan/add')}
+            >
+              장소 추가
             </button>
             <button className="flex-1 text-xs text-gray-400 border border-gray-200 py-1 rounded">
             메모 추가
