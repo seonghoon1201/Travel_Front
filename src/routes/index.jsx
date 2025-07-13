@@ -28,6 +28,8 @@ import PlanInvitePage from '../pages/Plan/PlanInvitePage';
 import PlanBudgetPage from '../pages/Plan/PlanBudgetPage';
 import PlanCartPage from '../pages/Plan/PlanCartPage';
 
+import ScheduleResultPage from '../pages/Schedule/ScheduleResultPage';
+import AddPlace from '../pages/Schedule/AddPlace';
 
 const AppRoutes = () => (
   <Router>
@@ -66,6 +68,9 @@ const AppRoutes = () => (
       <Route path="/plan/invite" element={<PlanInvitePage />} />
       <Route path="/plan/budget" element={<PlanBudgetPage />} />
       <Route path="/plan/cart" element={<PlanCartPage />} />
+
+      <Route path="/plan/schedule" element={<ScheduleResultPage />} />
+      <Route path="/plan/add" element={<AddPlace />} />
     </Routes>
   </Router>
 );
