@@ -1,14 +1,17 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { MapPin } from 'lucide-react';
+import React, { useState }  from 'react';
+import { Edit, MapPin } from 'lucide-react';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
 import DayScheduleSection from '../../components/schedule/DayScheduleSection';
+import EditModal from '../../components/schedule/EditModal';
 import KakaoMap from '../../components/map/KakaoMap';
 
+
 const ScheduleResultPage = () => {
-  const navigate = useNavigate();
+  // 모달 띄우기
+   const [showEditModal, setShowEditModal] = useState(false);
+
 
   // 지도 위도경도값 임의로 고정
   const latitude = 33.4497;
@@ -64,7 +67,7 @@ const ScheduleResultPage = () => {
       <div className="flex justify-between items-center mb-1">
         <h1 className="text-xl font-bold">{schedule.title}</h1>
         <button
-          onClick={() => navigate('/edit/plan/schedule')}
+          onClick={() => setShowEditModal(true)} 
           className="text-sm text-gray-400"
         >
           편집
@@ -98,6 +101,10 @@ const ScheduleResultPage = () => {
         <DayScheduleSection key={index} day={day} dayIndex={index} />
       ))}
 
+      {/* 모달 열기 */}
+       {showEditModal && (
+        <EditModal onClose={() => setShowEditModal(false)} />
+      )}
     </DefaultLayout>
   );
 };
