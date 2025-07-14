@@ -30,8 +30,8 @@ const AppRoutes = () => (
   <Router>
     <AuthChecker />
     <Routes>
-      <Route path="/" element={<Splash />} />
-      <Route path="/home" element={<HomePage />} />
+      <Route path="/splash" element={<Splash />} />
+      <Route path="/" element={<HomePage />} />
 
       <Route path="/search" element={<SearchPage />} />
 
