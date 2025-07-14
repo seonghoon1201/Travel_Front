@@ -71,7 +71,7 @@ const BudgetBoard = () => {
             📍한도 맞춤 추천지
           </p>
           <p className="text-sm text-gray-500 mt-1">
-            예산에 맞춰 추천해드려요 !
+            예산에 맞춰 관광지를 추천해드려요 !
           </p>
         </div>
         <div className="text-right pt-3 pr-2">
