@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { CalendarPlus } from 'lucide-react';
 import '../styles/HomePage.css';
 
-//test용
 import kakaoIcon from '../assets/kakao_icon.png';
 
 import MainHeader from '../components/header/MainHeader';
@@ -12,18 +11,19 @@ import LocationSection from '../components/location/LocationSection';
 import TravelDiaryList from '../components/traveldiary/TravelDiaryList';
 
 import useUserStore from '../store/userStore';
-import { getItem } from '../utils/localStorage';
 
 const HomePage = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const setState = useUserStore.setState;
+
+  const initializeFromStorage = useUserStore(
+    (state) => state.initializeFromStorage
+  );
 
   useEffect(() => {
-  useUserStore.getState().initializeFromStorage();
-}, []);
+    initializeFromStorage();
+  }, [initializeFromStorage]);
 
-  //더미값 test
   const dummyLocations = [
     { name: '제주도', image: kakaoIcon },
     { name: '부산', image: kakaoIcon },
@@ -37,7 +37,7 @@ const HomePage = () => {
     { name: '강릉', image: kakaoIcon },
     { name: '강릉', image: kakaoIcon },
   ];
-  //더미값 test
+
   const dummyDiaries = [
     {
       id: 1,
@@ -93,9 +93,7 @@ const HomePage = () => {
           diaries={dummyDiaries}
           showMore={true}
         />
-        {/* 하단 여행하기 section */}
         <div className="w-full flex items-center justify-between px-2">
-          {/* 왼쪽 텍스트  (60%) */}
           <div className="w-3/5 flex flex-col items-start">
             <h3 className="font-jalnongothic text-xl text-[#143447] mb-2">
               친구와 함께 여행하기
@@ -111,8 +109,6 @@ const HomePage = () => {
               <span>일정 짜기</span>
             </button>
           </div>
-
-          {/* 오른쪽 이미지 (40%) */}
           <div className="w-2/5 flex justify-end">
             <img
               src={require('../assets/main_picture.png')}

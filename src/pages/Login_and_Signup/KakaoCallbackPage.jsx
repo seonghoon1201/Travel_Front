@@ -20,9 +20,12 @@ const KakaoCallbackPage = () => {
       }
 
       try {
-        const res = await axios.get('http://124.49.210.216/auth/kakao/callback', {
-          params: { code },
-        });
+        const res = await axios.get(
+          'http://124.49.210.216/auth/kakao/callback',
+          {
+            params: { code },
+          }
+        );
 
         const {
           jwtDto: { accessToken, refreshToken },
@@ -48,10 +51,12 @@ const KakaoCallbackPage = () => {
         setItem('accessToken', accessToken);
         setItem('nickname', nickname);
 
-        navigate('/home');
+        navigate('/');
       } catch (error) {
         console.error('카카오 로그인 실패:', error);
-        alert('카카오 로그인에 실패했습니다. 인가코드가 만료되었거나 서버 오류입니다.');
+        alert(
+          '카카오 로그인에 실패했습니다. 인가코드가 만료되었거나 서버 오류입니다.'
+        );
         navigate('/login');
       }
     };
