@@ -9,22 +9,27 @@ import FindPasswordPage from '../pages/Login_and_Signup/FindPasswordPage';
 import VerifyCodePage from '../pages/Login_and_Signup/VerifyCodePage';
 import ResetPasswordPage from '../pages/Login_and_Signup/ResetPasswordPage';
 import MyPage from '../pages/MyPage';
-import EditProfile from '../pages/EditProfile';
+import EditProfile from '../pages/EditProfilePage';
 import AuthChecker from '../components/auth/AuthChecker';
 
-import HotBoard from '../pages/HotBoard';
-import BudgetBoard from '../pages/BudgetBoard';
+import HotBoardPage from '../pages/Board/HotBoardPage';
+import RegionDetailPage from '../pages/Board/RegionDetailPage';
+import BudgetBoardPage from '../pages/Board/BudgetBoardPage';
+import PlaceDetail from '../pages/Board/PlaceDetail';
 
-import TravelDiaryBoard from '../pages/Travel_Diary/TravelDiaryBoard';
-import TravelDiaryDetail from '../pages/Travel_Diary/TravelDiaryDetail';
-import WriteTravelDiary from '../pages/Travel_Diary/WriteTravelDiary';
+import TravelDiaryBoardPage from '../pages/Travel_Diary/TravelDiaryBoardPage';
+import TravelDiaryDetailPage from '../pages/Travel_Diary/TravelDiaryDetailPage';
+import WriteTravelDiaryPage from '../pages/Travel_Diary/WriteTravelDiaryPage';
+import UpdateTravelDiaryPage from '../pages/Travel_Diary/UpdateTravelDiaryPage';
 import PlanLocationPage from '../pages/Plan/PlanLocationPage';
 import PlanDatePage from '../pages/Plan/PlanDatePage';
 import PlanStylePage from '../pages/Plan/PlanStylePage';
 import PlanInvitePage from '../pages/Plan/PlanInvitePage';
 import PlanBudgetPage from '../pages/Plan/PlanBudgetPage';
 import PlanCartPage from '../pages/Plan/PlanCartPage';
-import RegionDetailPage from '../pages/RegionDetailPage';
+
+import ScheduleResultPage from '../pages/Schedule/ScheduleResultPage';
+import AddPlace from '../pages/Schedule/AddPlace';
 
 const AppRoutes = () => (
   <Router>
@@ -45,13 +50,16 @@ const AppRoutes = () => (
       <Route path="/mypage" element={<MyPage />} />
       <Route path="/edit/profile" element={<EditProfile />} />
 
-      <Route path="/board/hot" element={<HotBoard />} />
-      <Route path="/board/detail" element={<RegionDetailPage />} />
-      <Route path="/board/budget" element={<BudgetBoard />} />
+      <Route path="/board/hot" element={<HotBoardPage />} />
+      <Route path="/region/detail/:city" element={<RegionDetailPage />} />      
+      <Route path="/board/budget" element={<BudgetBoardPage />} />
+      <Route path="/place/detail/:contentID" element={<PlaceDetail />} />
 
-      <Route path="/board/travel/diary" element={<TravelDiaryBoard />} />
-      <Route path="/board/travel/diary/:id" element={<TravelDiaryDetail />} />
-      <Route path="/write/travel/diary" element={<WriteTravelDiary />} />
+
+      <Route path="/board/travel/diary" element={<TravelDiaryBoardPage />} />
+      <Route path="/board/travel/diary/:id" element={<TravelDiaryDetailPage />} />
+      <Route path="/write/travel/diary" element={<WriteTravelDiaryPage />} />
+      <Route path="/uptae/travel/diary/:id" element={<UpdateTravelDiaryPage />} />
 
       <Route path="/plan/location" element={<PlanLocationPage />} />
       <Route path="/kakao/callback" element={<KakaoCallbackPage />} />
@@ -60,6 +68,9 @@ const AppRoutes = () => (
       <Route path="/plan/invite" element={<PlanInvitePage />} />
       <Route path="/plan/budget" element={<PlanBudgetPage />} />
       <Route path="/plan/cart" element={<PlanCartPage />} />
+
+      <Route path="/plan/schedule" element={<ScheduleResultPage />} />
+      <Route path="/plan/add" element={<AddPlace />} />
     </Routes>
   </Router>
 );

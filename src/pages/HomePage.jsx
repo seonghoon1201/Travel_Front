@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarPlus } from 'lucide-react';
 import '../styles/HomePage.css';
 
 import kakaoIcon from '../assets/kakao_icon.png';
 
 import MainHeader from '../components/header/MainHeader';
 import SideMenu from '../components/modal/SideMenu';
+import CreateScheduleCard from '../components/mypage/CreateScheduleCard';
 import LocationSection from '../components/location/LocationSection';
 import TravelDiaryList from '../components/traveldiary/TravelDiaryList';
 
@@ -21,8 +21,8 @@ const HomePage = () => {
   );
 
   useEffect(() => {
-    initializeFromStorage();
-  }, [initializeFromStorage]);
+    useUserStore.getState().initializeFromStorage();
+  }, []);
 
   const dummyLocations = [
     { name: '제주도', image: kakaoIcon },
@@ -75,15 +75,19 @@ const HomePage = () => {
     <>
       <MainHeader isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
       {isMenuOpen && <SideMenu onClose={() => setIsMenuOpen(false)} />}
-      <main className="w-full max-w-screen-sm mx-auto px-4 py-6">
+      <main className="w-full p-2">
+        <CreateScheduleCard />
+
         <LocationSection
           title="요즘 핫플"
+          type="hot"
           locations={dummyLocations}
           showMore={true}
           navigateTo="/board/hot"
         />
         <LocationSection
           title="저예산 추천 여행지"
+          type="budget"
           locations={dummyLocations}
           showMore={true}
           navigateTo="/board/budget"
@@ -93,30 +97,7 @@ const HomePage = () => {
           diaries={dummyDiaries}
           showMore={true}
         />
-        <div className="w-full flex items-center justify-between px-2">
-          <div className="w-3/5 flex flex-col items-start">
-            <h3 className="font-jalnongothic text-xl text-[#143447] mb-2">
-              친구와 함께 여행하기
-            </h3>
-            <p className="font-noonnu text-gray-500 mb-2">
-              여행 경비 공유하고 일정짜기
-            </p>
-            <button
-              className="font-pretendard bg-primary text-white px-5 py-2 rounded-full shadow transition flex items-center gap-x-2"
-              onClick={() => navigate('/plan/location')}
-            >
-              <CalendarPlus className="w-5 h-5" />
-              <span>일정 짜기</span>
-            </button>
-          </div>
-          <div className="w-2/5 flex justify-end">
-            <img
-              src={require('../assets/main_picture.png')}
-              alt="메인 이미지"
-              className="w-full h-auto object-contain max-w-xs"
-            />
-          </div>
-        </div>
+
       </main>
     </>
   );

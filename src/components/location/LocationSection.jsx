@@ -1,7 +1,15 @@
 import { useNavigate } from 'react-router-dom';
 
-const LocationSection = ({ title, locations, showMore, navigateTo }) => {
+const LocationSection = ({ title, type, locations, showMore, navigateTo }) => {
   const navigate = useNavigate();
+
+  const handleClick = (item) => {
+    if (type === 'hot') {
+      navigate(`/region/detail/${encodeURIComponent(item.city)}`);
+    } else if (type === 'budget') {
+      navigate(`/place/detail/${item.contentId}`);
+    }
+  };
 
   return (
     <section className=" mb-5">
@@ -23,6 +31,7 @@ const LocationSection = ({ title, locations, showMore, navigateTo }) => {
           <div
             key={idx}
             className="flex-shrink-0 flex flex-col items-center w-20"
+            onClick={() => handleClick(loc)}
           >
             <img
               src={loc.image}

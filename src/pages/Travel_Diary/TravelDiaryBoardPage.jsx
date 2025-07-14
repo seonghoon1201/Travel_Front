@@ -7,7 +7,7 @@ import SearchBar from '../../components/common/SearchBar';
 import TravelDiary from '../../components/traveldiary/TravelDiary';
 import DefaultLayout from '../../layouts/DefaultLayout';
 
-const TravelDiaryBoard = () => {
+const TravelDiaryBoardPage = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -76,4 +76,4 @@ const TravelDiaryBoard = () => {
   );
 };
 
-export default TravelDiaryBoard;
+export default TravelDiaryBoardPage;

@@ -1,28 +1,71 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { loadKakaoMapScript } from '../../utils/kakaoMapLoader';
 
-const KakaoMap = () => {
+const KakaoMap = ({ latitude, longitude, markers = [], useCustomOverlay = false }) => {
+  const mapRef = useRef(null);
+
   useEffect(() => {
     loadKakaoMapScript(() => {
-        console.log('지도 콜백 시작');
-        // container: 지도가 들어갈 <div id="map">
-        const container = document.getElementById('map');
-        // 추후에 api 연동해서 위도 경도값 변수로 받아와서 해야할 듯 !
-        //LatLng: 위도 경도, level: 줌 레벨, Map: 지도를 생성해서 넣기
-        const options = {
-            center: new window.kakao.maps.LatLng(33.450701, 126.570667),
-            level: 3,
-        };
-        const map = new window.kakao.maps.Map(container, options);
+      if (!mapRef.current) return;
 
-        new window.kakao.maps.Marker({
-            map,
-            position: new window.kakao.maps.LatLng(33.450701, 126.570667),
-        });
-        });
-  }, []);
+      // 원하는 5가지 색상 반복 돌림
+      const colorList = ['#5E87EB', '#F97316', '#10B981', '#EC4899', '#FACC15'];
 
-  return <div id="map" style={{ width: '100%', height: '400px' }}></div>;
+      let map;
+
+      const center = markers.length > 0
+        ? new window.kakao.maps.LatLng(markers[0].lat, markers[0].lng)
+        : latitude && longitude
+          ? new window.kakao.maps.LatLng(latitude, longitude)
+          : null;
+
+      if (!center) return;
+
+      map = new window.kakao.maps.Map(mapRef.current, {
+        center,
+        level: 6,
+      });
+
+      if (markers.length > 0) {
+        markers.forEach(({ lat, lng }, index) => {
+          const position = new window.kakao.maps.LatLng(lat, lng);
+
+          if (useCustomOverlay) {
+            // index 기준으로 5가지 반복
+            const color = colorList[index % colorList.length];
+
+            new window.kakao.maps.CustomOverlay({
+              map,
+              position,
+              content: `
+                <div style="
+                  width: 24px;
+                  height: 24px;
+                  border-radius: 50%;
+                  background: ${color};
+                  color: white;
+                  text-align: center;
+                  line-height: 24px;
+                  font-size: 12px;
+                  font-weight: bold;
+                ">
+                  ${index + 1}
+                </div>
+              `,
+              yAnchor: 1,
+            });
+          } else {
+            new window.kakao.maps.Marker({ map, position });
+          }
+        });
+      } else if (latitude && longitude) {
+        const position = new window.kakao.maps.LatLng(latitude, longitude);
+        new window.kakao.maps.Marker({ map, position });
+      }
+    });
+  }, [latitude, longitude, markers, useCustomOverlay]);
+
+  return <div ref={mapRef} className="w-full h-64 rounded-lg" />;
 };
 
 export default KakaoMap;

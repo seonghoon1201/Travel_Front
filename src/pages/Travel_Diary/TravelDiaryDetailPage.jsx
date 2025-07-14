@@ -46,6 +46,8 @@ const TravelDiaryDetail = () => {
 
         {/* 본문 내용 */}
         <p className=" text-gray-700 whitespace-pre-line pb-6 border-b-2">{dummyData.content}</p>
+        {/* 업로드 이미지 */}
+        <div> 사용자가 올린 이미지 </div>
 
         {/* 일정 버튼 - 추가 구현 */}
         <div className="flex justify-end items-center">
@@ -53,6 +55,7 @@ const TravelDiaryDetail = () => {
                 <CalendarDays className="w-4 h-4" />일정 보기
             </button>
         </div>
+        
       </div>
 
       {/* 태그 */}

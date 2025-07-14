@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 
-import BackHeader from '../components/header/BackHeader';
-import SearchBar from '../components/common/SearchBar';
-import CategoryButtonSection from '../components/mypage/CategoryButtonSection';
-import PlaceList from '../components/board/PlaceList';
-import DefaultLayout from '../layouts/DefaultLayout';
+import BackHeader from '../../components/header/BackHeader';
+import SearchBar from '../../components/common/SearchBar';
+import CategoryButtonSection from '../../components/mypage/CategoryButtonSection';
+import PlaceList from '../../components/board/PlaceList';
+import DefaultLayout from '../../layouts/DefaultLayout';
 
 const BudgetBoard = () => {
   const [activeCategory, setActiveCategory] = useState('전체');
@@ -71,7 +71,7 @@ const BudgetBoard = () => {
             📍한도 맞춤 추천지
           </p>
           <p className="text-sm text-gray-500 mt-1">
-            예산에 맞춰 추천해드려요 !
+            예산에 맞춰 관광지를 추천해드려요 !
           </p>
         </div>
         <div className="text-right pt-3 pr-2">

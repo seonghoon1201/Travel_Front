@@ -4,7 +4,7 @@ import { CalendarDays, X } from 'lucide-react';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
 
-const WriteTravelDiary = () => {
+const UpdateTravelDiaryPage = () => {
   const [tags, setTags] = useState([]);
   const [inputValue, setInputValue] = useState('');
 
@@ -92,4 +92,4 @@ const WriteTravelDiary = () => {
   );
 };
 
-export default WriteTravelDiary;
+export default UpdateTravelDiaryPage;
