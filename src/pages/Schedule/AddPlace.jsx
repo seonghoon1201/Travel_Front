@@ -7,7 +7,7 @@ import { useState } from 'react';
 
 const AddPlace = () => {
   const location = useLocation();
-  const dayIndex = location.state?.dayIndex ?? 0; 
+  const dayIndex = location.state?.dayIndex ?? 0;
 
   const [selectedIds, setSelectedIds] = useState([]);
 
@@ -18,7 +18,7 @@ const AddPlace = () => {
       category: '관광',
       contentId: 12345,
       selected: false,
-      imageUrl: "",
+      imageUrl: '',
     },
     {
       id: 2,
@@ -26,7 +26,7 @@ const AddPlace = () => {
       category: '쇼핑',
       contentId: 67890,
       selected: false,
-      imageUrl: "",
+      imageUrl: '',
     },
   ];
 
@@ -37,7 +37,7 @@ const AddPlace = () => {
       category: '관광',
       contentId: 11111,
       selected: false,
-      imageUrl: "",
+      imageUrl: '',
     },
   ];
 
@@ -52,8 +52,10 @@ const AddPlace = () => {
       <BackHeader />
       <SearchBar placeholder="관광지/숙소/맛집 검색" />
 
-      {/*  추천 장소 */ }
-      <h3 className="text-sm font-bold mt-4 mb-2">DAY {dayIndex + 1} 추천 장소</h3>
+      {/*  추천 장소 */}
+      <h3 className="text-sm font-bold mt-4 mb-2">
+        DAY {dayIndex + 1} 추천 장소
+      </h3>
       <div className="space-y-2">
         {recommended.map((place) => (
           <div
@@ -61,7 +63,11 @@ const AddPlace = () => {
             className="flex justify-between items-center bg-white rounded-lg p-3 border"
           >
             <div className="flex items-center gap-3">
-              <img src={place.imageUrl} alt={place.name} className="w-14 h-14 rounded-md object-cover" />
+              <img
+                src={place.imageUrl}
+                alt={place.name}
+                className="w-14 h-14 rounded-md object-cover"
+              />
               <div>
                 <p className="text-sm font-medium">{place.name}</p>
                 <p className="text-xs text-gray-400">{place.category}</p>
@@ -85,7 +91,11 @@ const AddPlace = () => {
             className="flex justify-between items-center bg-white rounded-lg p-3 border"
           >
             <div className="flex items-center gap-3">
-              <img src={place.imageUrl} alt={place.name} className="w-14 h-14 rounded-md object-cover" />
+              <img
+                src={place.imageUrl}
+                alt={place.name}
+                className="w-14 h-14 rounded-md object-cover"
+              />
               <div>
                 <p className="text-sm font-medium">{place.name}</p>
                 <p className="text-xs text-gray-400">{place.category}</p>
