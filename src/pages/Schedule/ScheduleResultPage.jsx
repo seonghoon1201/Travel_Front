@@ -55,14 +55,13 @@ const ScheduleResultPage = () => {
   };
 
   // 선택된 날짜의 장소들을 마커로 변환
-  const selectedMarkers =
-    schedule.days[selectedDayIndex].plans
-      .filter(p => p.lat && p.lng)
-      .map(p => ({
-        lat: p.lat,
-        lng: p.lng,
-        dayIndex: selectedDayIndex,
-      }));
+  const selectedMarkers = schedule.days[selectedDayIndex].plans
+    .filter((p) => p.lat && p.lng)
+    .map((p) => ({
+      lat: p.lat,
+      lng: p.lng,
+      dayIndex: selectedDayIndex,
+    }));
 
   return (
     <DefaultLayout>
@@ -98,20 +97,16 @@ const ScheduleResultPage = () => {
         ))}
       </div>
 
-      {/* 버튼 */}
+      {/* 일행 - 추가 구현 필요(일행초대하는) */}
       <div className="flex gap-2 mb-4">
-        <PrimaryButton className="flex-1">일정표 함께 일정 짜기</PrimaryButton>
-        <PrimaryButton className="flex-1 bg-white text-[#4B5563] border border-[#D1D5DB]">
-          일정 초대
+        <PrimaryButton className="w-fit px-3 py-1 text-sm">
+          함께하는 일행
         </PrimaryButton>
       </div>
 
       {/* 지도 */}
       <div className="w-full h-48 rounded-lg mb-6 overflow-hidden">
-        <KakaoMap
-          markers={selectedMarkers}
-          useCustomOverlay={true}
-        />
+        <KakaoMap markers={selectedMarkers} useCustomOverlay={true} />
       </div>
 
       {/* 선택한 날짜의 일정만 보여줌 */}
@@ -121,9 +116,7 @@ const ScheduleResultPage = () => {
       />
 
       {/* 편집 모달 */}
-      {showEditModal && (
-        <EditModal onClose={() => setShowEditModal(false)} />
-      )}
+      {showEditModal && <EditModal onClose={() => setShowEditModal(false)} />}
     </DefaultLayout>
   );
 };
