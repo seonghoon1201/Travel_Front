@@ -1,10 +1,12 @@
 import { useState } from 'react';
+
 import EditTitle from './edit/EditTitle';
 import EditDate from './edit/EditDate';
 import EditStyle from './edit/EditStyle';
+import EditDelete from './edit/EditDelete';
 
 const EditModal = ({ onClose }) => {
-  const [modalType, setModalType] = useState(null); // 'title', 'city' 등
+  const [modalType, setModalType] = useState(null);
 
   const dummyCompanion = '친구와';
   const dummyStyles = ['맛집 탐방', '힐링 여행'];
@@ -57,6 +59,19 @@ const EditModal = ({ onClose }) => {
     );
   }
 
+  if (modalType === 'delete') {
+    return (
+      <EditDelete
+        onClose={() => setModalType(null)}
+        onDelete={() => {
+          console.log('일정 삭제 실행');
+          setModalType(null);
+          onClose();
+        }}
+      />
+    );
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/30"
@@ -80,6 +95,9 @@ const EditModal = ({ onClose }) => {
             <button onClick={() => setModalType('style')}>
               여행 스타일 수정
             </button>
+          </li>
+          <li className="text-red-500">
+            <button onClick={() => setModalType('delete')}>여행 삭제</button>
           </li>
         </ul>
         <button
