@@ -36,6 +36,7 @@ const PlanCard = ({ plan, index, isLast }) => {
         className="ml-16 bg-white rounded-lg border border-[#E5E7EB] px-4 py-3 shadow-sm cursor-pointer"
       >
         <p className="font-medium text-sm">{plan.name}</p>
+        {/* api 연동할땐 region 받기 */}
         <p className="text-[11px] text-gray-400 mt-1">관광 | 제주</p>
 
         {plan.memo && (
@@ -47,15 +48,12 @@ const PlanCard = ({ plan, index, isLast }) => {
       {/* isLast 마지막 index에만 추가 */}
       <div className="ml-16">
         {isLast && (
-          <div className="mt-2 flex gap-2">
+          <div className="mt-2 flex gap-2 ">
             <button
               className="flex-1 text-xs text-gray-400 border border-gray-200 py-1 rounded"
               onClick={() => navigate('/plan/add')}
             >
               장소 추가
-            </button>
-            <button className="flex-1 text-xs text-gray-400 border border-gray-200 py-1 rounded">
-              메모 추가
             </button>
           </div>
         )}
