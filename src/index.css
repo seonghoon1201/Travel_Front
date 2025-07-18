@@ -5,3 +5,12 @@
 body {
   @apply font-sans;
 }
+
+/* 스크롤바 숨기기 (tailwind 지원x) */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE, Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
