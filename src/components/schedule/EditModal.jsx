@@ -1,9 +1,14 @@
 import { useState } from 'react';
 import EditTitle from './edit/EditTitle';
 import EditDate from './edit/EditDate';
+import EditStyle from './edit/EditStyle';
 
 const EditModal = ({ onClose }) => {
   const [modalType, setModalType] = useState(null); // 'title', 'city' 등
+
+  const dummyCompanion = '친구와';
+  const dummyStyles = ['맛집 탐방', '힐링 여행'];
+  const dummyTransport = '자동차';
 
   // 모달 내에서 서브 모달 전환
   if (modalType === 'title') {
@@ -36,6 +41,22 @@ const EditModal = ({ onClose }) => {
     );
   }
 
+  if (modalType === 'style') {
+    return (
+      <EditStyle
+        currentCompanion={dummyCompanion}
+        currentStyles={dummyStyles}
+        currentTransport={dummyTransport}
+        onClose={() => setModalType(null)}
+        onSave={(data) => {
+          console.log('저장된 스타일:', data);
+          setModalType(null);
+          onClose();
+        }}
+      />
+    );
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/30"
@@ -54,6 +75,11 @@ const EditModal = ({ onClose }) => {
           </li>
           <li>
             <button onClick={() => setModalType('date')}>여행 일정 수정</button>
+          </li>
+          <li>
+            <button onClick={() => setModalType('style')}>
+              여행 스타일 수정
+            </button>
           </li>
         </ul>
         <button
