@@ -53,7 +53,7 @@ const AddPlace = () => {
       <SearchBar placeholder="관광지/숙소/맛집 검색" />
 
       {/*  추천 장소 */}
-      <h3 className="text-sm font-bold mt-4 mb-2">
+      {/* <h3 className="text-sm font-bold mt-4 mb-2">
         DAY {dayIndex + 1} 추천 장소
       </h3>
       <div className="space-y-2">
@@ -80,7 +80,7 @@ const AddPlace = () => {
             />
           </div>
         ))}
-      </div>
+      </div> */}
 
       {/* 저장된 장소 */}
       <h3 className="text-sm font-bold mt-6 mb-2">내 저장 장소</h3>
@@ -111,6 +111,7 @@ const AddPlace = () => {
       </div>
 
       {/* 하단 버튼 */}
+      {/* 버튼 누르면 해당 DAY 일정 추가  */}
       <div className="fixed bottom-0 left-0 w-full p-4 bg-white shadow-inner z-50">
         <button className="w-full bg-blue-500 text-white py-3 rounded-lg text-sm font-semibold">
           이 장소를 DAY {dayIndex + 1} 일정에 담기
