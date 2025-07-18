@@ -74,13 +74,24 @@ const PlanCard = ({ plan, index, isLast }) => {
           </div>
         )}
       </div>
+      {/* card 클릭 시 상세정보 모달 */}
+      {showModal && (
+        <PlaceDetailModal
+          place={{
+            ...plan,
+            mapX: plan.lng,
+            mapY: plan.lat,
+          }}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+      {/* 메모 버튼 클릭 시 메모 수정 모달 */}
       {showMemoModal && (
         <MemoModal
           defaultValue={memo}
           onClose={() => setShowMemoModal(false)}
           onSave={(newMemo) => {
             setMemo(newMemo);
-            // 여기에 서버 저장 로직도 추가 가능
           }}
         />
       )}

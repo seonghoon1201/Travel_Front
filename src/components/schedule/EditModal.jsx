@@ -1,6 +1,12 @@
 import React from 'react';
 
-const EditModal = ({ onClose }) => {
+const EditModal = ({ onClose, onEditType }) => {
+  const handleEditCity = () => onEditType('city');
+  const handleEditTitle = () => onEditType('title');
+  const handleEditDate = () => onEditType('date');
+  const handleEditStyle = () => onEditType('style');
+  const handleDeleteTrip = () => onEditType('delete');
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-30"
@@ -12,11 +18,23 @@ const EditModal = ({ onClose }) => {
       >
         <p className="text-sm pb-3 text-gray-500 mb-4">편집</p>
         <ul className="text-gray-700 space-y-8">
-          <li>여행 도시 추가 및 편집</li>
-          <li>여행 제목 수정</li>
-          <li>여행 날짜 수정</li>
-          <li>여행 스타일 등록 및 수정</li>
-          <li>여행 삭제</li>
+          <li>
+            <button onClick={handleEditCity}>여행 도시 추가 및 편집</button>
+          </li>
+          <li>
+            <button onClick={handleEditTitle}>여행 제목 수정</button>
+          </li>
+          <li>
+            <button onClick={handleEditDate}>여행 날짜 수정</button>
+          </li>
+          <li>
+            <button onClick={handleEditStyle}>여행 스타일 등록 및 수정</button>
+          </li>
+          <li>
+            <button onClick={handleDeleteTrip} className="text-red-500">
+              여행 삭제
+            </button>
+          </li>
         </ul>
         <button
           onClick={onClose}
