@@ -1,10 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PlaceDetailModal from './PlaceDetailModal';
+import MemoModal from '../modal/MemoModal';
 
 const PlanCard = ({ plan, index, isLast }) => {
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
+
+  const [showMemoModal, setShowMemoModal] = useState(false);
+  const [memo, setMemo] = useState(plan.memo || '');
+
   const colorList = ['#5E87EB', '#F97316', '#10B981', '#EC4899', '#FACC15'];
   const color = colorList[index % colorList.length];
 
@@ -33,10 +38,9 @@ const PlanCard = ({ plan, index, isLast }) => {
       {/* 카드 본문 */}
       <div
         onClick={() => setShowModal(true)}
-        className="ml-16 bg-white rounded-lg border border-[#E5E7EB] px-4 py-3 shadow-sm cursor-pointer"
+        className="relative ml-16 bg-white rounded-lg border border-[#E5E7EB] px-4 py-3 shadow-sm cursor-pointer"
       >
         <p className="font-medium text-sm">{plan.name}</p>
-        {/* api 연동할땐 region 받기 */}
         <p className="text-[11px] text-gray-400 mt-1">관광 | 제주</p>
 
         {plan.memo && (
@@ -44,7 +48,19 @@ const PlanCard = ({ plan, index, isLast }) => {
             {plan.memo}
           </div>
         )}
+
+        {/* 메모 버튼 */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowMemoModal(true);
+          }}
+          className="absolute bottom-2 right-2 text-[11px] text-blue-300 border border-gray-300 px-2 py-0.5 rounded"
+        >
+          +메모
+        </button>
       </div>
+
       {/* isLast 마지막 index에만 추가 */}
       <div className="ml-16">
         {isLast && (
@@ -58,14 +74,14 @@ const PlanCard = ({ plan, index, isLast }) => {
           </div>
         )}
       </div>
-      {showModal && (
-        <PlaceDetailModal
-          place={{
-            ...plan,
-            mapX: plan.lng,
-            mapY: plan.lat,
+      {showMemoModal && (
+        <MemoModal
+          defaultValue={memo}
+          onClose={() => setShowMemoModal(false)}
+          onSave={(newMemo) => {
+            setMemo(newMemo);
+            // 여기에 서버 저장 로직도 추가 가능
           }}
-          onClose={() => setShowModal(false)}
         />
       )}
     </div>
