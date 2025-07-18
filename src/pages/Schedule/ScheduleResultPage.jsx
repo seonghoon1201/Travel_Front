@@ -147,6 +147,7 @@ const ScheduleResultPage = () => {
 
       {/* 편집 모달 */}
       {showEditModal && <EditModal onClose={() => setShowEditModal(false)} />}
+      {showEditModal && <EditModal onClose={() => setShowEditModal(false)} />}
     </DefaultLayout>
   );
 };
