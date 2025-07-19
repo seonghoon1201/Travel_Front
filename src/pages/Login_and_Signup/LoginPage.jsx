@@ -15,7 +15,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
 
   const handleKakaoLogin = () => {
-    window.location.href = 'http://124.49.210.216/auth/kakao/login';
+    window.location.href = 'http://localhost:8080/auth/kakao/login';
   };
 
   const handleLogin = async () => {
