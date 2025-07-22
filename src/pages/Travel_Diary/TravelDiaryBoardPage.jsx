@@ -38,39 +38,43 @@ const TravelDiaryBoardPage = () => {
 
   return (
     <DefaultLayout>
-      <BackHeader />
+      <div className="w-full max-w-sm mx-auto">
+        <BackHeader />
 
-      {/* 검색창 */}
-      <div className="w-full mb-4">
-        <SearchBar
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
-
-      {/* 상단 제목 + 글쓰기 */}
-      <div className="flex items-center justify-between px-4 py-2">
-        <h2 className="text-lg font-semibold">국내 실시간 여행일기</h2>
-        <button className="text-sm text-gray-500 flex items-center gap-1"
-        onClick={() => navigate('/write/travel/diary')}>
-          <PencilLine className="w-4 h-4" />
-          여행 일기 쓰러가기
-        </button>
-      </div>
-
-      {/* 여행일기 리스트 */}
-      <div className="space-y-4 px-4 pb-6">
-        {filteredDiaries.map((diary) => (
-          <TravelDiary
-            key={diary.id}
-            id={diary.id}
-            title={diary.title}
-            nickname={diary.nickname}
-            period={diary.period}
-            tags={diary.tags}
-            imageUrl={diary.imageUrl}
+        {/* 검색창 */}
+        <div className="w-full mb-4">
+          <SearchBar
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
-        ))}
+        </div>
+
+        {/* 상단 제목 + 글쓰기 */}
+        <div className="flex items-center justify-between px-4 py-2">
+          <h2 className="text-lg font-semibold">국내 실시간 여행일기</h2>
+          <button
+            className="text-sm text-gray-500 flex items-center gap-1"
+            onClick={() => navigate('/write/travel/diary')}
+          >
+            <PencilLine className="w-4 h-4" />
+            여행 일기 쓰러가기
+          </button>
+        </div>
+
+        {/* 여행일기 리스트 */}
+        <div className="space-y-4 px-4 pb-6">
+          {filteredDiaries.map((diary) => (
+            <TravelDiary
+              key={diary.id}
+              id={diary.id}
+              title={diary.title}
+              nickname={diary.nickname}
+              period={diary.period}
+              tags={diary.tags}
+              imageUrl={diary.imageUrl}
+            />
+          ))}
+        </div>
       </div>
     </DefaultLayout>
   );

@@ -48,48 +48,50 @@ const BudgetBoard = () => {
 
   return (
     <DefaultLayout>
-      <BackHeader />
+      <div className="w-full max-w-sm mx-auto">
+        <BackHeader />
 
-      {/* 검색창 */}
-      <div className="w-full mb-4">
-        <SearchBar
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+        {/* 검색창 */}
+        <div className="w-full mb-4">
+          <SearchBar
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        {/* 카테고리 */}
+        <CategoryButtonSection
+          activeCategory={activeCategory}
+          setActiveCategory={setActiveCategory}
         />
-      </div>
 
-      {/* 카테고리 */}
-      <CategoryButtonSection
-        activeCategory={activeCategory}
-        setActiveCategory={setActiveCategory}
-      />
-
-      {/* 상단 설명 영역 */}
-      <div className="flex items-start justify-between px-2 pt-4 py-2">
-        <div>
-          <p className="text-lg font-semibold text-[#222]">
-            📍한도 맞춤 추천지
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
-            예산에 맞춰 관광지를 추천해드려요 !
-          </p>
+        {/* 상단 설명 영역 */}
+        <div className="flex items-start justify-between px-2 pt-4 py-2">
+          <div>
+            <p className="text-lg font-semibold text-[#222]">
+              📍한도 맞춤 추천지
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
+              예산에 맞춰 관광지를 추천해드려요 !
+            </p>
+          </div>
+          <div className="text-right pt-3 pr-2">
+            <p className="text-xs font-medium text-[#333] flex items-center justify-end gap-1">
+              <SlidersHorizontal className="w-4 h-4" />
+              금액 조정하기
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
+              예산 : <span className="font-semibold text-black">원</span>
+            </p>
+          </div>
         </div>
-        <div className="text-right pt-3 pr-2">
-          <p className="text-xs font-medium text-[#333] flex items-center justify-end gap-1">
-            <SlidersHorizontal className="w-4 h-4" />
-            금액 조정하기
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
-            예산 : <span className="font-semibold text-black">원</span>
-          </p>
-        </div>
-      </div>
 
-      {/* 핫플 리스트 */}
-      <div className="space-y-4 mt-4">
-        {filteredBookmarks.map((item, index) => (
-          <PlaceList key={index} {...item} />
-        ))}
+        {/* 핫플 리스트 */}
+        <div className="space-y-4 mt-4">
+          {filteredBookmarks.map((item, index) => (
+            <PlaceList key={index} {...item} />
+          ))}
+        </div>
       </div>
     </DefaultLayout>
   );
