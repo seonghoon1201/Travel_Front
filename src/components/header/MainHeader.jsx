@@ -14,7 +14,7 @@ const MainHeader = ({ isMenuOpen, setIsMenuOpen }) => {
 
   return (
     <>
-      <header className="flex items-center justify-between px-4 py-2 bg-[#E2F2FA]">
+      <header className="flex items-center justify-between bg-[#E2F2FA] p-2">
         {/* 왼쪽: 전체 로고 이미지 */}
         <img src={logo} alt="여담 로고" className="h-16" />
 

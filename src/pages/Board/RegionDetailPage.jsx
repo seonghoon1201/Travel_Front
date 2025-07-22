@@ -12,7 +12,7 @@ const RegionDetailPage = () => {
   const { city } = useParams();
   console.log(' RegionDetailPage 렌더링 중');
   console.log(city.toLowerCase());
-  // 더미 데이터 
+  // 더미 데이터
   const region = {
     city: '제주특별자치도',
     weather: {
@@ -25,36 +25,36 @@ const RegionDetailPage = () => {
 
   return (
     <DefaultLayout>
-      <BackHeader />
-      <div className="w-full min-h-screen bg-[#F8FBFF]">
-        {/* 사진 + 요약 정보 */}
+      <div className="w-full max-w-sm mx-auto">
+        <BackHeader />
+        <div className="w-full min-h-screen bg-[#F8FBFF]">
+          {/* 사진 + 요약 정보 */}
+          <RegionSummary title="제주특별자치도" />
 
-        <RegionSummary title="제주특별자치도" />
+          {/* 날씨 정보 */}
+          <div className="px-4 py-2 flex items-center gap-2 text-sm text-gray-700">
+            <span className="text-xl">{region.weather.icon}</span>
+            <span>{region.weather.temp}</span>
+            <span className="text-gray-500">· {region.weather.desc}</span>
+          </div>
 
-        {/* 날씨 정보 */}
-        <div className="px-4 py-2 flex items-center gap-2 text-sm text-gray-700">
-          <span className="text-xl">{region.weather.icon}</span>
-          <span>{region.weather.temp}</span>
-          <span className="text-gray-500">· {region.weather.desc}</span>
-        </div>
-
-        {/* 즐길거리 리스트 */}
-        <div className="px-4 pt-4">
-          <h3 className="text-base font-semibold text-gray-800 mb-2">
-            즐길거리
-          </h3>
-          <div >
-            {region.places.map((place, idx) => (
-              <PlaceList key={idx} name={place} />
-            ))}
+          {/* 즐길거리 리스트 */}
+          <div className="px-4 pt-4">
+            <h3 className="text-base font-semibold text-gray-800 mb-2">
+              즐길거리
+            </h3>
+            <div>
+              {region.places.map((place, idx) => (
+                <PlaceList key={idx} name={place} />
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* 일정 만들기 버튼 */}
-        <div className="fixed bottom-4 left-0 w-full px-4 z-50">
+        {/*  일정 만들기 버튼 */}
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 z-50">
           <PrimaryButton className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm shadow">
-            <CalendarPlus className="w-4 h-4" />
-            이 지역으로 일정 만들기
+            <CalendarPlus className="w-4 h-4" />이 지역으로 일정 만들기
           </PrimaryButton>
         </div>
       </div>
