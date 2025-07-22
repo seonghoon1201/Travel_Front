@@ -78,34 +78,38 @@ const EditModal = ({ onClose }) => {
       onClick={onClose}
     >
       <div
-        className="bg-white w-full rounded-t-xl p-6"
+        className="bg-white w-full max-w-sm mx-auto rounded-t-xl px-6 pt-6 pb-3 overflow-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="text-sm pb-3 text-gray-500 mb-4">편집</p>
-        <ul className="text-gray-700 space-y-8">
-          <li>
-            <button onClick={() => setModalType('title')}>
-              여행 제목 수정
-            </button>
-          </li>
-          <li>
-            <button onClick={() => setModalType('date')}>여행 일정 수정</button>
-          </li>
-          <li>
-            <button onClick={() => setModalType('style')}>
-              여행 스타일 수정
-            </button>
-          </li>
-          <li className="text-red-500">
-            <button onClick={() => setModalType('delete')}>여행 삭제</button>
-          </li>
-        </ul>
-        <button
-          onClick={onClose}
-          className="mt-6 w-full py-2 text-sm text-gray-500 border-t border-gray-200"
-        >
-          닫기
-        </button>
+        <div className={modalType ? 'hidden' : ''}>
+          <p className="text-sm pb-3 text-gray-500 mb-4">편집</p>
+          <ul className="text-gray-700 space-y-8">
+            <li>
+              <button onClick={() => setModalType('title')}>
+                여행 제목 수정
+              </button>
+            </li>
+            <li>
+              <button onClick={() => setModalType('date')}>
+                여행 일정 수정
+              </button>
+            </li>
+            <li>
+              <button onClick={() => setModalType('style')}>
+                여행 스타일 수정
+              </button>
+            </li>
+            <li className="text-red-500">
+              <button onClick={() => setModalType('delete')}>여행 삭제</button>
+            </li>
+          </ul>
+          <button
+            onClick={onClose}
+            className="mt-6 w-full py-2 text-sm text-gray-500 border-t border-gray-200"
+          >
+            닫기
+          </button>
+        </div>
       </div>
     </div>
   );
