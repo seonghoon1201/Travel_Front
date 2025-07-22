@@ -20,10 +20,10 @@ const KakaoCallbackPage = () => {
       }
 
       try {
-        const res = await axios.get('http://124.49.210.216/auth/kakao/callback', {
-          params: { code },
+        // ✅ 백엔드로 POST 요청 (JSON 형식)
+        const res = await axios.post('http://localhost:8080/auth/kakao/callback', {
+          code,
         });
-
         const {
           jwtDto: { accessToken, refreshToken },
           userNickname: nickname,
@@ -33,7 +33,8 @@ const KakaoCallbackPage = () => {
           userName,
         } = res.data;
 
-        // ✅ Zustand store 저장
+        // ✅ 상태 저장 (Zustand)
+        // ✅ 상태 저장 (Zustand)
         login({
           accessToken,
           refreshToken,
@@ -42,13 +43,18 @@ const KakaoCallbackPage = () => {
           userRole,
           userEmail,
           userName,
+          isLoggedIn: true, // ✅ 로그인 상태 표시
         });
 
-        // ✅ localStorage 저장 (원한다면 최소한으로)
-        setItem('accessToken', accessToken);
-        setItem('nickname', nickname);
 
-        navigate('/home');
+        // ✅ 로컬스토리지 저장
+        setItem('accessToken', accessToken);
+        setItem('refreshToken', refreshToken);
+        setItem('nickname', nickname);
+        setItem('profileImageUrl', profileImageUrl);
+
+        // ✅ 홈으로 이동
+        navigate('/');
       } catch (error) {
         console.error('카카오 로그인 실패:', error);
         alert('카카오 로그인에 실패했습니다. 인가코드가 만료되었거나 서버 오류입니다.');
