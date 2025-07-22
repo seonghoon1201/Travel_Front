@@ -53,7 +53,7 @@ const PlanLocationPage = () => {
     );
   };
 
-   const handleNext = () => {
+  const handleNext = () => {
     const selectedIds = locations
       .filter((loc) => loc.selected)
       .map((loc) => loc.id);
@@ -70,7 +70,7 @@ const PlanLocationPage = () => {
   return (
     <DefaultLayout>
       <div className="max-w-md mx-auto">
-        <BackHeader title="여행지 선택"/>
+        <BackHeader title="여행지 선택" />
 
         <SearchBar
           placeholder="관광지/맛집/숙소 검색"

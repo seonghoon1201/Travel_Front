@@ -4,6 +4,7 @@ import '../styles/HomePage.css';
 
 import kakaoIcon from '../assets/kakao_icon.png';
 
+import DefaultLayout from '../layouts/DefaultLayout';
 import MainHeader from '../components/header/MainHeader';
 import SideMenu from '../components/modal/SideMenu';
 import CreateScheduleCard from '../components/mypage/CreateScheduleCard';
@@ -74,31 +75,36 @@ const HomePage = () => {
   return (
     <>
       <MainHeader isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
-      {isMenuOpen && <SideMenu onClose={() => setIsMenuOpen(false)} />}
-      <main className="w-full p-2">
-        <CreateScheduleCard />
 
-        <LocationSection
-          title="요즘 핫플"
-          type="hot"
-          locations={dummyLocations}
-          showMore={true}
-          navigateTo="/board/hot"
-        />
-        <LocationSection
-          title="저예산 추천 여행지"
-          type="budget"
-          locations={dummyLocations}
-          showMore={true}
-          navigateTo="/board/budget"
-        />
-        <TravelDiaryList
-          title="여행 일기"
-          diaries={dummyDiaries}
-          showMore={true}
-        />
+      <DefaultLayout>
+        <div className="max-w-md w-full mx-auto px-4 -mt-[24px]">
+          {isMenuOpen && <SideMenu onClose={() => setIsMenuOpen(false)} />}
 
-      </main>
+          <main className="w-full">
+            <CreateScheduleCard />
+
+            <LocationSection
+              title="요즘 핫플"
+              type="hot"
+              locations={dummyLocations}
+              showMore={true}
+              navigateTo="/board/hot"
+            />
+            <LocationSection
+              title="저예산 추천 여행지"
+              type="budget"
+              locations={dummyLocations}
+              showMore={true}
+              navigateTo="/board/budget"
+            />
+            <TravelDiaryList
+              title="여행 일기"
+              diaries={dummyDiaries}
+              showMore={true}
+            />
+          </main>
+        </div>
+      </DefaultLayout>
     </>
   );
 };
