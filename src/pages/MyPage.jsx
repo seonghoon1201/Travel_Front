@@ -8,10 +8,14 @@ import MyTravelSection from '../components/mypage/MyTravelSection';
 import MyDiarySection from '../components/mypage/MyDiarySection';
 import MyBookmarkSection from '../components/mypage/MyBookmarkSection';
 
+import useUserStore from '../store/userStore';
+
 const MyPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('myTrip');
+
+  const nickname = useUserStore((state) => state.nickname);
 
   // URL 쿼리로 activeTab 갱신
   useEffect(() => {
@@ -29,7 +33,7 @@ const MyPage = () => {
 
   return (
     <div className="min-h-screen font-pretendard">
-      <div className="px-4 py-6">
+      <div>
         <BackHeader
           showRightButton={true}
           rightButtonText="프로필 편집"
@@ -37,7 +41,7 @@ const MyPage = () => {
         />
       </div>
 
-      <ProfileSummary />
+      <ProfileSummary nickname={nickname} />
       <TabMenu activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* 탭별 콘텐츠 렌더링 */}
