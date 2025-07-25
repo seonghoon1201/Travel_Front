@@ -71,7 +71,6 @@ const useUserStore = create((set) => ({
         userName: data.userName,
       });
 
-      // 로컬스토리지에도 반영
       setItem('nickname', data.userNickname);
       setItem('profileImageUrl', data.userProfileImage);
       setItem('userEmail', data.email);

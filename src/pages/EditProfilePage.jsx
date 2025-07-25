@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import BackHeader from '../components/header/BackHeader';
 import PrimaryButton from '../components/common/PrimaryButton';
 import { Pencil, X } from 'lucide-react';
@@ -6,8 +6,37 @@ import useUserStore from '../store/userStore';
 import profileDefault from '../assets/profile_default.png';
 
 const EditProfile = () => {
+  // 상태 개별 호출
   const nickname = useUserStore((state) => state.nickname);
+  const setNickname = useUserStore((state) => state.setNickname);
   const profileImageUrl = useUserStore((state) => state.profileImageUrl);
+  const setProfileImageUrl = useUserStore((state) => state.setProfileImageUrl);
+
+  const fileInputRef = useRef(null);
+
+  // 이미지 버튼 클릭
+  const handleImageClick = () => fileInputRef.current.click();
+
+  // 이미지 변경
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const previewUrl = URL.createObjectURL(file);
+    setProfileImageUrl(previewUrl);
+    // TODO: 이미지 업로드 API 호출 추가
+  };
+
+  // 닉네임 초기화
+  const clearNickname = () => {
+    // 상태만 비움
+    useUserStore.setState({ nickname: '' });
+  };
+
+  // 저장 버튼 클릭
+  const handleUpdate = () => {
+    // TODO: 닉네임 변경 API 호출
+    alert('닉네임 변경 완료!');
+  };
 
   return (
     <div className="bg-background min-h-screen flex w-full justify-center px-4">
@@ -17,7 +46,7 @@ const EditProfile = () => {
         <div className="flex flex-col items-center">
           {/* 프로필 이미지 */}
           <div className="relative mt-6">
-            <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 overflow-hidden">
+            <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
               <img
                 src={profileImageUrl || profileDefault}
                 alt="프로필 이미지"
@@ -25,24 +54,37 @@ const EditProfile = () => {
               />
             </div>
 
-            <button className="absolute top-0 right-0 bg-white rounded-full p-1 shadow">
+            <button
+              type="button"
+              onClick={handleImageClick}
+              className="absolute top-0 right-0 bg-white rounded-full p-1 shadow"
+            >
               <Pencil className="w-4 h-4 text-gray-500" />
             </button>
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageChange}
+            />
           </div>
 
-          {/* 닉네임 입력 필드 */}
+          {/* 닉네임 입력 */}
           <div className="w-full relative mt-6">
             <input
               type="text"
-              value={nickname}
-              // onChange={(e) => setNickname(e.target.value)}
+              value={nickname || ''}
+              onChange={(e) => setNickname(e.target.value)}
               placeholder="닉네임을 입력하세요"
               className="w-full border-b border-gray-300 py-2 text-center text-lg font-semibold bg-transparent focus:outline-none"
             />
             {nickname && (
               <button
+                type="button"
+                onClick={clearNickname}
                 className="absolute right-0 top-1/2 transform -translate-y-1/2 pr-2"
-                // onClick={() => setNickname('')}
               >
                 <X className="w-4 h-4 text-gray-400" />
               </button>
@@ -51,16 +93,11 @@ const EditProfile = () => {
 
           <PrimaryButton
             className="w-full m-4"
-            //  onClick={handleUpdate}
+            onClick={handleUpdate}
+            disabled={!nickname?.trim()}
           >
-            닉네임 변경
+            프로필 수정
           </PrimaryButton>
-
-          <p className="mt-4 text-xs text-gray-400 text-center leading-relaxed">
-            유효성에 따라 닉네임 변경
-            <br />
-            한글/영어/숫자를 사용할 수 있습니다.
-          </p>
         </div>
       </div>
     </div>
