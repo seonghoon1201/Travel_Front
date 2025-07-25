@@ -1,12 +1,16 @@
 import React, { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import BackHeader from '../components/header/BackHeader';
 import PrimaryButton from '../components/common/PrimaryButton';
 import { Pencil, X } from 'lucide-react';
 import useUserStore from '../store/userStore';
 import profileDefault from '../assets/profile_default.png';
+import { updateUserProfile } from '../api/updateUserProfile';
 
 const EditProfile = () => {
-  // 상태 개별 호출
+  const navigate = useNavigate();
+
+  // Zustand 상태
   const nickname = useUserStore((state) => state.nickname);
   const setNickname = useUserStore((state) => state.setNickname);
   const profileImageUrl = useUserStore((state) => state.profileImageUrl);
@@ -23,19 +27,30 @@ const EditProfile = () => {
     if (!file) return;
     const previewUrl = URL.createObjectURL(file);
     setProfileImageUrl(previewUrl);
-    // TODO: 이미지 업로드 API 호출 추가
   };
 
   // 닉네임 초기화
   const clearNickname = () => {
-    // 상태만 비움
     useUserStore.setState({ nickname: '' });
   };
 
-  // 저장 버튼 클릭
-  const handleUpdate = () => {
-    // TODO: 닉네임 변경 API 호출
-    alert('닉네임 변경 완료!');
+  // 닉네임 저장 후 마이페이지로 이동
+  const handleUpdate = async () => {
+    const result = await updateUserProfile({
+      userNickname: nickname,
+      userProfileImage: profileImageUrl,
+    });
+
+    if (result.success) {
+      // 상태 갱신 (로컬스토리지는 API 함수에서 갱신됨)
+      setNickname(nickname);
+      setProfileImageUrl(profileImageUrl);
+
+      alert('프로필 수정 완료!');
+      navigate('/'); // 홈으로 이동
+    } else {
+      alert(`수정 실패: ${result.error}`);
+    }
   };
 
   return (

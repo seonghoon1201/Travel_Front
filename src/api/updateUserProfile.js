@@ -1,12 +1,6 @@
 import axios from 'axios';
 import { getItem, setItem } from '../utils/localStorage';
 
-/**
- * 사용자 프로필 업데이트 API
- * @param {Object} param0
- * @param {string} param0.userNickname - 새 닉네임
- * @param {string} param0.userProfileImage - 새 프로필 이미지 URL
- */
 export const updateUserProfile = async ({ userNickname, userProfileImage }) => {
   const accessToken = getItem('accessToken');
 
