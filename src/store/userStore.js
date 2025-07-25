@@ -37,6 +37,18 @@ const useUserStore = create((set) => ({
     });
     set(restored);
   },
+
+  // 프로필 편집 - 닉네임 업데이트
+  setNickname: (nickname) => {
+    set({ nickname });
+    setItem('nickname', nickname);
+  },
+
+  // 프로필 편집- 프로필 이미지 업데이트
+  setProfileImageUrl: (url) => {
+    set({ profileImageUrl: url });
+    setItem('profileImageUrl', url);
+  },
 }));
 
 export default useUserStore;
