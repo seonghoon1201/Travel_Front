@@ -9,3 +9,9 @@ const DefaultLayout = ({ children }) => {
 };
 
 export default DefaultLayout;
+
+// <DefaultLayout>
+//  <div className="w-full max-w-sm mx-auto">
+//    <Page내용>
+//  </div>
+// </DefaultLayout>
