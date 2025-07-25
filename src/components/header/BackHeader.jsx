@@ -11,7 +11,7 @@ const BackHeader = ({
   const navigate = useNavigate();
 
   return (
-    <header className="flex items-center justify-center px-4 py-3 relative mb-6">
+    <header className="flex items-center justify-center px-4 py-3 relative mb-6 mt-6">
       <button onClick={() => navigate(-1)}>
         <ArrowLeft className="w-5 h-5 text-black absolute left-3 top-3" />
       </button>
@@ -20,7 +20,6 @@ const BackHeader = ({
       </h1>
       {/* 오른쪽 버튼 */}
       <div className="w-5 h-5">
-        {' '}
         {showRightButton && (
           <button
             onClick={onRightButtonClick}

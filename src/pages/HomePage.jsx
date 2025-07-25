@@ -74,35 +74,36 @@ const HomePage = () => {
 
   return (
     <>
-      <MainHeader isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
-
       <DefaultLayout>
-        <div className="max-w-md w-full mx-auto px-4 -mt-[24px]">
-          {isMenuOpen && <SideMenu onClose={() => setIsMenuOpen(false)} />}
+        <div className="w-full max-w-sm mx-auto">
+          <MainHeader isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+          <div className="max-w-md w-full mx-auto px-4 mt-[1rem]">
+            {isMenuOpen && <SideMenu onClose={() => setIsMenuOpen(false)} />}
 
-          <main className="w-full">
-            <CreateScheduleCard />
+            <main className="w-full">
+              <CreateScheduleCard />
 
-            <LocationSection
-              title="요즘 핫플"
-              type="hot"
-              locations={dummyLocations}
-              showMore={true}
-              navigateTo="/board/hot"
-            />
-            <LocationSection
-              title="저예산 추천 여행지"
-              type="budget"
-              locations={dummyLocations}
-              showMore={true}
-              navigateTo="/board/budget"
-            />
-            <TravelDiaryList
-              title="여행 일기"
-              diaries={dummyDiaries}
-              showMore={true}
-            />
-          </main>
+              <LocationSection
+                title="요즘 핫플"
+                type="hot"
+                locations={dummyLocations}
+                showMore={true}
+                navigateTo="/board/hot"
+              />
+              <LocationSection
+                title="저예산 추천 여행지"
+                type="budget"
+                locations={dummyLocations}
+                showMore={true}
+                navigateTo="/board/budget"
+              />
+              <TravelDiaryList
+                title="여행 일기"
+                diaries={dummyDiaries}
+                showMore={true}
+              />
+            </main>
+          </div>
         </div>
       </DefaultLayout>
     </>
