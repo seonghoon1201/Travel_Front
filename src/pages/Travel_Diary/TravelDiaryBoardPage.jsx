@@ -42,7 +42,7 @@ const TravelDiaryBoardPage = () => {
         <BackHeader />
 
         {/* 검색창 */}
-        <div className="w-full mb-4">
+        <div className="w-full mb-4 pr-[1rem] pl-[1rem] ">
           <SearchBar
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -50,19 +50,19 @@ const TravelDiaryBoardPage = () => {
         </div>
 
         {/* 상단 제목 + 글쓰기 */}
-        <div className="flex items-center justify-between px-4 py-2">
-          <h2 className="text-lg font-semibold">국내 실시간 여행일기</h2>
+        <div className="flex items-center justify-between pr-[1.4rem] pl-[1.4rem] ">
+          <h3 className="text-lg font-semibold">국내 실시간 여행일기</h3>
           <button
             className="text-sm text-gray-500 flex items-center gap-1"
             onClick={() => navigate('/write/travel/diary')}
           >
-            <PencilLine className="w-4 h-4" />
+            <PencilLine className="w-3 h-3" />
             여행 일기 쓰러가기
           </button>
         </div>
 
         {/* 여행일기 리스트 */}
-        <div className="space-y-4 px-4 pb-6">
+        <div className="space-y-4 px-[1.4rem] pb-[2rem]">
           {filteredDiaries.map((diary) => (
             <TravelDiary
               key={diary.id}
