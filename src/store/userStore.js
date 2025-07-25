@@ -38,16 +38,47 @@ const useUserStore = create((set) => ({
     set(restored);
   },
 
-  // 프로필 편집 - 닉네임 업데이트
+  /** 닉네임 변경 (스토어+로컬스토리지) */
   setNickname: (nickname) => {
     set({ nickname });
     setItem('nickname', nickname);
   },
 
-  // 프로필 편집- 프로필 이미지 업데이트
+  /** 프로필 이미지 변경 (스토어+로컬스토리지) */
   setProfileImageUrl: (url) => {
     set({ profileImageUrl: url });
     setItem('profileImageUrl', url);
+  },
+
+  /** 서버에서 유저 정보 새로 가져와 상태 갱신 */
+  fetchUserInfo: async () => {
+    const token = getItem('accessToken', '');
+    if (!token) return;
+
+    try {
+      const response = await fetch('http://localhost:8080/user/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error('유저 정보 요청 실패');
+
+      const data = await response.json();
+
+      set({
+        nickname: data.userNickname,
+        profileImageUrl: data.userProfileImage,
+        userEmail: data.email,
+        userName: data.userName,
+      });
+
+      // 로컬스토리지에도 반영
+      setItem('nickname', data.userNickname);
+      setItem('profileImageUrl', data.userProfileImage);
+      setItem('userEmail', data.email);
+      setItem('userName', data.userName);
+    } catch (err) {
+      console.error('fetchUserInfo Error:', err);
+    }
   },
 }));
 
