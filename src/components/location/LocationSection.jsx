@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { fetchWikipediaData } from '../../utils/wikiApi';
 
 // 더미 도시 리스트 (핫플 대상 도시)
-const hotCities = ['성남시', '부산광역시', '서울특별시', '광주광역시'];
+const hotCities = ['', '부산광역시', '서울특별시', '광주광역시'];
 
 const HotPlaceSection = () => {
   const navigate = useNavigate();

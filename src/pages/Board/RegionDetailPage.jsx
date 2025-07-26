@@ -21,35 +21,46 @@ const RegionDetailPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // 도시명 축약 (백엔드 region 필드 맞추기)
         const normalizedCity = decodedCity
           .replace('특별자치도', '')
           .replace('광역시', '')
-          .replace('특별시', '');
-        // 1. 날씨 API
-        const weatherRes = await getWeather(decodedCity);
-        if (weatherRes.success) setWeather(weatherRes.data);
+          .replace('특별시', '')
+          .trim();
 
-        // 2. 투어 API
+        // 1. 날씨 API 호출
+        const weatherRes = await getWeather(normalizedCity);
+        if (weatherRes.success) {
+          setWeather(weatherRes.data);
+        } else {
+          console.warn('날씨 데이터 없음');
+        }
+
+        // 2. 투어 API 호출 (keyword도 반드시 값 넣기)
         const tourRes = await searchTours({
-          region: decodedCity,
+          keyword: 0,
+          region: normalizedCity,
           category: '관광지',
           page: 0,
-          size: 10,
+          size: 20,
         });
 
-        if (tourRes.success) {
+        if (tourRes.success && tourRes.data?.content) {
           const processedPlaces = tourRes.data.content.map((item) => ({
             id: item.contentId,
             name: item.title,
             imageUrl: item.firstImage || '/images/default_place.jpg',
-            overview: item.overview,
+            description: item.overview,
             lat: parseFloat(item.mapY),
             lng: parseFloat(item.mapX),
           }));
           setPlaces(processedPlaces);
+        } else {
+          setPlaces([]);
         }
       } catch (err) {
         console.error('RegionDetailPage API 에러:', err);
+        setPlaces([]);
       }
     };
 
@@ -67,7 +78,7 @@ const RegionDetailPage = () => {
           {/* 날씨 */}
           <div className="px-4 pt-4">
             <h3 className="text-base font-semibold text-gray-800 mb-2">날씨</h3>
-            {weather && (
+            {weather ? (
               <div className="px-4 py-2 flex items-center gap-2 text-sm text-gray-700">
                 <span className="text-xl">☀️</span>
                 <span>{weather.main.temp}°C</span>
@@ -75,6 +86,10 @@ const RegionDetailPage = () => {
                   · {weather.weather.description}
                 </span>
               </div>
+            ) : (
+              <p className="text-sm text-gray-400">
+                날씨 정보를 불러올 수 없습니다.
+              </p>
             )}
           </div>
 
