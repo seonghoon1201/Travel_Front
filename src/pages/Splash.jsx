@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import logo from "../assets/logo.png";
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import logo from '../assets/logo.png';
 
 const Splash = () => {
   const [fadeOut, setFadeOut] = useState(false);
@@ -8,11 +8,11 @@ const Splash = () => {
 
   useEffect(() => {
     const fadeTimer = setTimeout(() => {
-      setFadeOut(true); 
+      setFadeOut(true);
     }, 1500);
 
     const navTimer = setTimeout(() => {
-      navigate("/home");
+      navigate('/home');
     }, 2500);
 
     return () => {
@@ -24,7 +24,7 @@ const Splash = () => {
   return (
     <div
       className={`bg-white h-screen w-screen flex items-center justify-center transition-opacity duration-1000 ${
-        fadeOut ? "animate-fadeOut" : "animate-fadeIn"
+        fadeOut ? 'animate-fadeOut' : 'animate-fadeIn'
       }`}
     >
       <img src={logo} alt="여담 로고" className="w-48 h-auto" />
