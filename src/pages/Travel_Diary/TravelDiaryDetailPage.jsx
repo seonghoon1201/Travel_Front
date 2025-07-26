@@ -59,7 +59,10 @@ const TravelDiaryDetail = () => {
               </div>
             </div>
             <div className="text-gray-400 text-xl font-bold">
-              <PostActionModal id={diary.boardId || diary.id} />
+              <PostActionModal
+                id={diary.boardId}
+                writerNickname={diary.userNickname}
+              />
             </div>
           </div>
 
