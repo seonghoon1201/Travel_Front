@@ -71,7 +71,9 @@ const RegionDetailPage = () => {
         <BackHeader />
         <div className="w-full min-h-screen bg-[#F8FBFF]">
           {/* 요약 */}
-          <RegionSummary title={decodedCity} />
+          <div className="pr-3 pl-3">
+            <RegionSummary title={decodedCity} />
+          </div>
 
           {/* 날씨 */}
           <div className="px-4 pt-4">
