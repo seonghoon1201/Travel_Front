@@ -46,7 +46,7 @@ const HotPlaceSection = () => {
 
   return (
     <section className="mb-5">
-      <div className="flex justify-between items-center px-3">
+      <div className="flex justify-between items-center px-2">
         <h3 className="font-jalnongothic">요즘 핫플</h3>
 
         <button className="font-pretendard text-sm text-blue-500 border rounded-full px-2 py-0.5">

@@ -27,7 +27,7 @@ const TravelDiaryList = ({ title, showMore }) => {
   return (
     <div>
       {/* 제목과 더보기 버튼 */}
-      <div className="flex justify-between items-center px-1 mb-2">
+      <div className="flex justify-between items-center px-2 mb-2">
         <h2 className=" font-jalnongothic">{title}</h2>
         {showMore && (
           <button
