@@ -3,12 +3,12 @@ import { API_BASE_URL } from '../config';
 import { getItem } from '../../utils/localStorage';
 
 export const getDiaryDetail = async (boardId) => {
-  const accessToken = getItem('accessToken');
+  const token = getItem('accessToken');
 
   try {
     const res = await axios.get(`${API_BASE_URL}/board/${boardId}`, {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${token}`,
       },
     });
     return { success: true, data: res.data };
