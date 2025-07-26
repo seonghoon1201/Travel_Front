@@ -1,16 +1,17 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BackHeader from '../components/header/BackHeader';
 import PrimaryButton from '../components/common/PrimaryButton';
 import { Pencil, X } from 'lucide-react';
 import useUserStore from '../store/userStore';
 import profileDefault from '../assets/profile_default.png';
+import { uploadProfileImage } from '../api/file/uploadProfileImage';
 import { userprofileUpdate } from '../api/user/userprofileUpdate';
 
 const EditProfile = () => {
   const navigate = useNavigate();
 
-  // Zustand 상태
+  // Zustand 전역 상태: 서버에서 받은 URL만 저장
   const nickname = useUserStore((state) => state.nickname);
   const setNickname = useUserStore((state) => state.setNickname);
   const profileImageUrl = useUserStore((state) => state.profileImageUrl);
@@ -18,38 +19,75 @@ const EditProfile = () => {
 
   const fileInputRef = useRef(null);
 
-  // 이미지 버튼 클릭
+  // 로컬 상태: 편집 중 미리보기(blob)
+  const [previewUrl, setPreviewUrl] = useState(profileImageUrl);
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  // 이미지 클릭 -> 파일 선택창 열기
   const handleImageClick = () => fileInputRef.current.click();
 
-  // 이미지 변경
+  // 이미지 변경 시 미리보기(blob) 업데이트
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const previewUrl = URL.createObjectURL(file);
-    setProfileImageUrl(previewUrl);
+
+    // 기존 blob 해제
+    if (previewUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
+    const blobUrl = URL.createObjectURL(file);
+    setPreviewUrl(blobUrl);
+    setSelectedFile(file);
   };
+
+  // 언마운트 시 blob 해제
+  useEffect(() => {
+    return () => {
+      if (previewUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   // 닉네임 초기화
   const clearNickname = () => {
     useUserStore.setState({ nickname: '' });
   };
 
-  // 닉네임 저장 후 마이페이지로 이동
+  // 프로필 업데이트
   const handleUpdate = async () => {
-    const result = await userprofileUpdate({
-      userNickname: nickname,
-      userProfileImage: profileImageUrl,
-    });
+    try {
+      let finalImageUrl = profileImageUrl;
 
-    if (result.success) {
-      // 상태 갱신 (로컬스토리지는 API 함수에서 갱신됨)
-      setNickname(nickname);
-      setProfileImageUrl(profileImageUrl);
+      // 파일 업로드
+      if (selectedFile) {
+        const uploadRes = await uploadProfileImage(selectedFile);
+        if (!uploadRes.success) {
+          alert('이미지 업로드 실패');
+          return;
+        }
+        finalImageUrl = uploadRes.imageUrl; // 서버에서 받은 URL
+      }
 
-      alert('프로필 수정 완료!');
-      navigate('/'); // 홈으로 이동
-    } else {
-      alert(`수정 실패: ${result.error}`);
+      // 2) 닉네임 + 최종 URL로 프로필 수정
+      const result = await userprofileUpdate({
+        userNickname: nickname,
+        userProfileImage: finalImageUrl,
+      });
+
+      if (result.success) {
+        // 전역 상태에 서버 URL 저장
+        setNickname(nickname);
+        setProfileImageUrl(finalImageUrl);
+
+        alert('프로필 수정 완료!');
+        navigate('/');
+      } else {
+        alert(`수정 실패: ${result.error}`);
+      }
+    } catch (err) {
+      alert('수정 중 오류 발생: ' + err.message);
     }
   };
 
@@ -63,7 +101,7 @@ const EditProfile = () => {
           <div className="relative mt-6">
             <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
               <img
-                src={profileImageUrl || profileDefault}
+                src={previewUrl || profileDefault}
                 alt="프로필 이미지"
                 className="w-full h-full object-cover"
               />
