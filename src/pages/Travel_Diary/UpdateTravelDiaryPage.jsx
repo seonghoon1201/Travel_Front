@@ -1,17 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CalendarDays, X } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
 
+import { getDiaryDetail } from '../../api/board/getDiaryDetail';
+import { updateDiary } from '../../api/board/updateDiary';
+
 const UpdateTravelDiaryPage = () => {
+  const { id } = useParams(); // boardId
+  const navigate = useNavigate();
+
+  // 상태
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
   const [tags, setTags] = useState([]);
   const [inputValue, setInputValue] = useState('');
 
+  // 기존 데이터 불러오기
+  useEffect(() => {
+    const fetchDiary = async () => {
+      const res = await getDiaryDetail(id);
+      if (res.success) {
+        setTitle(res.data.title);
+        setContent(res.data.content);
+        setTags(res.data.tag ? res.data.tag.split(',') : []);
+      }
+    };
+    fetchDiary();
+  }, [id]);
+
+  // 태그 추가
   const addTag = () => {
     const trimmed = inputValue.trim();
-
-    // 10개로 제한하기
     if (tags.length >= 10) {
       alert('태그는 최대 10개까지만 추가할 수 있어요!');
       return;
@@ -33,6 +55,28 @@ const UpdateTravelDiaryPage = () => {
     setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
+  // 수정 API 호출
+  const handleUpdate = async () => {
+    if (!title.trim() || !content.trim()) {
+      alert('제목과 내용을 입력해주세요.');
+      return;
+    }
+
+    const result = await updateDiary(id, {
+      title,
+      content,
+      tag: tags.join(','),
+      imageUrl: '', // 필요시 이미지 연동
+    });
+
+    if (result.success) {
+      alert('수정 완료!');
+      navigate(`/board/${id}`);
+    } else {
+      alert(`수정 실패: ${result.error}`);
+    }
+  };
+
   return (
     <DefaultLayout>
       <div className="w-full max-w-sm mx-auto">
@@ -44,6 +88,8 @@ const UpdateTravelDiaryPage = () => {
             <div>
               <input
                 type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 placeholder="제목을 입력하세요"
                 className="w-full border border-gray-200 rounded-lg p-2 text-center font-bold text-lg focus:outline-none"
               />
@@ -78,6 +124,8 @@ const UpdateTravelDiaryPage = () => {
             {/* 내용 입력 */}
             <textarea
               rows={10}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
               placeholder="내용을 입력하세요."
               className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
             />
@@ -89,8 +137,17 @@ const UpdateTravelDiaryPage = () => {
                 일정 보기
               </button>
             </div>
+
+            {/* 수정 버튼 */}
+            <div className="w-full mt-6">
+              <button
+                onClick={handleUpdate}
+                className="w-full py-3 bg-blue-500 text-white rounded-xl text-sm shadow"
+              >
+                수정 완료
+              </button>
+            </div>
           </div>
-          <div className="text-center pt-10">아래에 일정 관련 UI 구현 </div>
         </div>
       </div>
     </DefaultLayout>

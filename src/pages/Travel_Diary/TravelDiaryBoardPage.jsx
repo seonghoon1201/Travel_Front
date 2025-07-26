@@ -21,9 +21,8 @@ const TravelDiaryBoardPage = () => {
         const formatted = res.data.map((item) => ({
           id: item.boardId,
           title: item.title,
-          nickname: item.nickname,
-          period: item.period || '', // 없으면 빈 값
-          tags: item.tags || [],
+          nickname: item.userNickname,
+          tags: item.tag ? item.tag.split(',') : [], // 문자열 → 배열 변환
           imageUrl: item.imageUrl || '',
         }));
         setDiaries(formatted);
