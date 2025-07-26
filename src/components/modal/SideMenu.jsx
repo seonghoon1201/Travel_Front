@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { X, MapPinned, Notebook, Heart } from 'lucide-react';
 
 import useUserStore from '../../store/userStore';
-import profileDefault from '../../assets/profile_default.png';
 
 const SideMenu = ({ onClose }) => {
   const navigate = useNavigate();
@@ -82,7 +81,7 @@ const SideMenu = ({ onClose }) => {
                 </div>
                 <div className="w-2/5 flex justify-end">
                   <img
-                    src={profileImageUrl || profileDefault}
+                    src={profileImageUrl}
                     alt="프로필 이미지"
                     className="w-20 h-20 object-cover rounded-full"
                   />
