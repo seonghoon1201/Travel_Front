@@ -5,7 +5,7 @@ import PrimaryButton from '../components/common/PrimaryButton';
 import { Pencil, X } from 'lucide-react';
 import useUserStore from '../store/userStore';
 import profileDefault from '../assets/profile_default.png';
-import { updateUserProfile } from '../api/updateUserProfile';
+import { userprofileUpdate } from '../api/user/userprofileUpdate';
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -36,7 +36,7 @@ const EditProfile = () => {
 
   // 닉네임 저장 후 마이페이지로 이동
   const handleUpdate = async () => {
-    const result = await updateUserProfile({
+    const result = await userprofileUpdate({
       userNickname: nickname,
       userProfileImage: profileImageUrl,
     });

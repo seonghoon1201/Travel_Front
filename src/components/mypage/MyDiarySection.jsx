@@ -1,32 +1,39 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import useUserStore from '../../store/userStore';
+import { fetchMyDiaries } from '../../api/user/userContentApi';
 import TravelDiary from '../../components/traveldiary/TravelDiary';
 
 const MyDiarySection = () => {
-  //더미값 지우면 문구만 보여지게
-  const diaryList = [
-    {
-      title: '6월의 제주',
-      nickname: '재균짱123',
-      period: '3박 4일',
-      tags: ['제주', '6월', '여박여행'],
-      imageUrl: '', // 이미지가 없을 경우 빈 문자열
-    },
-  ];
+  const [diaries, setDiaries] = useState([]);
+  const accessToken = useUserStore((state) => state.accessToken);
+
+  useEffect(() => {
+    const loadDiaries = async () => {
+      try {
+        const data = await fetchMyDiaries(accessToken);
+        setDiaries(data);
+      } catch (error) {
+        console.error('내 여행일기 불러오기 실패:', error);
+      }
+    };
+
+    loadDiaries();
+  }, [accessToken]);
 
   return (
-    <div className="p-4 flex justify-center">
-      {diaryList.length === 0 ? (
-        <p className="text-center text-gray-400 mt-8">
-          작성된 여행일기가 없습니다.
-        </p>
+    <div className="bg-white px-4 pt-2 m-2">
+      <p className="text-sm font-semibold text-gray-600 mb-3 m-2">
+        내 여행 일기
+      </p>
+      {diaries.length === 0 ? (
+        <p className="text-gray-400 text-sm">작성한 여행일기가 없습니다.</p>
       ) : (
-        diaryList.map((diary, idx) => (
+        diaries.map((diary) => (
           <TravelDiary
-            key={idx}
+            key={diary.boardId}
             title={diary.title}
-            nickname={diary.nickname}
-            period={diary.period}
-            tags={diary.tags}
+            content={diary.content}
+            createdAt={diary.createdAt}
             imageUrl={diary.imageUrl}
           />
         ))

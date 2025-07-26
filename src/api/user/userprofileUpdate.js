@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { getItem, setItem } from '../utils/localStorage';
+import { getItem, setItem } from '../../utils/localStorage';
 
-export const updateUserProfile = async ({ userNickname, userProfileImage }) => {
+export const userprofileUpdate = async ({ userNickname, userProfileImage }) => {
   const accessToken = getItem('accessToken');
 
   try {
