@@ -38,7 +38,7 @@ const WriteTravelDiary = () => {
     setInputValue('');
   };
 
-  /** 스페이스/엔터 시 태그 추가 */
+  /** 스페이스 혹은 엔터 시 태그 추가 */
   const handleKeyDown = (e) => {
     if (e.key === ' ' || e.key === 'Enter') {
       e.preventDefault();
@@ -60,7 +60,6 @@ const WriteTravelDiary = () => {
     setPreviewUrl(URL.createObjectURL(file)); // 미리보기용
   };
 
-  /** 작성 API 호출 */
   const handleSubmit = async () => {
     if (!title.trim() || !content.trim()) {
       alert('제목과 내용을 입력해주세요.');
@@ -70,7 +69,7 @@ const WriteTravelDiary = () => {
     try {
       let uploadedUrl = '';
 
-      // 1) 이미지 파일 업로드 (선택된 경우만)
+      // 이미지 파일 업로드 (선택된 경우만)
       if (selectedFile) {
         const uploadRes = await uploadProfileImage(selectedFile);
         if (!uploadRes.success) {
@@ -80,7 +79,7 @@ const WriteTravelDiary = () => {
         uploadedUrl = uploadRes.imageUrl;
       }
 
-      // 2) 작성 API 호출
+      // 2작성 API 호출
       const result = await writeDiary({
         title,
         content,

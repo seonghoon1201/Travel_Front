@@ -7,6 +7,7 @@ import BackHeader from '../../components/header/BackHeader';
 
 import { getDiaryDetail } from '../../api/board/getDiaryDetail';
 import { updateDiary } from '../../api/board/updateDiary';
+import { uploadProfileImage } from '../../api/file/uploadProfileImage'; // 이미지 업로드 API
 
 const UpdateTravelDiaryPage = () => {
   const { boardId } = useParams();
@@ -17,6 +18,10 @@ const UpdateTravelDiaryPage = () => {
   const [tags, setTags] = useState([]);
   const [inputValue, setInputValue] = useState('');
 
+  // 이미지 상태
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
+
   // 기존 데이터 불러오기
   useEffect(() => {
     const fetchDiary = async () => {
@@ -25,6 +30,7 @@ const UpdateTravelDiaryPage = () => {
         setTitle(res.data.title);
         setContent(res.data.content);
         setTags(res.data.tag ? res.data.tag.split(',') : []);
+        if (res.data.imageUrl) setPreviewUrl(res.data.imageUrl); // 기존 이미지 미리보기
       }
     };
     fetchDiary();
@@ -54,6 +60,15 @@ const UpdateTravelDiaryPage = () => {
     setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
+  /** 이미지 선택 */
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file)); // 미리보기용
+  };
+
   // 수정 API 호출
   const handleUpdate = async () => {
     if (!title.trim() || !content.trim()) {
@@ -61,18 +76,34 @@ const UpdateTravelDiaryPage = () => {
       return;
     }
 
-    const result = await updateDiary(boardId, {
-      title,
-      content,
-      tag: tags.length > 0 ? tags.join(',') : '',
-      imageUrl: '',
-    });
+    try {
+      let uploadedUrl = previewUrl;
 
-    if (result.success) {
-      alert('수정 완료!');
-      navigate(`/board/travel/diary/${boardId}`);
-    } else {
-      alert(`수정 실패: ${result.error}`);
+      // 새 파일 선택 시 업로드
+      if (selectedFile) {
+        const uploadRes = await uploadProfileImage(selectedFile);
+        if (!uploadRes.success) {
+          alert('이미지 업로드 실패');
+          return;
+        }
+        uploadedUrl = uploadRes.imageUrl;
+      }
+
+      const result = await updateDiary(boardId, {
+        title,
+        content,
+        tag: tags.length > 0 ? tags.join(',') : '',
+        imageUrl: uploadedUrl || '', // 기존 이미지 유지 or 새 이미지
+      });
+
+      if (result.success) {
+        alert('수정 완료!');
+        navigate(`/board/travel/diary/${boardId}`);
+      } else {
+        alert(`수정 실패: ${result.error}`);
+      }
+    } catch (err) {
+      alert('오류 발생: ' + err.message);
     }
   };
 
@@ -129,13 +160,33 @@ const UpdateTravelDiaryPage = () => {
               className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
             />
 
-            {/* 일정 보기 버튼 */}
-            <div className="w-full flex justify-end">
+            {/* 이미지 업로드 + 미리보기 */}
+            <div className="w-full flex justify-between items-center">
+              <label className="flex items-center gap-1 text-sm text-white bg-gray-300 px-3 py-1.5 rounded-full cursor-pointer">
+                이미지 변경
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
+                />
+              </label>
+
               <button className="flex items-center gap-1 text-sm text-white bg-sky-300 px-3 py-1.5 rounded-full">
                 <CalendarDays className="w-4 h-4" />
                 일정 보기
               </button>
             </div>
+
+            {previewUrl && (
+              <div className="mt-2">
+                <img
+                  src={previewUrl}
+                  alt="미리보기"
+                  className="rounded-lg w-full object-cover"
+                />
+              </div>
+            )}
 
             {/* 수정 버튼 */}
             <div className="w-full mt-6">
