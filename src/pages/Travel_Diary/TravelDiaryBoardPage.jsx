@@ -16,7 +16,7 @@ const TravelDiaryBoardPage = () => {
 
   useEffect(() => {
     const fetchDiaries = async () => {
-      const res = await getDiary(0, 20); // 처음 20개 불러오기
+      const res = await getDiary(0, 20);
       if (res.success) {
         const formatted = res.data.map((item) => ({
           id: item.boardId,

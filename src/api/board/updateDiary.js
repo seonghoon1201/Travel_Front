@@ -10,13 +10,16 @@ export const updateDiary = async (boardId, updateData) => {
       updateData,
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: token ? `Bearer ${token}` : undefined,
         },
       }
     );
     return { success: true, data: res.data };
   } catch (error) {
-    console.error('게시글 수정 실패:', error.response?.data || error.message);
+    console.error('게시글 수정 실패:', {
+      status: error.response?.status,
+      data: error.response?.data,
+    });
     return { success: false, error: error.response?.data || '수정 실패' };
   }
 };

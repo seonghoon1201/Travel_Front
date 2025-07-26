@@ -18,7 +18,6 @@ const PostActionModal = ({ id }) => {
         setIsOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
@@ -62,7 +61,7 @@ const PostActionModal = ({ id }) => {
           </button>
           <button
             onClick={() => {
-              navigate(`/update/diary/travel/${id}`);
+              navigate(`/update/travel/diary/${id}`);
               closeMenu();
             }}
             className="w-full px-4 py-2 text-sm hover:bg-gray-100"

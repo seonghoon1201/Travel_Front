@@ -9,10 +9,9 @@ import { getDiaryDetail } from '../../api/board/getDiaryDetail';
 import { updateDiary } from '../../api/board/updateDiary';
 
 const UpdateTravelDiaryPage = () => {
-  const { id } = useParams(); // boardId
+  const { boardId } = useParams();
   const navigate = useNavigate();
 
-  // 상태
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tags, setTags] = useState([]);
@@ -21,7 +20,7 @@ const UpdateTravelDiaryPage = () => {
   // 기존 데이터 불러오기
   useEffect(() => {
     const fetchDiary = async () => {
-      const res = await getDiaryDetail(id);
+      const res = await getDiaryDetail(boardId);
       if (res.success) {
         setTitle(res.data.title);
         setContent(res.data.content);
@@ -29,7 +28,7 @@ const UpdateTravelDiaryPage = () => {
       }
     };
     fetchDiary();
-  }, [id]);
+  }, [boardId]);
 
   // 태그 추가
   const addTag = () => {
@@ -62,16 +61,16 @@ const UpdateTravelDiaryPage = () => {
       return;
     }
 
-    const result = await updateDiary(id, {
+    const result = await updateDiary(boardId, {
       title,
       content,
-      tag: tags.join(','),
-      imageUrl: '', // 필요시 이미지 연동
+      tag: tags.length > 0 ? tags.join(',') : '',
+      imageUrl: '',
     });
 
     if (result.success) {
       alert('수정 완료!');
-      navigate(`/board/${id}`);
+      navigate(`/board/travel/diary/${boardId}`);
     } else {
       alert(`수정 실패: ${result.error}`);
     }
