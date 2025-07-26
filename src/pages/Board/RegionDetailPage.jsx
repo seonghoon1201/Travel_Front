@@ -21,15 +21,22 @@ const RegionDetailPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1. 날씨 API 호출
+        const normalizedCity = decodedCity
+          .replace('특별자치도', '')
+          .replace('광역시', '')
+          .replace('특별시', '');
+        // 1. 날씨 API
         const weatherRes = await getWeather(decodedCity);
         if (weatherRes.success) setWeather(weatherRes.data);
 
-        // 2. 투어 API 호출
+        // 2. 투어 API
         const tourRes = await searchTours({
           region: decodedCity,
           category: '관광지',
+          page: 0,
+          size: 10,
         });
+
         if (tourRes.success) {
           const processedPlaces = tourRes.data.content.map((item) => ({
             id: item.contentId,
@@ -39,11 +46,10 @@ const RegionDetailPage = () => {
             lat: parseFloat(item.mapY),
             lng: parseFloat(item.mapX),
           }));
-
           setPlaces(processedPlaces);
         }
       } catch (err) {
-        console.error(err);
+        console.error('RegionDetailPage API 에러:', err);
       }
     };
 
@@ -55,34 +61,41 @@ const RegionDetailPage = () => {
       <div className="w-full max-w-sm mx-auto">
         <BackHeader />
         <div className="w-full min-h-screen bg-[#F8FBFF]">
-          {/* 요약: title만 넘김 */}
+          {/* 요약 */}
           <RegionSummary title={decodedCity} />
 
           {/* 날씨 */}
-          {weather && (
-            <div className="px-4 py-2 flex items-center gap-2 text-sm text-gray-700">
-              <span className="text-xl">{/* 날씨 아이콘 매핑 */}☀️</span>
-              <span>{weather.main.temp}°C</span>
-              <span className="text-gray-500">
-                · {weather.weather.description}
-              </span>
-            </div>
-          )}
+          <div className="px-4 pt-4">
+            <h3 className="text-base font-semibold text-gray-800 mb-2">날씨</h3>
+            {weather && (
+              <div className="px-4 py-2 flex items-center gap-2 text-sm text-gray-700">
+                <span className="text-xl">☀️</span>
+                <span>{weather.main.temp}°C</span>
+                <span className="text-gray-500">
+                  · {weather.weather.description}
+                </span>
+              </div>
+            )}
+          </div>
 
           {/* 즐길거리 */}
           <div className="px-4 pt-4">
             <h3 className="text-base font-semibold text-gray-800 mb-2">
               즐길거리
             </h3>
-            <div>
-              {places.map((place) => (
-                <PlaceList
-                  key={place.id}
-                  name={place.name}
-                  imageUrl={place.imageUrl}
-                  description={place.overview}
-                />
-              ))}
+            <div className="space-y-3">
+              {places.length > 0 ? (
+                places.map((place) => (
+                  <PlaceList
+                    key={place.id}
+                    name={place.name}
+                    imageUrl={place.imageUrl}
+                    description={place.description}
+                  />
+                ))
+              ) : (
+                <p className="text-sm text-gray-400">즐길거리가 없습니다.</p>
+              )}
             </div>
           </div>
         </div>
