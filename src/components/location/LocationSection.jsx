@@ -2,8 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchWikipediaData } from '../../utils/wikiApi';
 
-// 더미 도시 리스트 (핫플 대상 도시)
-const hotCities = ['', '부산광역시', '서울특별시', '광주광역시'];
+// 더미값
+const hotCities = [
+  '성남시',
+  '서울특별시',
+  '부산광역시',
+  '서울특별시',
+  '광주광역시',
+  '대전광역시',
+  '제주특별자치도',
+  '울산광역시',
+];
 
 const HotPlaceSection = () => {
   const navigate = useNavigate();
@@ -38,12 +47,15 @@ const HotPlaceSection = () => {
   return (
     <section className="mb-5">
       <div className="flex justify-between items-center px-3">
-        <h3 className="text-base font-semibold">요즘 핫플</h3>
-        <button className="text-sm text-gray-500">+ 더보기</button>
+        <h3 className="font-jalnongothic">요즘 핫플</h3>
+
+        <button className="font-pretendard text-sm text-blue-500 border rounded-full px-2 py-0.5">
+          + 더보기
+        </button>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto px-3 mt-2">
-        {places.map((item, idx) => (
+      <div className="flex gap-3 overflow-x-auto px-3 mt-2 scrollbar-hide">
+        {places.slice(0, 7).map((item, idx) => (
           <div
             key={idx}
             className="flex-shrink-0 w-20 text-center cursor-pointer"

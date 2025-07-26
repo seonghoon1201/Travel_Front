@@ -21,25 +21,23 @@ const RegionDetailPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 도시명 축약 (백엔드 region 필드 맞추기)
-        const normalizedCity = decodedCity
-          .replace('특별자치도', '')
-          .replace('광역시', '')
-          .replace('특별시', '')
-          .trim();
+        // API에 그대로 보내는 값 확인용 로그
+        console.log('Weather / Tour API 호출 도시명:', decodedCity);
 
         // 1. 날씨 API 호출
-        const weatherRes = await getWeather(normalizedCity);
+        const weatherRes = await getWeather(decodedCity);
         if (weatherRes.success) {
+          console.log('날씨 API 응답:', weatherRes.data);
+
           setWeather(weatherRes.data);
         } else {
           console.warn('날씨 데이터 없음');
         }
 
-        // 2. 투어 API 호출 (keyword도 반드시 값 넣기)
+        // 2. 투어 API 호출
         const tourRes = await searchTours({
-          keyword: 0,
-          region: normalizedCity,
+          keyword: 0, // 기본값 0
+          region: decodedCity, // 그대로 전달
           category: '관광지',
           page: 0,
           size: 20,
@@ -79,12 +77,36 @@ const RegionDetailPage = () => {
           <div className="px-4 pt-4">
             <h3 className="text-base font-semibold text-gray-800 mb-2">날씨</h3>
             {weather ? (
-              <div className="px-4 py-2 flex items-center gap-2 text-sm text-gray-700">
-                <span className="text-xl">☀️</span>
-                <span>{weather.main.temp}°C</span>
-                <span className="text-gray-500">
-                  · {weather.weather.description}
-                </span>
+              <div className="flex items-center justify-between px-4 py-3 bg-white rounded-lg shadow">
+                {/* 왼쪽: 아이콘 + 최저/최고온도 */}
+                <div className="flex items-center gap-3">
+                  <img
+                    src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`}
+                    alt={weather.weather[0].description}
+                    className="w-10 h-10"
+                  />
+                  <div className="text-sm text-gray-700 pt-4 ">
+                    <p className="font-medium">
+                      최저 {weather.main.temp_min}°C / 최고{' '}
+                      {weather.main.temp_max}°C
+                    </p>
+                    <p className="text-gray-500">
+                      {weather.weather.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 오른쪽: 날씨 보러가기 버튼 */}
+                <a
+                  href={`https://search.naver.com/search.naver?query=${encodeURIComponent(
+                    decodedCity
+                  )}+날씨`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 text-sm hover:underline"
+                >
+                  날씨 보러가기
+                </a>
               </div>
             ) : (
               <p className="text-sm text-gray-400">
