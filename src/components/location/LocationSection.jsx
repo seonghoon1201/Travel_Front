@@ -1,44 +1,73 @@
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { searchTours } from '../../api/tour/searchTour';
 
-const LocationSection = ({ title, type, locations, showMore, navigateTo }) => {
+const LocationSection = ({ title }) => {
   const navigate = useNavigate();
+  const [places, setPlaces] = useState([]);
 
-  const handleClick = (item) => {
-    if (type === 'hot') {
-      navigate(`/region/detail/${encodeURIComponent(item.city)}`);
-    } else if (type === 'budget') {
-      navigate(`/place/detail/${item.contentId}`);
-    }
+  useEffect(() => {
+    const fetchTours = async () => {
+      const res = await searchTours({
+        keyword: '해운대', // 기본값
+        region: '부산', // 기본값
+        category: '관광지',
+        page: 0,
+        size: 10,
+      });
+
+      if (res.success) {
+        console.log('투어 API 응답:', res.data);
+
+        const processed = res.data.content.map((item) => {
+          // city 추출 (addr1 첫 단어)
+          const city = item.addr1 ? item.addr1.split(' ')[0] : item.title;
+          return {
+            city,
+            name: item.title,
+            image: item.firstImage || '/images/default_place.jpg',
+          };
+        });
+
+        setPlaces(processed);
+      } else {
+        console.error('투어 API 호출 실패:', res.error);
+      }
+    };
+
+    fetchTours();
+  }, []);
+
+  const locations = [
+    { name: '제주도', image: '/images/jeju.png' },
+    { name: '부산광역시', image: '/images/busan.png' },
+    { name: '광주광역시', image: '/images/gwangju.png' },
+  ];
+
+  const handleClick = (city) => {
+    navigate(`/region/detail/${encodeURIComponent(city)}`);
   };
 
   return (
-    <section className=" mb-5">
-      {/* 게시글 이름, 더보기 버튼 */}
+    <section className="mb-5">
       <div className="flex justify-between items-center px-3">
-        <h2 className="text-lg font-jalnongothic">{title}</h2>
-        {showMore && (
-          <button
-            className="font-pretendard text-sm text-blue-500 border rounded-full px-2 py-0.5"
-            onClick={() => navigate(navigateTo)}
-          >
-            + 더보기
-          </button>
-        )}
+        <h3 className="text-base font-semibold">{title}</h3>
+        <button className="text-sm text-gray-500">+ 더보기</button>
       </div>
-      {/* 리스트 */}
-      <div className="flex overflow-x-auto mt-2 px-3 space-x-4 scrollbar-hide">
-        {locations.slice(0, 8).map((loc, idx) => (
+
+      <div className="flex gap-3 overflow-x-auto px-3 mt-2">
+        {places.map((item, idx) => (
           <div
             key={idx}
-            className="flex-shrink-0 flex flex-col items-center w-20"
-            onClick={() => handleClick(loc)}
+            className="flex-shrink-0 w-20 text-center cursor-pointer"
+            onClick={() => handleClick(item)}
           >
             <img
-              src={loc.image}
-              alt={loc.name}
-              className="w-20 h-20 rounded-full object-cover"
+              src={item.image}
+              alt={item.name}
+              className="w-20 h-20 rounded-full object-cover mb-1"
             />
-            <p className="text-semibold font-noonnu mt-1">{loc.name}</p>
+            <p className="text-xs">{item.city}</p>
           </div>
         ))}
       </div>

@@ -1,18 +1,39 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from 'antd';
+import { getDiary } from '../../api/board/getDiary';
+
 const { Meta } = Card;
 
-const TravelDiaryList = ({ diaries = [], title, showMore }) => {
-  const navigate = useNavigate();
+const TravelDiaryList = ({ title, showMore }) => {
+  const [diaries, setDiaries] = useState([]);
+  const navigate = useNavigate(); // navigate 추가
+
+  useEffect(() => {
+    const fetchDiaries = async () => {
+      const res = await getDiary(0, 6); // 함수명 변경
+      if (res.success) {
+        const formatted = res.data.map((item) => ({
+          id: item.boardId,
+          title: item.title,
+          image: item.imageUrl,
+        }));
+        setDiaries(formatted);
+      }
+    };
+    fetchDiaries();
+  }, []);
+
   return (
     <div>
       {/* 제목과 더보기 버튼 */}
       <div className="flex justify-between items-center px-1 mb-2">
         <h2 className="text-lg font-jalnongothic">{title}</h2>
         {showMore && (
-          <button className="font-pretendard text-sm text-blue-500 border rounded-full px-2 py-0.5"
-          onClick={() => navigate('/board/travel/diary')}>
+          <button
+            className="font-pretendard text-sm text-blue-500 border rounded-full px-2 py-0.5"
+            onClick={() => navigate('/board/travel/diary')}
+          >
             + 더보기
           </button>
         )}
@@ -23,7 +44,7 @@ const TravelDiaryList = ({ diaries = [], title, showMore }) => {
             key={diary.id}
             hoverable
             style={{ width: 160 }}
-            onClick={() => navigate(`/board/travel/diary/${diary.id}`)} 
+            onClick={() => navigate(`/board/travel/diary/${diary.id}`)}
             cover={
               diary.image ? (
                 <img
