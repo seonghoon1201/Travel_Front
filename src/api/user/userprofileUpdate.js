@@ -1,12 +1,14 @@
+// src/api/user/userprofileUpdate.js
 import axios from 'axios';
-import { getItem, setItem } from '../utils/localStorage';
+import { getItem, setItem } from '../../utils/localStorage';
+import { API_BASE_URL } from '../config';
 
-export const updateUserProfile = async ({ userNickname, userProfileImage }) => {
+export const userprofileUpdate = async ({ userNickname, userProfileImage }) => {
   const accessToken = getItem('accessToken');
 
   try {
     const response = await axios.put(
-      'http://localhost:8080/user/update',
+      `${API_BASE_URL}/user/update`,
       { userNickname, userProfileImage },
       {
         headers: {

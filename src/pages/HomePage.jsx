@@ -26,8 +26,8 @@ const HomePage = () => {
   }, []);
 
   const dummyLocations = [
-    { name: '제주도', image: kakaoIcon },
-    { name: '부산', image: kakaoIcon },
+    { city: '제주특별자치도', name: '제주도', image: kakaoIcon },
+    { city: '부산', name: '부산', image: kakaoIcon },
     { name: '강릉', image: kakaoIcon },
     { name: '강릉', image: kakaoIcon },
     { name: '강릉', image: kakaoIcon },
@@ -97,11 +97,7 @@ const HomePage = () => {
                 showMore={true}
                 navigateTo="/board/budget"
               />
-              <TravelDiaryList
-                title="여행 일기"
-                diaries={dummyDiaries}
-                showMore={true}
-              />
+              <TravelDiaryList title="여행 일기" showMore={true} />
             </main>
           </div>
         </div>

@@ -2,7 +2,16 @@ import React from 'react';
 import profileDefault from '../../assets/profile_default.png';
 import { useNavigate } from 'react-router-dom';
 
-const TravelDiary = ({ id, title, userProfileImage = '', nickname, period, tags = [], imageUrl, variant = "default" }) => {
+const TravelDiary = ({
+  id,
+  title,
+  userProfileImage = '',
+  userNickname,
+  period,
+  tags = [],
+  imageUrl,
+  variant = 'default',
+}) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -10,8 +19,8 @@ const TravelDiary = ({ id, title, userProfileImage = '', nickname, period, tags 
   };
 
   //UI compact 모드일 경우 작은 카드 스타일로 렌더링
-  const isCompact = variant === "compact"; 
-  
+  const isCompact = variant === 'compact';
+
   return (
     <div
       onClick={handleClick}
@@ -31,30 +40,24 @@ const TravelDiary = ({ id, title, userProfileImage = '', nickname, period, tags 
         />
       )}
 
-    <div className="p-4">
+      <div className="p-4">
         <div className="flex items-center gap-2 mb-1">
           {/* 프로필 이미지 */}
           {!isCompact && (
             <img
-              src={
-                userProfileImage ||profileDefault
-              }
+              src={userProfileImage || profileDefault}
               alt="profile"
               className="w-12 h-12 rounded-full object-cover -mt-12"
             />
           )}
-          <h2
-            className={` font-semibold ${
-              isCompact ? 'truncate' : ''
-            }`}
-          >
+          <h2 className={` font-semibold ${isCompact ? 'truncate' : ''}`}>
             {title}
           </h2>
         </div>
         {!isCompact && (
           <>
             <p className="text-sm text-gray-600">
-              {nickname}의 일정 · {period}
+              {userNickname}의 일정 · {period}
             </p>
             <div className="mt-2 text-xs text-gray-400 space-x-1">
               {tags.map((tag, index) => (
