@@ -32,18 +32,24 @@ const MyDiarySection = () => {
       <p className="text-sm font-semibold text-gray-600 mb-3 m-2">
         내 여행 일기
       </p>
+
       {diaries.length === 0 ? (
         <p className="text-gray-400 text-sm">작성한 여행일기가 없습니다.</p>
       ) : (
-        diaries.map((diary) => (
-          <TravelDiary
-            key={diary.boardId}
-            title={diary.title}
-            content={diary.content}
-            createdAt={diary.createdAt}
-            imageUrl={diary.imageUrl}
-          />
-        ))
+        <div className="space-y-4 mb-6">
+          {' '}
+          {/* 리스트 사이 간격 및 하단 여백 */}
+          {diaries.map((diary) => (
+            <TravelDiary
+              key={diary.boardId}
+              title={diary.title}
+              userNickname={diary.userNickname}
+              content={diary.content}
+              createdAt={diary.createdAt}
+              imageUrl={diary.imageUrl}
+            />
+          ))}
+        </div>
       )}
 
       {/* 여행일기 쓰러가기 버튼 */}
