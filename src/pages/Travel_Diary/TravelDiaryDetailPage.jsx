@@ -8,6 +8,7 @@ import DefaultLayout from '../../layouts/DefaultLayout';
 import PostActionModal from '../../components/modal/PostActionModal';
 import KakaoMap from '../../components/map/KakaoMap';
 
+import useUserStore from '../../store/userStore'; // 경로 수정
 import { getDiaryDetail } from '../../api/board/getDiaryDetail';
 
 const TravelDiaryDetail = () => {
@@ -15,9 +16,12 @@ const TravelDiaryDetail = () => {
   const [diary, setDiary] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Zustand에서 토큰 불러오기
+  const token = useUserStore((state) => state.accessToken);
+
   useEffect(() => {
     const fetchDiaryDetail = async () => {
-      const res = await getDiaryDetail(id);
+      const res = await getDiaryDetail(id, token); // token 전달
       if (res.success) {
         setDiary(res.data);
       }
@@ -25,7 +29,7 @@ const TravelDiaryDetail = () => {
     };
 
     if (id) fetchDiaryDetail();
-  }, [id]);
+  }, [id, token]);
 
   if (loading)
     return <p className="text-center text-gray-400">불러오는 중...</p>;
@@ -43,9 +47,9 @@ const TravelDiaryDetail = () => {
           {/* 프로필 */}
           <div className="flex items-center justify-between pb-3 border-b-2">
             <div className="flex items-center gap-3">
-              {/* 작성자 이미지 추후에 연동 예정 */}
+              {/* 작성자 프로필 이미지 추후 연동 예정 */}
               <img
-                src={profileDefault}
+                src={diary.userProfileImage || profileDefault}
                 alt="profile"
                 className="w-12 h-12 rounded-full object-cover"
               />
@@ -70,7 +74,7 @@ const TravelDiaryDetail = () => {
               <img
                 src={diary.imageUrl}
                 alt="업로드 이미지"
-                className="rounded-lg w-full object-cover"
+                className="rounded-lg w-full h-48 object-cover"
               />
             </div>
           )}
