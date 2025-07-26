@@ -1,48 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { searchTours } from '../../api/tour/searchTour';
+import { fetchWikipediaData } from '../../utils/wikiApi';
 
-const LocationSection = ({ title }) => {
+// 더미 도시 리스트 (핫플 대상 도시)
+const hotCities = ['제주특별자치도', '부산광역시', '서울특별시', '광주광역시'];
+
+const HotPlaceSection = () => {
   const navigate = useNavigate();
   const [places, setPlaces] = useState([]);
 
   useEffect(() => {
-    const fetchTours = async () => {
-      const res = await searchTours({
-        keyword: '해운대', // 기본값
-        region: '부산', // 기본값
-        category: '관광지',
-        page: 0,
-        size: 10,
-      });
-
-      if (res.success) {
-        console.log('투어 API 응답:', res.data);
-
-        const processed = res.data.content.map((item) => {
-          // city 추출 (addr1 첫 단어)
-          const city = item.addr1 ? item.addr1.split(' ')[0] : item.title;
-          return {
-            city,
-            name: item.title,
-            image: item.firstImage || '/images/default_place.jpg',
-          };
-        });
-
-        setPlaces(processed);
-      } else {
-        console.error('투어 API 호출 실패:', res.error);
+    const loadWikipediaData = async () => {
+      try {
+        const results = await Promise.all(
+          hotCities.map(async (city) => {
+            const data = await fetchWikipediaData(city);
+            return {
+              city: data.title,
+              image: data.imageUrl, // 위키에서 받아온 이미지
+              summary: data.extract, // 요약 (필요 시 상세에서 사용)
+            };
+          })
+        );
+        setPlaces(results);
+      } catch (err) {
+        console.error('핫플 데이터 로드 실패:', err);
       }
     };
 
-    fetchTours();
+    loadWikipediaData();
   }, []);
-
-  const locations = [
-    { name: '제주도', image: '/images/jeju.png' },
-    { name: '부산광역시', image: '/images/busan.png' },
-    { name: '광주광역시', image: '/images/gwangju.png' },
-  ];
 
   const handleClick = (city) => {
     navigate(`/region/detail/${encodeURIComponent(city)}`);
@@ -51,7 +38,7 @@ const LocationSection = ({ title }) => {
   return (
     <section className="mb-5">
       <div className="flex justify-between items-center px-3">
-        <h3 className="text-base font-semibold">{title}</h3>
+        <h3 className="text-base font-semibold">요즘 핫플</h3>
         <button className="text-sm text-gray-500">+ 더보기</button>
       </div>
 
@@ -60,11 +47,11 @@ const LocationSection = ({ title }) => {
           <div
             key={idx}
             className="flex-shrink-0 w-20 text-center cursor-pointer"
-            onClick={() => handleClick(item)}
+            onClick={() => handleClick(item.city)}
           >
             <img
-              src={item.image}
-              alt={item.name}
+              src={item.image || '/images/default_place.jpg'}
+              alt={item.city}
               className="w-20 h-20 rounded-full object-cover mb-1"
             />
             <p className="text-xs">{item.city}</p>
@@ -75,4 +62,4 @@ const LocationSection = ({ title }) => {
   );
 };
 
-export default LocationSection;
+export default HotPlaceSection;
