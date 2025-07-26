@@ -43,7 +43,7 @@ const TravelDiaryDetail = () => {
     <DefaultLayout>
       <div className="w-full max-w-sm mx-auto">
         <BackHeader />
-        <div className="bg-white rounded-xl shadow-md p-5 space-y-6 w-full">
+        <div className="bg-white rounded-xl shadow-md p-6 space-y-6 w-full">
           {/* 프로필 */}
           <div className="flex items-center justify-between pb-3 border-b-2">
             <div className="flex items-center gap-3">
@@ -59,7 +59,7 @@ const TravelDiaryDetail = () => {
               </div>
             </div>
             <div className="text-gray-400 text-xl font-bold">
-              <PostActionModal />
+              <PostActionModal id={diary.boardId || diary.id} />
             </div>
           </div>
 
