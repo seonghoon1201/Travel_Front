@@ -51,15 +51,20 @@ const AppRoutes = () => (
       <Route path="/edit/profile" element={<EditProfile />} />
 
       <Route path="/board/hot" element={<HotBoardPage />} />
-      <Route path="/region/detail/:city" element={<RegionDetailPage />} />      
+      <Route path="/region/detail/:city" element={<RegionDetailPage />} />
       <Route path="/board/budget" element={<BudgetBoardPage />} />
       <Route path="/place/detail/:contentID" element={<PlaceDetail />} />
 
-
       <Route path="/board/travel/diary" element={<TravelDiaryBoardPage />} />
-      <Route path="/board/travel/diary/:id" element={<TravelDiaryDetailPage />} />
+      <Route
+        path="/board/travel/diary/:id"
+        element={<TravelDiaryDetailPage />}
+      />
       <Route path="/write/travel/diary" element={<WriteTravelDiaryPage />} />
-      <Route path="/uptae/travel/diary/:id" element={<UpdateTravelDiaryPage />} />
+      <Route
+        path="/update/travel/diary/:boardId"
+        element={<UpdateTravelDiaryPage />}
+      />
 
       <Route path="/plan/location" element={<PlanLocationPage />} />
       <Route path="/kakao/callback" element={<KakaoCallbackPage />} />
