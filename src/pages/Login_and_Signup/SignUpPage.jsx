@@ -51,7 +51,7 @@ const SignUpPage = () => {
 
     try {
       const checkRes = await axios.get(
-        'http://124.49.210.216/mail/check-email',
+        `${process.env.REACT_APP_API_URL}/mail/check-email`,
         {
           params: { email },
         }
@@ -65,7 +65,7 @@ const SignUpPage = () => {
       }
 
       // 인증코드 전송
-      await axios.post('http://124.49.210.216/mail/send', { email });
+      await axios.post(`${process.env.REACT_APP_API_URL}/mail/send`, { email });
       alert('인증코드가 이메일로 전송되었습니다.');
       setIsCodeSent(true);
     } catch (error) {
@@ -76,7 +76,7 @@ const SignUpPage = () => {
 
   const handleVerifyAuthCode = async () => {
     try {
-      const res = await axios.post('http://124.49.210.216/mail/verify', {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/mail/verify`, {
         token: authCode,
       });
 
@@ -109,7 +109,7 @@ const SignUpPage = () => {
       formData.append('image', file);
 
       const res = await axios.post(
-        'http://124.49.210.216/file/upload',
+        `${process.env.REACT_APP_API_URL}/file/upload`,
         formData,
         {
           headers: {
@@ -171,7 +171,7 @@ const SignUpPage = () => {
 
     try {
       const res = await axios.post(
-        'http://124.49.210.216/user/register',
+        `${process.env.REACT_APP_API_URL}/user/register`,
         payload
       );
 
@@ -212,180 +212,182 @@ const SignUpPage = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit}>
-        {/* 이메일 */}
-        <label className="block text-sm font-medium mb-1">
-          이메일 <span className="text-red-500">*</span>
-        </label>
-        <div className="flex gap-2 mb-3">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="이메일을 입력해 주세요."
-            className="border w-full px-3 py-2 rounded text-sm"
-          />
-          <button
-            type="button"
-            onClick={handleSendAuthCode}
-            className="text-sm border px-3 py-2 rounded text-blue-500 whitespace-nowrap"
-            disabled={!email}
-          >
-            이메일 중복 확인
-          </button>
-        </div>
+      <div className="w-full max-w-md mx-auto px-4">
+        <form onSubmit={handleSubmit}>
+          {/* 이메일 */}
+          <label className="block text-sm font-medium mb-1">
+            이메일 <span className="text-red-500">*</span>
+          </label>
+          <div className="flex gap-2 mb-3">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="이메일을 입력해 주세요."
+              className="border w-full px-3 py-2 rounded text-sm"
+            />
+            <button
+              type="button"
+              onClick={handleSendAuthCode}
+              className="text-sm border px-3 py-2 rounded text-blue-500 whitespace-nowrap"
+              disabled={!email}
+            >
+              이메일 중복 확인
+            </button>
+          </div>
 
-        {/* 인증코드 */}
-        {isCodeSent && (
-          <>
-            <label className="block text-sm font-medium mb-1">
-              인증코드 입력 <span className="text-red-500">*</span>
-            </label>
-            <div className="flex gap-2 mb-3">
+          {/* 인증코드 */}
+          {isCodeSent && (
+            <>
+              <label className="block text-sm font-medium mb-1">
+                인증코드 입력 <span className="text-red-500">*</span>
+              </label>
+              <div className="flex gap-2 mb-3">
+                <input
+                  type="text"
+                  value={authCode}
+                  onChange={(e) => setAuthCode(e.target.value)}
+                  placeholder="인증코드를 입력해 주세요."
+                  className="border w-full px-3 py-2 rounded text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={handleVerifyAuthCode}
+                  className="text-sm border px-3 py-2 rounded text-blue-500 whitespace-nowrap"
+                >
+                  인증하기
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* 비밀번호 */}
+          <label className="block text-sm font-medium mb-1">
+            비밀번호 <span className="text-red-500">*</span>
+          </label>
+          <div className="relative mb-3">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="비밀번호를 입력해 주세요."
+              className="border w-full px-3 py-2 rounded text-sm pr-10"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+            </button>
+          </div>
+
+          {/* 비밀번호 확인 */}
+          <label className="block text-sm font-medium mb-1">
+            비밀번호 확인 <span className="text-red-500">*</span>
+          </label>
+          <div className="relative mb-1">
+            <input
+              type={showConfirmPassword ? 'text' : 'password'}
+              placeholder="비밀번호를 다시 입력해 주세요."
+              className="border w-full px-3 py-2 rounded text-sm pr-10"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              {showConfirmPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+            </button>
+          </div>
+          {passwordsMismatch && (
+            <p className="text-sm text-red-500">비밀번호가 일치하지 않습니다.</p>
+          )}
+          {passwordsMatch && (
+            <p className="text-sm text-green-600">비밀번호가 일치합니다!</p>
+          )}
+
+          {/* 이름 */}
+          <label className="block text-sm font-medium mt-4 mb-1">
+            이름 <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={userName}
+            onChange={(e) => setUserName(e.target.value)}
+            placeholder="이름을 입력해 주세요."
+            className="border w-full px-3 py-2 rounded text-sm mb-3"
+          />
+
+          {/* 닉네임 */}
+          <label className="block text-sm font-medium mb-1">
+            닉네임 <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={userNickname}
+            onChange={(e) => setUserNickname(e.target.value)}
+            placeholder="닉네임을 입력해 주세요."
+            className="border w-full px-3 py-2 rounded text-sm mb-5"
+          />
+
+          {/* 약관 */}
+          <div className="border-t border-gray-200 my-4" />
+          <div className="text-sm font-medium mb-2">이용 약관</div>
+          <div className="mb-2">
+            <label className="flex items-center gap-2">
               <input
-                type="text"
-                value={authCode}
-                onChange={(e) => setAuthCode(e.target.value)}
-                placeholder="인증코드를 입력해 주세요."
-                className="border w-full px-3 py-2 rounded text-sm"
+                type="checkbox"
+                checked={allChecked}
+                onChange={handleAllAgreeChange}
               />
-              <button
-                type="button"
-                onClick={handleVerifyAuthCode}
-                className="text-sm border px-3 py-2 rounded text-blue-500 whitespace-nowrap"
-              >
-                인증하기
-              </button>
-            </div>
-          </>
-        )}
+              모두 동의합니다
+            </label>
+          </div>
+          <div className="space-y-2 text-sm pl-5">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={terms}
+                onChange={(e) => setTerms(e.target.checked)}
+              />
+              [필수] 이용약관{' '}
+              <span className="text-blue-500 cursor-pointer">[보기]</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={privacy}
+                onChange={(e) => setPrivacy(e.target.checked)}
+              />
+              [필수] 개인정보 수집 이용 동의{' '}
+              <span className="text-blue-500 cursor-pointer">[보기]</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={marketing}
+                onChange={(e) => setMarketing(e.target.checked)}
+              />
+              [선택] 마케팅 정보 수신 동의
+            </label>
+          </div>
 
-        {/* 비밀번호 */}
-        <label className="block text-sm font-medium mb-1">
-          비밀번호 <span className="text-red-500">*</span>
-        </label>
-        <div className="relative mb-3">
-          <input
-            type={showPassword ? 'text' : 'password'}
-            placeholder="비밀번호를 입력해 주세요."
-            className="border w-full px-3 py-2 rounded text-sm pr-10"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <button
-            type="button"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-            onClick={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? (
-              <EyeOff className="w-4 h-4" />
-            ) : (
-              <Eye className="w-4 h-4" />
-            )}
-          </button>
-        </div>
-
-        {/* 비밀번호 확인 */}
-        <label className="block text-sm font-medium mb-1">
-          비밀번호 확인 <span className="text-red-500">*</span>
-        </label>
-        <div className="relative mb-1">
-          <input
-            type={showConfirmPassword ? 'text' : 'password'}
-            placeholder="비밀번호를 다시 입력해 주세요."
-            className="border w-full px-3 py-2 rounded text-sm pr-10"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-          <button
-            type="button"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-          >
-            {showConfirmPassword ? (
-              <EyeOff className="w-4 h-4" />
-            ) : (
-              <Eye className="w-4 h-4" />
-            )}
-          </button>
-        </div>
-        {passwordsMismatch && (
-          <p className="text-sm text-red-500">비밀번호가 일치하지 않습니다.</p>
-        )}
-        {passwordsMatch && (
-          <p className="text-sm text-green-600">비밀번호가 일치합니다!</p>
-        )}
-
-        {/* 이름 */}
-        <label className="block text-sm font-medium mt-4 mb-1">
-          이름 <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          value={userName}
-          onChange={(e) => setUserName(e.target.value)}
-          placeholder="이름을 입력해 주세요."
-          className="border w-full px-3 py-2 rounded text-sm mb-3"
-        />
-
-        {/* 닉네임 */}
-        <label className="block text-sm font-medium mb-1">
-          닉네임 <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          value={userNickname}
-          onChange={(e) => setUserNickname(e.target.value)}
-          placeholder="닉네임을 입력해 주세요."
-          className="border w-full px-3 py-2 rounded text-sm mb-5"
-        />
-
-        {/* 약관 */}
-        <div className="border-t border-gray-200 my-4" />
-        <div className="text-sm font-medium mb-2">이용 약관</div>
-        <div className="mb-2">
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={allChecked}
-              onChange={handleAllAgreeChange}
-            />
-            모두 동의합니다
-          </label>
-        </div>
-        <div className="space-y-2 text-sm pl-5">
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={terms}
-              onChange={(e) => setTerms(e.target.checked)}
-            />
-            [필수] 이용약관{' '}
-            <span className="text-blue-500 cursor-pointer">[보기]</span>
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={privacy}
-              onChange={(e) => setPrivacy(e.target.checked)}
-            />
-            [필수] 개인정보 수집 이용 동의{' '}
-            <span className="text-blue-500 cursor-pointer">[보기]</span>
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={marketing}
-              onChange={(e) => setMarketing(e.target.checked)}
-            />
-            [선택] 마케팅 정보 수신 동의
-          </label>
-        </div>
-
-        <div className="mt-6">
-          <PrimaryButton type="submit">여담 가입하기</PrimaryButton>
-        </div>
-      </form>
+          <div className="mt-6">
+            <PrimaryButton type="submit">여담 가입하기</PrimaryButton>
+          </div>
+        </form>
+      </div>
 
       <CommonModal
         isOpen={isModalOpen}

@@ -27,7 +27,7 @@ const KakaoCallbackPage = () => {
 
       try {
         const res = await axios.post(
-          'http://localhost:8080/auth/kakao/callback',
+          `${process.env.REACT_APP_API_URL}/auth/kakao/callback`,
           { code }
         );
 
