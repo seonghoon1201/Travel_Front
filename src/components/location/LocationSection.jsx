@@ -1,44 +1,72 @@
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { fetchWikipediaData } from '../../utils/wikiApi';
 
-const LocationSection = ({ title, type, locations, showMore, navigateTo }) => {
+// 더미값
+const hotCities = [
+  '성남시',
+  '서울특별시',
+  '부산광역시',
+  '서울특별시',
+  '광주광역시',
+  '대전광역시',
+  '제주특별자치도',
+  '울산광역시',
+];
+
+const HotPlaceSection = () => {
   const navigate = useNavigate();
+  const [places, setPlaces] = useState([]);
 
-  const handleClick = (item) => {
-    if (type === 'hot') {
-      navigate(`/region/detail/${encodeURIComponent(item.city)}`);
-    } else if (type === 'budget') {
-      navigate(`/place/detail/${item.contentId}`);
-    }
+  useEffect(() => {
+    const loadWikipediaData = async () => {
+      try {
+        const results = await Promise.all(
+          hotCities.map(async (city) => {
+            const data = await fetchWikipediaData(city);
+            return {
+              city: data.title,
+              image: data.imageUrl, // 위키에서 받아온 이미지
+              summary: data.extract, // 요약 (필요 시 상세에서 사용)
+            };
+          })
+        );
+        setPlaces(results);
+      } catch (err) {
+        console.error('핫플 데이터 로드 실패:', err);
+      }
+    };
+
+    loadWikipediaData();
+  }, []);
+
+  const handleClick = (city) => {
+    navigate(`/region/detail/${encodeURIComponent(city)}`);
   };
 
   return (
-    <section className=" mb-5">
-      {/* 게시글 이름, 더보기 버튼 */}
-      <div className="flex justify-between items-center px-3">
-        <h2 className="text-lg font-jalnongothic">{title}</h2>
-        {showMore && (
-          <button
-            className="font-pretendard text-sm text-blue-500 border rounded-full px-2 py-0.5"
-            onClick={() => navigate(navigateTo)}
-          >
-            + 더보기
-          </button>
-        )}
+    <section className="mb-5">
+      <div className="flex justify-between items-center px-2">
+        <h3 className="font-jalnongothic">요즘 핫플</h3>
+
+        <button className="font-pretendard text-sm text-blue-500 border rounded-full px-2 py-0.5">
+          + 더보기
+        </button>
       </div>
-      {/* 리스트 */}
-      <div className="flex overflow-x-auto mt-2 px-3 space-x-4 scrollbar-hide">
-        {locations.slice(0, 8).map((loc, idx) => (
+
+      <div className="flex gap-3 overflow-x-auto px-3 mt-2 scrollbar-hide">
+        {places.slice(0, 7).map((item, idx) => (
           <div
             key={idx}
-            className="flex-shrink-0 flex flex-col items-center w-20"
-            onClick={() => handleClick(loc)}
+            className="flex-shrink-0 w-20 text-center cursor-pointer"
+            onClick={() => handleClick(item.city)}
           >
             <img
-              src={loc.image}
-              alt={loc.name}
-              className="w-20 h-20 rounded-full object-cover"
+              src={item.image || '/images/default_place.jpg'}
+              alt={item.city}
+              className="w-20 h-20 rounded-full object-cover mb-1"
             />
-            <p className="text-semibold font-noonnu mt-1">{loc.name}</p>
+            <p className="text-xs">{item.city}</p>
           </div>
         ))}
       </div>
@@ -46,4 +74,4 @@ const LocationSection = ({ title, type, locations, showMore, navigateTo }) => {
   );
 };
 
-export default LocationSection;
+export default HotPlaceSection;

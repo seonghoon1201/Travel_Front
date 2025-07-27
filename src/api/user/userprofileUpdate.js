@@ -1,18 +1,14 @@
+// src/api/user/userprofileUpdate.js
 import axios from 'axios';
-import { getItem, setItem } from '../utils/localStorage';
+import { getItem, setItem } from '../../utils/localStorage';
+import { API_BASE_URL } from '../config';
 
-/**
- * 사용자 프로필 업데이트 API
- * @param {Object} param0
- * @param {string} param0.userNickname - 새 닉네임
- * @param {string} param0.userProfileImage - 새 프로필 이미지 URL
- */
-export const updateUserProfile = async ({ userNickname, userProfileImage }) => {
+export const userprofileUpdate = async ({ userNickname, userProfileImage }) => {
   const accessToken = getItem('accessToken');
 
   try {
     const response = await axios.put(
-      'http://localhost:8080/user/update',
+      `${API_BASE_URL}/user/update`,
       { userNickname, userProfileImage },
       {
         headers: {

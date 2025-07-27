@@ -15,7 +15,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
 
   const handleKakaoLogin = () => {
-    window.location.href = 'http://localhost:8080/auth/kakao/login';
+    window.location.href = `${process.env.REACT_APP_API_URL}/auth/kakao/login`;
   };
 
   const handleLogin = async () => {
@@ -25,7 +25,7 @@ const LoginPage = () => {
     }
 
     try {
-      const res = await axios.post('http://124.49.210.216/user/login', {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/login`, {
         email,
         password,
       });
@@ -61,10 +61,10 @@ const LoginPage = () => {
 
   return (
     <DefaultLayout>
-      <div className="flex flex-col items-center justify-center w-full min-h-[calc(100vh-96px)]">
+      <div className="flex flex-col items-center justify-center w-full min-h-[calc(100vh-96px)] p-[1.2rem] pt-[2.6rem]">
         <img src={logo} alt="여담 로고" className="w-60 mb-6" />
 
-        <div className="w-full max-w-md px-4">
+        <div className="w-full max-w-md">
           <div className="text-left mb-3">
             <label className="text-sm text-text font-semibold">이메일</label>
             <input

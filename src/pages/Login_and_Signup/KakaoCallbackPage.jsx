@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import useUserStore from '../../store/userStore';
@@ -8,8 +8,14 @@ const KakaoCallbackPage = () => {
   const navigate = useNavigate();
   const login = useUserStore((state) => state.login);
 
+  // 플래그 ref로 호출 1회 제한
+  const isCalled = useRef(false);
+
   useEffect(() => {
     const fetchKakaoLogin = async () => {
+      if (isCalled.current) return;
+      isCalled.current = true;
+
       const url = new URL(window.location.href);
       const code = url.searchParams.get('code');
 
@@ -20,21 +26,25 @@ const KakaoCallbackPage = () => {
       }
 
       try {
-        // ✅ 백엔드로 POST 요청 (JSON 형식)
-        const res = await axios.post('http://localhost:8080/auth/kakao/callback', {
-          code,
-        });
-        const {
-          jwtDto: { accessToken, refreshToken },
-          userNickname: nickname,
-          userProfileImage: profileImageUrl,
-          userRole,
-          userEmail,
-          userName,
-        } = res.data;
+        const res = await axios.post(
+          `${process.env.REACT_APP_API_URL}/auth/kakao/callback`,
+          { code }
+        );
 
-        // ✅ 상태 저장 (Zustand)
-        // ✅ 상태 저장 (Zustand)
+        console.log('카카오 로그인 응답:', res.data);
+
+        const jwtDto = res.data?.jwtDto;
+        if (!jwtDto) {
+          throw new Error('jwtDto가 응답에 없습니다.');
+        }
+
+        const { accessToken, refreshToken } = jwtDto;
+        const nickname = res.data?.userNickname || '';
+        const profileImageUrl = res.data?.userProfileImage || '';
+        const userRole = res.data?.userRole || '';
+        const userEmail = res.data?.userEmail || '';
+        const userName = res.data?.userName || '';
+
         login({
           accessToken,
           refreshToken,
@@ -43,21 +53,20 @@ const KakaoCallbackPage = () => {
           userRole,
           userEmail,
           userName,
-          isLoggedIn: true, // ✅ 로그인 상태 표시
+          isLoggedIn: true,
         });
 
-
-        // ✅ 로컬스토리지 저장
         setItem('accessToken', accessToken);
         setItem('refreshToken', refreshToken);
         setItem('nickname', nickname);
         setItem('profileImageUrl', profileImageUrl);
 
-        // ✅ 홈으로 이동
         navigate('/');
       } catch (error) {
         console.error('카카오 로그인 실패:', error);
-        alert('카카오 로그인에 실패했습니다. 인가코드가 만료되었거나 서버 오류입니다.');
+        alert(
+          '카카오 로그인에 실패했습니다. 인가코드가 만료되었거나 서버 오류입니다.'
+        );
         navigate('/login');
       }
     };

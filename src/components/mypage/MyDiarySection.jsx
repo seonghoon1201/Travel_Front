@@ -1,36 +1,64 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import useUserStore from '../../store/userStore';
+import { fetchMyDiaries } from '../../api/user/userContentApi';
 import TravelDiary from '../../components/traveldiary/TravelDiary';
+import { useNavigate } from 'react-router-dom';
+import { Pencil } from 'lucide-react';
 
 const MyDiarySection = () => {
-  //더미값 지우면 문구만 보여지게
-  const diaryList = [
-    {
-      title: '6월의 제주',
-      nickname: '재균짱123',
-      period: '3박 4일',
-      tags: ['제주', '6월', '여박여행'],
-      imageUrl: '', // 이미지가 없을 경우 빈 문자열
-    },
-  ];
+  const [diaries, setDiaries] = useState([]);
+  const accessToken = useUserStore((state) => state.accessToken);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const loadDiaries = async () => {
+      try {
+        const data = await fetchMyDiaries(accessToken);
+        setDiaries(data);
+      } catch (error) {
+        console.error('내 여행일기 불러오기 실패:', error);
+      }
+    };
+
+    loadDiaries();
+  }, [accessToken]);
+
+  const handleWriteDiary = () => {
+    navigate('/write/travel/diary');
+  };
 
   return (
-    <div className="p-4 flex justify-center">
-      {diaryList.length === 0 ? (
-        <p className="text-center text-gray-400 mt-8">
-          작성된 여행일기가 없습니다.
-        </p>
+    <div className="bg-white px-4 pt-2 m-2 relative min-h-[200px]">
+      <p className="text-sm font-semibold text-gray-600 mb-3 m-2">
+        내 여행 일기
+      </p>
+
+      {diaries.length === 0 ? (
+        <p className="text-gray-400 text-sm">작성한 여행일기가 없습니다.</p>
       ) : (
-        diaryList.map((diary, idx) => (
-          <TravelDiary
-            key={idx}
-            title={diary.title}
-            nickname={diary.nickname}
-            period={diary.period}
-            tags={diary.tags}
-            imageUrl={diary.imageUrl}
-          />
-        ))
+        <div className="space-y-4 mb-6">
+          {' '}
+          {/* 리스트 사이 간격 및 하단 여백 */}
+          {diaries.map((diary) => (
+            <TravelDiary
+              key={diary.boardId}
+              title={diary.title}
+              userNickname={diary.userNickname}
+              content={diary.content}
+              createdAt={diary.createdAt}
+              imageUrl={diary.imageUrl}
+            />
+          ))}
+        </div>
       )}
+
+      {/* 여행일기 쓰러가기 버튼 */}
+      <button
+        onClick={handleWriteDiary}
+        className="fixed bottom-6 right-6 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-4 shadow-lg transition-colors"
+      >
+        <Pencil className="w-5 h-5" />
+      </button>
     </div>
   );
 };

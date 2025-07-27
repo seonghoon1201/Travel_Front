@@ -91,63 +91,65 @@ const ScheduleResultPage = () => {
 
   return (
     <DefaultLayout>
-      <BackHeader />
+      <div className="w-full max-w-sm mx-auto px-4">
+        <BackHeader />
 
-      {/* Header */}
-      <div className="flex justify-between items-center mb-1">
-        <h1 className="text-xl font-bold">{schedule.title}</h1>
-        <button
-          onClick={() => setShowEditModal(true)}
-          className="text-sm text-gray-400"
-        >
-          편집
-        </button>
-      </div>
-      <p className="text-sm text-gray-500 mt-1">{schedule.dateRange}</p>
-      <p className="text-sm text-gray-500">{schedule.organizer}</p>
-
-      <div className="flex items-center gap-2 mb-4">
-        {/* 고정된 일행 버튼 */}
-        <div className="flex-shrink-0">
-          <PrimaryButton className="px-3 py-1 text-sm whitespace-nowrap">
-            함께하는 일행
-          </PrimaryButton>
+        {/* Header */}
+        <div className="flex justify-between items-center mb-1">
+          <h1 className="text-xl font-bold">{schedule.title}</h1>
+          <button
+            onClick={() => setShowEditModal(true)}
+            className="text-sm text-gray-400"
+          >
+            편집
+          </button>
         </div>
+        <p className="text-sm text-gray-500 mt-1">{schedule.dateRange}</p>
+        <p className="text-sm text-gray-500">{schedule.organizer}</p>
 
-        {/* 가로 스크롤 가능한 Day 버튼 */}
-        <div className="flex-1 overflow-x-auto scrollbar-hide">
-          <div className="flex gap-2 w-max">
-            {schedule.days.map((day, idx) => (
-              <button
-                key={idx}
-                onClick={() => setSelectedDayIndex(idx)}
-                className={`px-3 py-1 rounded-full text-sm border whitespace-nowrap ${
-                  selectedDayIndex === idx
-                    ? 'border-primary text-primary bg-blue-50'
-                    : 'border-gray-300 text-gray-500 bg-white'
-                }`}
-              >
-                Day {idx + 1}
-              </button>
-            ))}
+        <div className="flex items-center gap-2 mb-4">
+          {/* 고정된 일행 버튼 */}
+          <div className="flex-shrink-0">
+            <PrimaryButton className="px-3 py-1 text-sm whitespace-nowrap">
+              함께하는 일행
+            </PrimaryButton>
+          </div>
+
+          {/* 가로 스크롤 가능한 Day 버튼 */}
+          <div className="flex-1 overflow-x-auto scrollbar-hide">
+            <div className="flex gap-2 w-max">
+              {schedule.days.map((day, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setSelectedDayIndex(idx)}
+                  className={`px-3 py-1 rounded-full text-sm border whitespace-nowrap ${
+                    selectedDayIndex === idx
+                      ? 'border-primary text-primary bg-blue-50'
+                      : 'border-gray-300 text-gray-500 bg-white'
+                  }`}
+                >
+                  Day {idx + 1}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
+
+        {/* 지도 */}
+        <div className="w-full h-48 rounded-lg mb-6 overflow-hidden">
+          <KakaoMap markers={selectedMarkers} useCustomOverlay={true} />
+        </div>
+
+        {/* 선택한 날짜의 일정만 보여줌 */}
+        <DayScheduleSection
+          day={schedule.days[selectedDayIndex]}
+          dayIndex={selectedDayIndex}
+        />
+
+        {/* 편집 모달 */}
+        {showEditModal && <EditModal onClose={() => setShowEditModal(false)} />}
+        {showEditModal && <EditModal onClose={() => setShowEditModal(false)} />}
       </div>
-
-      {/* 지도 */}
-      <div className="w-full h-48 rounded-lg mb-6 overflow-hidden">
-        <KakaoMap markers={selectedMarkers} useCustomOverlay={true} />
-      </div>
-
-      {/* 선택한 날짜의 일정만 보여줌 */}
-      <DayScheduleSection
-        day={schedule.days[selectedDayIndex]}
-        dayIndex={selectedDayIndex}
-      />
-
-      {/* 편집 모달 */}
-      {showEditModal && <EditModal onClose={() => setShowEditModal(false)} />}
-      {showEditModal && <EditModal onClose={() => setShowEditModal(false)} />}
     </DefaultLayout>
   );
 };
