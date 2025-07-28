@@ -14,7 +14,7 @@ const hotCities = [
   '울산광역시',
 ];
 
-const HotPlaceSection = () => {
+const HotPlaceSection = ({ navigateTo }) => {
   const navigate = useNavigate();
   const [places, setPlaces] = useState([]);
 
@@ -49,7 +49,10 @@ const HotPlaceSection = () => {
       <div className="flex justify-between items-center px-2">
         <h3 className="font-jalnongothic">요즘 핫플</h3>
 
-        <button className="font-pretendard text-sm text-blue-500 border rounded-full px-2 py-0.5">
+        <button
+          className="font-pretendard text-sm text-blue-500 border rounded-full px-2 py-0.5"
+          onClick={() => navigate(navigateTo)}
+        >
           + 더보기
         </button>
       </div>
