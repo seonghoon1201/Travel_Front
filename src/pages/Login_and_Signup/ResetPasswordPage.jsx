@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
 import CommonModal from "../../components/modal/CommonModal";
 import { LockKeyhole } from "lucide-react";
 import BackHeader from "../../components/header/BackHeader";
@@ -11,29 +12,67 @@ const ResetPasswordPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const email = location.state?.email;
 
   const handleConfirm = () => {
     setIsModalOpen(false);
-    navigate("/login"); // 로그인 페이지로 이동
+    navigate("/login");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: 비밀번호 조건 통과 및 서버 요청 성공 시
-    setIsModalOpen(true);
+
+    if (!email) {
+      alert("이메일 정보가 없습니다. 처음부터 다시 시도해주세요.");
+      navigate("/find-password");
+      return;
+    }
+
+    if (!newPassword || !confirmPassword) {
+      alert("비밀번호를 입력해주세요.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      alert("비밀번호가 일치하지 않습니다.");
+      return;
+    }
+
+    if (newPassword.length < 8 || newPassword.length > 20) {
+      alert("비밀번호는 8~20자로 설정해주세요.");
+      return;
+    }
+
+    try {
+      await axios.patch(`${process.env.REACT_APP_API_URL}/user/password`, {
+        email,
+        password: newPassword,
+      }); // 비밀번호 재설정 API 호출                                       
+
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error("비밀번호 재설정 실패:", error.message);
+      alert(
+        console.log("에러 응답:", error.response),
+        error?.response?.data?.message ||
+        "비밀번호 재설정에 실패했습니다. 다시 시도해주세요."
+      );
+    }
   };
 
   return (
     <DefaultLayout>
-        <BackHeader title="비밀번호 재설정" />
+      <BackHeader title="비밀번호 재설정" />
 
-        <div className="text-center mt-6 mb-6">
-          <h2 className="text-lg font-bold mb-2">비밀번호 재설정</h2>
-          <p className="text-sm text-gray-600">
-            비밀번호는 8~20자의 영문, 숫자, 특수문자를 포함해야 합니다.
-          </p>
-        </div>
+      <div className="text-center mt-6 mb-6">
+        <h2 className="text-lg font-bold mb-2">비밀번호 재설정</h2>
+        <p className="text-sm text-gray-600">
+          비밀번호는 8~20자의 영문, 숫자, 특수문자를 포함해야 합니다.
+        </p>
+      </div>
 
+      <div className="w-full max-w-md mx-auto px-4">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="relative">
             <input
@@ -59,12 +98,14 @@ const ResetPasswordPage = () => {
 
           <PrimaryButton type="submit">비밀번호 변경</PrimaryButton>
         </form>
-        <CommonModal
-          isOpen={isModalOpen}
-          message={`비밀번호 재설정이 완료되었습니다.\n재로그인을 진행해주세요.`}
-          onConfirm={handleConfirm}
-        />
-      </DefaultLayout>
+      </div>
+
+      <CommonModal
+        isOpen={isModalOpen}
+        message={`비밀번호 재설정이 완료되었습니다.\n재로그인을 진행해주세요.`}
+        onConfirm={handleConfirm}
+      />
+    </DefaultLayout>
   );
 };
 
