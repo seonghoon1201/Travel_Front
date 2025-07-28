@@ -55,53 +55,55 @@ const HotBoard = () => {
 
   return (
     <DefaultLayout>
-      <BackHeader />
-      <div className="w-full max-w-sm mx-auto p-3">
-        {/* 검색창 */}
-        <div className="w-full mb-4">
-          <SearchBar
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        {/* 상단 설명 영역 */}
-        <div className="flex items-start justify-between px-2 pt-4 py-2">
-          <div>
-            <p className="text-lg font-semibold text-[#222]">📍핫플 여행지</p>
-            <p className="text-sm text-gray-500 mt-1">
-              사람들이 많이 가는 곳으로 추천해드려요!
-            </p>
+      <div className="w-full max-w-sm mx-auto ">
+        <BackHeader />
+        <div className="pl-[1rem] pr-[1rem]">
+          {/* 검색창 */}
+          <div className="w-full mb-4">
+            <SearchBar
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-          <div className="text-right pt-3 pr-2">
-            <p className="text-xs font-medium text-[#333] flex items-center justify-end gap-1">
-              <SlidersHorizontal className="w-4 h-4" />
-              금액 조정하기
-            </p>
-            <p className="text-sm text-gray-500 mt-1">
-              예산 : <span className="font-semibold text-black">원</span>
-            </p>
-          </div>
-        </div>
 
-        {/* 핫플 리스트 */}
-        <div className="space-y-4 mt-4 px-2">
-          {filteredRegionData.length > 0 ? (
-            filteredRegionData.map((item, index) => (
-              <RegionList
-                key={index}
-                imageUrl={item.imageUrl}
-                city={item.city}
-                Province={item.Province}
-                summary={item.summary}
-                locations={item.locations}
-              />
-            ))
-          ) : (
-            <p className="text-sm text-center text-gray-400">
-              검색 결과가 없습니다.
-            </p>
-          )}
+          {/* 상단 설명 영역 */}
+          <div className="flex items-start justify-between px-2 pt-4 py-2">
+            <div>
+              <p className="text-lg font-semibold text-[#222]">📍핫플 여행지</p>
+              <p className="text-sm text-gray-500 mt-1">
+                사람들이 많이 가는 곳으로 추천해드려요!
+              </p>
+            </div>
+            <div className="text-right pt-3 pr-2">
+              <p className="text-xs font-medium text-[#333] flex items-center justify-end gap-1">
+                <SlidersHorizontal className="w-4 h-4" />
+                금액 조정하기
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                예산 : <span className="font-semibold text-black">원</span>
+              </p>
+            </div>
+          </div>
+
+          {/* 핫플 리스트 */}
+          <div className="space-y-4 mt-4 px-2">
+            {filteredRegionData.length > 0 ? (
+              filteredRegionData.map((item, index) => (
+                <RegionList
+                  key={index}
+                  imageUrl={item.imageUrl}
+                  city={item.city}
+                  Province={item.Province}
+                  summary={item.summary}
+                  locations={item.locations}
+                />
+              ))
+            ) : (
+              <p className="text-sm text-center text-gray-400">
+                검색 결과가 없습니다.
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </DefaultLayout>

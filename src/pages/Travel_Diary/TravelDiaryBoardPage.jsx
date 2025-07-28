@@ -21,7 +21,7 @@ const TravelDiaryBoardPage = () => {
         const formatted = res.data.map((item) => ({
           id: item.boardId,
           title: item.title,
-          nickname: item.userNickname,
+          userNickname: item.userNickname,
           tags: item.tag ? item.tag.split(',') : [], // 문자열 → 배열 변환
           imageUrl: item.imageUrl || '',
         }));
@@ -75,7 +75,7 @@ const TravelDiaryBoardPage = () => {
                 key={diary.id}
                 id={diary.id}
                 title={diary.title}
-                nickname={diary.nickname}
+                userNickname={diary.userNickname}
                 period={diary.period}
                 tags={diary.tags}
                 imageUrl={diary.imageUrl}
