@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
+import DefaultLayout from '../layouts/DefaultLayout';
 import BackHeader from '../components/header/BackHeader';
 import ProfileSummary from '../components/profile/ProfileSummary';
 import TabMenu from '../components/modal/TapMenu';
@@ -32,23 +33,24 @@ const MyPage = () => {
   }, [activeTab, navigate]);
 
   return (
-    <div className="min-h-screen font-pretendard">
-      <div>
+    <DefaultLayout>
+      <div className="w-full max-w-sm mx-auto ">
         <BackHeader
           showRightButton={true}
           rightButtonText="프로필 편집"
           onRightButtonClick={() => navigate('/edit/profile')}
         />
+        <div></div>
+
+        <ProfileSummary nickname={nickname} />
+        <TabMenu activeTab={activeTab} setActiveTab={setActiveTab} />
+
+        {/* 탭별 콘텐츠 렌더링 */}
+        {activeTab === 'myTrip' && <MyTravelSection />}
+        {activeTab === 'myDiary' && <MyDiarySection />}
+        {activeTab === 'myBookmark' && <MyBookmarkSection />}
       </div>
-
-      <ProfileSummary nickname={nickname} />
-      <TabMenu activeTab={activeTab} setActiveTab={setActiveTab} />
-
-      {/* 탭별 콘텐츠 렌더링 */}
-      {activeTab === 'myTrip' && <MyTravelSection />}
-      {activeTab === 'myDiary' && <MyDiarySection />}
-      {activeTab === 'myBookmark' && <MyBookmarkSection />}
-    </div>
+    </DefaultLayout>
   );
 };
 

@@ -21,7 +21,7 @@ const TravelDiaryBoardPage = () => {
         const formatted = res.data.map((item) => ({
           id: item.boardId,
           title: item.title,
-          nickname: item.userNickname,
+          userNickname: item.userNickname,
           tags: item.tag ? item.tag.split(',') : [], // 문자열 → 배열 변환
           imageUrl: item.imageUrl || '',
         }));
@@ -45,14 +45,15 @@ const TravelDiaryBoardPage = () => {
         {/* 검색창 */}
         <div className="w-full mb-4 px-4">
           <SearchBar
+            placeholder="일기 제목으로 검색"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
         {/* 상단 제목 + 글쓰기 */}
-        <div className="flex items-center justify-between px-6">
-          <h3 className="text-lg font-semibold">국내 실시간 여행일기</h3>
+        <div className="flex items-center justify-between px-6 ">
+          <div className="text-medium font-semibold">국내 실시간 여행일기</div>
           <button
             className="text-sm text-gray-500 flex items-center gap-1"
             onClick={() => navigate('/write/travel/diary')}
@@ -63,7 +64,7 @@ const TravelDiaryBoardPage = () => {
         </div>
 
         {/* 여행일기 리스트 */}
-        <div className="space-y-4 px-6 pb-8">
+        <div className="space-y-3 px-[1.2rem] pb-[1rem] pt-[1rem]">
           {loading ? (
             <p className="text-gray-400 text-sm">로딩 중...</p>
           ) : filteredDiaries.length === 0 ? (
@@ -74,7 +75,7 @@ const TravelDiaryBoardPage = () => {
                 key={diary.id}
                 id={diary.id}
                 title={diary.title}
-                nickname={diary.nickname}
+                userNickname={diary.userNickname}
                 period={diary.period}
                 tags={diary.tags}
                 imageUrl={diary.imageUrl}

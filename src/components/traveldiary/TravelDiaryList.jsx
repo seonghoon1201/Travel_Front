@@ -7,11 +7,11 @@ const { Meta } = Card;
 
 const TravelDiaryList = ({ title, showMore }) => {
   const [diaries, setDiaries] = useState([]);
-  const navigate = useNavigate(); // navigate 추가
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchDiaries = async () => {
-      const res = await getDiary(0, 6); // 함수명 변경
+      const res = await getDiary(0, 6);
       if (res.success) {
         const formatted = res.data.map((item) => ({
           id: item.boardId,
@@ -43,6 +43,7 @@ const TravelDiaryList = ({ title, showMore }) => {
           <Card
             key={diary.id}
             hoverable
+            className="flex-shrink-0 w-[160px]"
             style={{ width: 160 }}
             onClick={() => navigate(`/board/travel/diary/${diary.id}`)}
             cover={
@@ -53,11 +54,14 @@ const TravelDiaryList = ({ title, showMore }) => {
                   style={{ height: 120, objectFit: 'cover' }}
                 />
               ) : (
-                <div style={{ height: 120, backgroundColor: '#d9d9d9' }} />
+                <div className="h-[120px] bg-gray-300" />
               )
             }
           >
-            <Meta title={diary.title} />
+            <Meta
+              // 제목 한 줄 처리
+              title={<p className="truncate">{diary.title}</p>}
+            />
           </Card>
         ))}
       </section>
