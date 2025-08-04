@@ -1,8 +1,3 @@
-/**
- * 현재 카카오 지도 API와는 연동되어 있지 않으며,
- * 텍스트 기반 주소 자동완성 기능만 제공합니다.
- * 향후 카카오 맵 연동 시 도로명 주소 좌표 변환 및 지도 마커 표시 기능 확장 예정입니다.
- */
 import { create } from 'zustand';
 
 const usePlanStore = create((set, get) => ({
