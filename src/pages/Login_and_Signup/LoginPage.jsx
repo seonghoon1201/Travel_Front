@@ -15,7 +15,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
 
   const handleKakaoLogin = () => {
-    window.location.href = `${process.env.REACT_APP_API_URL}/auth/kakao/login`;
+    window.location.href = `${process.env.REACT_APP_API_BASE_URL}/auth/kakao/login`;
   };
 
   const handleLogin = async () => {
