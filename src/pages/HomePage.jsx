@@ -77,7 +77,10 @@ const HomePage = () => {
       <MainHeader isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
       <DefaultLayout>
         <div className="w-full max-w-sm mx-auto">
-          <div className="max-w-md w-full mx-auto px-4 mt-[1rem]">
+
+          <MainHeader isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+          <div className="max-w-md w-full mx-auto mt-[1rem]">
+
             {isMenuOpen && <SideMenu onClose={() => setIsMenuOpen(false)} />}
 
             <main className="w-full">

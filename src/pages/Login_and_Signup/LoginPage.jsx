@@ -6,6 +6,7 @@ import PrimaryButton from '../../components/common/PrimaryButton';
 import axios from 'axios';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import useUserStore from '../../store/userStore';
+import { API_BASE_URL } from '../../api/config';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -15,7 +16,12 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
 
   const handleKakaoLogin = () => {
-    window.location.href = `${process.env.REACT_APP_API_BASE_URL}/auth/kakao/login`;
+
+    // 로컬
+    window.location.href = `${API_BASE_URL}/auth/kakao/login`;
+    //  서버
+    // window.location.href = `${process.env.REACT_APP_API_URL}/auth/kakao/login`;
+
   };
 
   const handleLogin = async () => {
