@@ -31,6 +31,8 @@ import PlanCartPage from '../pages/Plan/PlanCartPage';
 import ScheduleResultPage from '../pages/Schedule/ScheduleResultPage';
 import AddPlace from '../pages/Schedule/AddPlace';
 
+import InviteAcceptPage from '../pages/InviteAcceptPage';
+
 const AppRoutes = () => (
   <Router>
     <AuthChecker />
@@ -73,6 +75,8 @@ const AppRoutes = () => (
       <Route path="/plan/invite" element={<PlanInvitePage />} />
       <Route path="/plan/budget" element={<PlanBudgetPage />} />
       <Route path="/plan/cart" element={<PlanCartPage />} />
+
+      <Route path="/invite" element={<InviteAcceptPage />} />
 
       <Route path="/plan/schedule" element={<ScheduleResultPage />} />
       <Route path="/plan/add" element={<AddPlace />} />
