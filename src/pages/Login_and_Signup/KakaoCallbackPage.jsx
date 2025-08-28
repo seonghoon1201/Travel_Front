@@ -28,10 +28,12 @@ const KakaoCallbackPage = () => {
 
       try {
         const res = await axios.post(
+
           // 로컬
           `${process.env.REACT_APP_API_BASE_URL}/auth/kakao/callback`,
           //서버
           //`${process.env.REACT_APP_API_URL}/auth/kakao/callback`,
+
           { code }
         );
 
