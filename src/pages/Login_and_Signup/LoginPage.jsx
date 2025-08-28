@@ -16,10 +16,12 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
 
   const handleKakaoLogin = () => {
+
     // 로컬
     window.location.href = `${API_BASE_URL}/auth/kakao/login`;
     //  서버
     // window.location.href = `${process.env.REACT_APP_API_URL}/auth/kakao/login`;
+
   };
 
   const handleLogin = async () => {
