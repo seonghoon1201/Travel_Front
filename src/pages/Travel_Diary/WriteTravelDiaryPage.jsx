@@ -19,8 +19,8 @@ const WriteTravelDiary = () => {
   const [inputValue, setInputValue] = useState('');
 
   // 이미지 상태
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState([]);      
+  const [previewUrls, setPreviewUrls] = useState([]);          
 
   /** 태그 추가 */
   const addTag = () => {
@@ -53,11 +53,14 @@ const WriteTravelDiary = () => {
 
   /** 이미지 선택 */
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+     if (!files.length) return;
 
-    setSelectedFile(file);
-    setPreviewUrl(URL.createObjectURL(file)); // 미리보기용
+    const nextFiles = [...selectedFiles, ...files];
+    const nextPreviews = nextFiles.map((f) => URL.createObjectURL(f));
+
+    setSelectedFiles(nextFiles);
+    setPreviewUrls(nextPreviews);
   };
 
   const handleSubmit = async () => {
@@ -67,32 +70,32 @@ const WriteTravelDiary = () => {
     }
 
     try {
-      let uploadedUrl = '';
+       let imageUrls = [];
 
       // 이미지 파일 업로드 (선택된 경우만)
-      if (selectedFile) {
-        const uploadRes = await uploadProfileImage(selectedFile);
-        if (!uploadRes.success) {
-          alert('이미지 업로드 실패');
-          return;
-        }
-        uploadedUrl = uploadRes.imageUrl;
-      }
+        if (selectedFiles.length) {
+              const results = await Promise.all(selectedFiles.map((f) => uploadProfileImage(f)));
+              const failed = results.find((r) => !r.success);
+              if (failed) {
+                alert('이미지 업로드 중 일부 실패');
+                return;
+              }
+              imageUrls = results.map((r) => r.imageUrl);
+            }
 
-      // 2작성 API 호출
       const result = await writeDiary({
         title,
         content,
         tag: tags.join(','), // 태그 여러개 → 문자열
-        imageUrl: uploadedUrl,
+        imageUrls,
       });
 
-      if (result.success) {
-        alert('작성 완료!');
-        navigate(`/board/${result.data.boardId}`);
-      } else {
-        alert(`작성 실패: ${result.error}`);
-      }
+      if (result.success && result.boardId) {
+  navigate(`/board/travel/diary/${result.boardId}`); // 라우트에 맞춰 이동
+} else {
+  console.error('작성 결과:', result); // 여기서 실제 data 찍어보면 구조 파악 가능
+  alert(`작성 실패: ${result.error ?? '원인 미상(응답에 boardId가 없음)'}`);
+}
     } catch (err) {
       alert('오류 발생: ' + err.message);
     }
@@ -157,7 +160,9 @@ const WriteTravelDiary = () => {
                 이미지 추가
                 <input
                   type="file"
+                  
                   accept="image/*"
+                  multiple
                   className="hidden"
                   onChange={handleImageChange}
                 />
@@ -170,13 +175,11 @@ const WriteTravelDiary = () => {
             </div>
 
             {/* 이미지 미리보기 */}
-            {previewUrl && (
-              <div className="mt-2">
-                <img
-                  src={previewUrl}
-                  alt="미리보기"
-                  className="rounded-lg w-full object-cover"
-                />
+            {previewUrls.length > 0 && (
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {previewUrls.map((url, idx) => (
+                  <img key={idx} src={url} alt={`preview-${idx}`} className="rounded-lg w-full object-cover" />
+                ))}
               </div>
             )}
           </div>

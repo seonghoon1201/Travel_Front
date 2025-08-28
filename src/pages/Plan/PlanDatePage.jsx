@@ -12,7 +12,7 @@ const { RangePicker } = DatePicker;
 const { Option } = Select;
 
 const PlanDatePage = () => {
-  const [dates, setDates] = useState([]);
+  const [dates, setDates] = useState(null);
   const [departurePlace, setDeparturePlace] = useState('');
   const [hour, setHour] = useState('');
   const [minute, setMinute] = useState('');
@@ -20,12 +20,21 @@ const PlanDatePage = () => {
 
   const navigate = useNavigate();
   const setDatesInStore = usePlanStore((state) => state.setDates);
-  const setDeparturePlaceInStore = usePlanStore((state) => state.setDeparturePlace);
-  const setDepartureTimeInStore = usePlanStore((state) => state.setDepartureTime);
+  const setDeparturePlaceInStore = usePlanStore(
+    (state) => state.setDeparturePlace
+  );
+  const setDepartureTimeInStore = usePlanStore(
+    (state) => state.setDepartureTime
+  );
 
   const handleNext = () => {
-    if (!dates || dates.length !== 2 || !dates[0] || !dates[1]) {
+    // 유효성 검사 보강
+    if (!dates || dates.length !== 2) {
       return message.warning('여행 시작일과 종료일을 모두 선택해 주세요.');
+    }
+    const [start, end] = dates;
+    if (end.isBefore(start, 'day')) {
+      return message.warning('종료일은 시작일 이후로 선택해 주세요.');
     }
     if (!departurePlace) {
       return message.warning('출발 장소를 입력해 주세요.');
@@ -103,7 +112,9 @@ const PlanDatePage = () => {
 
         <PrimaryButton onClick={handleNext} className="mt-6 w-full">
           {dates?.length === 2
-            ? `${dayjs(dates[0]).format('YYYY.MM.DD')} ~ ${dayjs(dates[1]).format('YYYY.MM.DD')}`
+            ? `${dayjs(dates[0]).format('YYYY.MM.DD')} ~ ${dayjs(
+                dates[1]
+              ).format('YYYY.MM.DD')}`
             : '일정을 선택해 주세요'}
         </PrimaryButton>
       </div>
