@@ -39,38 +39,6 @@ const HomePage = () => {
     { name: '강릉', image: kakaoIcon },
   ];
 
-  const dummyDiaries = [
-    {
-      id: 1,
-      title: '6월의 제주',
-      image: '/images/jeju.png',
-    },
-    {
-      id: 2,
-      title: '6월의 제주',
-      image: '',
-    },
-    {
-      id: 3,
-      title: '6월의 제주',
-      image: '/images/jeju.png',
-    },
-    {
-      id: 4,
-      title: '6월의 제주',
-      image: '/images/jeju.png',
-    },
-    {
-      id: 5,
-      title: '6월의 제주',
-      image: '/images/jeju.png',
-    },
-    {
-      id: 6,
-      title: '6월의 제주',
-      image: '/images/jeju.png',
-    },
-  ];
 
   return (
     <>
@@ -91,13 +59,13 @@ const HomePage = () => {
                 showMore={true}
                 navigateTo="/board/hot"
               />
-              <LocationSection
-                title="저예산 추천 여행지"
+              {/* <LocationSection
+                title="요즘 핫플"
                 type="budget"
                 locations={dummyLocations}
                 showMore={true}
                 navigateTo="/board/budget"
-              />
+              /> */}
               <TravelDiaryList title="여행 일기" showMore={true} />
             </main>
           </div>
