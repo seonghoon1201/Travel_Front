@@ -4,41 +4,70 @@ import dayjs from 'dayjs';
 import defaultProfile from '../../assets/profile_default.png';
 
 const CommentItemList = ({ comments, userId, onDelete }) => {
+  console.log('CommentItemList props:', { comments, userId }); // 디버깅
+
+  // comments가 배열인지 확인
+  if (!Array.isArray(comments)) {
+    console.warn('comments가 배열이 아닙니다:', comments);
+    return <div className="text-red-500">댓글 데이터 오류</div>;
+  }
+
+  if (comments.length === 0) {
+    return <div className="text-gray-500">댓글이 없습니다.</div>;
+  }
+
   return (
     <div className="space-y-2">
-      {comments.map((comment) => (
-        <div key={comment.commentId} className="flex items-start gap-2 py-2">
-          {/* 프로필 이미지 */}
-          <img
-            src={comment.userProfileImage || defaultProfile}
-            alt="profile"
-            className="w-8 h-8 rounded-full object-cover"
-          />
+      {comments.map((comment, index) => {
+        console.log(`댓글 ${index}:`, comment); // 디버깅
+        
+        return (
+          <div key={comment.commentId || `comment-${index}`} className="flex items-start gap-2 py-2">
+            {/* 프로필 이미지 */}
+            <img
+              src={comment.userProfileImage || defaultProfile}
+              alt="profile"
+              className="w-8 h-8 rounded-full object-cover bg-gray-200"
+              onError={(e) => {
+                e.currentTarget.src = defaultProfile;
+              }}
+            />
 
-          {/* 본문 */}
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold">{comment.userNickname}</span>
-              <span className="text-xs text-gray-400">
-                {dayjs(comment.createdAt).isValid()
-                  ? dayjs(comment.createdAt).format('YYYY.MM.DD HH:mm')
-                  : '날짜 오류'}
-              </span>
+            {/* 본문 */}
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold">
+                  {comment.userNickname || '익명'}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {comment.createdAt && dayjs(comment.createdAt).isValid()
+                    ? dayjs(comment.createdAt).format('MM.DD HH:mm')
+                    : '시간 정보 없음'}
+                </span>
+              </div>
+              <p className="text-sm mt-1">
+                {comment.content || '내용 없음'}
+              </p>
             </div>
-            <p className="text-sm">{comment.content}</p>
-          </div>
 
-          {/* 삭제 버튼 (본인 댓글만 표시) */}
-          {userId === comment.userId && (
-            <button
-              className="p-1 text-gray-400 hover:text-gray-600"
-              onClick={() => onDelete(comment.commentId)}
-            >
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      ))}
+            {/* 삭제 버튼 (본인 댓글만 표시) */}
+            {userId && comment.userId && userId === comment.userId && (
+              <button
+                className="p-1 text-gray-400 hover:text-gray-600"
+                onClick={() => onDelete(comment.commentId)}
+                title="댓글 삭제"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* 디버깅 정보 - 나중에 제거 */}
+            <div className="text-xs text-gray-400">
+              ID: {comment.commentId?.slice(-4) || 'none'}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };
