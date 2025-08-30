@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { CalendarDays } from 'lucide-react';
-
 import ImageCarousel from '../../components/common/ImageCarousel';
 import profileDefault from '../../assets/profile_default.png';
 import BackHeader from '../../components/header/BackHeader';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import PostActionModal from '../../components/modal/PostActionModal';
 import KakaoMap from '../../components/map/KakaoMap';
-
 import useUserStore from '../../store/userStore'; // 경로 수정
 import { getDiaryDetail } from '../../api';
 
