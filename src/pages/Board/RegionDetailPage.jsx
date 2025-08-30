@@ -8,8 +8,8 @@ import PlaceList from '../../components/board/PlaceList';
 import RegionSummary from '../../components/board/RegionSummary';
 import PrimaryButton from '../../components/common/PrimaryButton';
 
-import { getWeather } from '../../api/weather/getWeather';
-import { searchTours } from '../../api/tour/searchTour';
+import { getWeather } from '../../api';
+import { searchTours } from '../../api';
 
 const RegionDetailPage = () => {
   const { city } = useParams();

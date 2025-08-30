@@ -69,51 +69,52 @@ const PlanLocationPage = () => {
 
   return (
     <DefaultLayout>
-      <div className="max-w-md mx-auto">
+      <div className="w-full max-w-sm mx-auto">
         <BackHeader title="여행지 선택" />
+        <div className="px-4">
+          <SearchBar
+            placeholder="관광지/맛집/숙소 검색"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
 
-        <SearchBar
-          placeholder="관광지/맛집/숙소 검색"
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-        />
-
-        <div className="mt-4 space-y-4">
-          {locations
-            .filter(
-              (loc) =>
-                loc.name.includes(searchText) ||
-                loc.description.includes(searchText)
-            )
-            .map((loc) => (
-              <div key={loc.id} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={loc.imageUrl}
-                    alt={loc.name}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                  <div>
-                    <div className="font-bold text-gray-800 text-sm">
-                      {loc.name}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {loc.description}
+          <div className="mt-4 space-y-4">
+            {locations
+              .filter(
+                (loc) =>
+                  loc.name.includes(searchText) ||
+                  loc.description.includes(searchText)
+              )
+              .map((loc) => (
+                <div key={loc.id} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={loc.imageUrl}
+                      alt={loc.name}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                    <div>
+                      <div className="font-bold text-gray-800 text-sm">
+                        {loc.name}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {loc.description}
+                      </div>
                     </div>
                   </div>
+                  <CategoryButton
+                    label={loc.selected ? '취소' : '선택'}
+                    isActive={loc.selected}
+                    onClick={() => handleSelect(loc.id)}
+                  />
                 </div>
-                <CategoryButton
-                  label={loc.selected ? '취소' : '선택'}
-                  isActive={loc.selected}
-                  onClick={() => handleSelect(loc.id)}
-                />
-              </div>
-            ))}
-        </div>
+              ))}
+          </div>
 
-        <PrimaryButton onClick={handleNext} className="mt-6 w-full">
-          선택 완료
-        </PrimaryButton>
+          <PrimaryButton onClick={handleNext} className="mt-6 w-full">
+            선택 완료
+          </PrimaryButton>
+        </div>
       </div>
     </DefaultLayout>
   );
