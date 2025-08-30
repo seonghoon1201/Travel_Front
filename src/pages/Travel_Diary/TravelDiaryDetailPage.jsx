@@ -17,10 +17,6 @@ const TravelDiaryDetail = () => {
   const [loading, setLoading] = useState(true);
 
   const token = useUserStore((state) => state.accessToken);
-  const nickname        = useUserStore(s => s.nickname);
-  const profileImageUrl = useUserStore(s => s.profileImageUrl);
-  const isLoggedIn      = useUserStore(s => s.isLoggedIn);
-
 
   useEffect(() => {
     let cancelled = false;
@@ -145,23 +141,7 @@ const TravelDiaryDetail = () => {
             </div>
           )}
 
-          {/* 업로드 이미지: 단일/복수 모두 지원 */}
-          {images.length > 0 &&
-            (images.length === 1 ? (
-              <ImageCarousel images={images} altPrefix="여행일기 이미지" />
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                {images.map((url, idx) => (
-                  <img
-                    key={`${url}-${idx}`}
-                    src={url}
-                    alt={`업로드 이미지 ${idx + 1}`}
-                    className="rounded-lg w-full h-40 object-cover"
-                  />
-                ))}
-              </div>
-            ))}
-
+         
 
           {/* 일정 버튼 */}
           <div className="flex justify-end items-center pt-4">
