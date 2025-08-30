@@ -1,4 +1,3 @@
-// src/api/comment/getComment.js
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 import { getItem } from '../../utils/localStorage';
@@ -9,7 +8,7 @@ export async function getComments(boardId, page = 0, size = 5) {
   const accessToken = getItem('accessToken', '');
   try {
     const res = await axios.get(`${API_BASE_URL}/comment/${boardId}`, {
-      params: { page, size }, // ★ 페이지/사이즈 전달
+      params: { page, size },
       headers: {
         Authorization: accessToken ? `Bearer ${accessToken}` : undefined,
         'Content-Type': 'application/json',

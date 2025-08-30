@@ -17,17 +17,12 @@ const TravelDiaryDetail = () => {
   const { id } = useParams();
   const [diary, setDiary] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [commentCount, setCommentCount] = useState(0);
-
 
   const token = useUserStore((state) => state.accessToken);
-
-  const accessToken     = useUserStore(s => s.accessToken);
   const nickname        = useUserStore(s => s.nickname);
   const profileImageUrl = useUserStore(s => s.profileImageUrl);
   const isLoggedIn      = useUserStore(s => s.isLoggedIn);
 
-  const currentUser = isLoggedIn ? { nickname, profileImage: profileImageUrl } : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -170,7 +165,6 @@ const TravelDiaryDetail = () => {
           </div>
         )}
 
-        {/* 댓글 섹션 (추후 구현) */}
         <div className="mt-6 px-4">
           <CommentList boardId={diary?.boardId} />
         </div>

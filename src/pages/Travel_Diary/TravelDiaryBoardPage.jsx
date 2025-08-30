@@ -23,7 +23,7 @@ const TravelDiaryBoardPage = () => {
           title: item.title,
           userNickname: item.userNickname,
           userProfileImage: item.userProfileImage,
-          tags: item.tag ? item.tag.split(',') : [], // 문자열 → 배열 변환
+          tags: item.tag ? item.tag.split(',') : [], 
           imageUrl: item.imageUrl || '',
         }));
         setDiaries(formatted);
