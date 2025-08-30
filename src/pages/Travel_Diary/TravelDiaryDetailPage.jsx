@@ -17,10 +17,6 @@ const TravelDiaryDetail = () => {
   const [loading, setLoading] = useState(true);
 
   const token = useUserStore((state) => state.accessToken);
-  const nickname        = useUserStore(s => s.nickname);
-  const profileImageUrl = useUserStore(s => s.profileImageUrl);
-  const isLoggedIn      = useUserStore(s => s.isLoggedIn);
-
 
   useEffect(() => {
     let cancelled = false;
