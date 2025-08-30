@@ -58,8 +58,8 @@ const TravelDiaryList = ({ title, showMore }) => {
   return (
     <div>
       <div className="flex justify-between items-center px-2 mb-2">
-        <h2 className="font-jalnangothic">{title}</h2>
-        {showMore && (
+        <h2 className="font-jalnongothic">{title}</h2>
+           {showMore && (
           <button
             className="font-pretendard text-sm text-blue-500 border rounded-full px-2 py-0.5"
             onClick={() => navigate('/board/travel/diary')}
@@ -74,7 +74,7 @@ const TravelDiaryList = ({ title, showMore }) => {
         {(Array.isArray(diaries) ? diaries : []).slice(0, 5).map((diary) => (
           <div
             key={diary.id}
-            className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer"
+            className="bg-white rounded-lg shadow-sm  hover:shadow-md transition-shadow cursor-pointer"
             onClick={() => navigate(`/board/travel/diary/${diary.id}`)}
           >
             {/* 프로필 + 제목 */}

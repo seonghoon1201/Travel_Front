@@ -1,4 +1,3 @@
-// src/components/traveldiary/ImageSlider.jsx
 import React, { useRef, useState } from 'react';
 import { Carousel } from 'antd';
 
@@ -51,7 +50,6 @@ export default function ImageSlider({ images = [] }) {
         ))}
       </Carousel>
 
-      {/* 좌우 버튼: 2장 이상일 때만 표시 */}
       {showControls && (
         <>
           <Arrow type="prev" onClick={goPrev} />
@@ -59,7 +57,6 @@ export default function ImageSlider({ images = [] }) {
         </>
       )}
 
-      {/* 우하단 카운트: 원하면 1/1도 보이게 둘 수 있음. 1장일 땐 숨기려면 showControls로 감싸기 */}
       <div className="absolute right-2 bottom-2 px-2 py-0.5 text-xs bg-black/60 text-white rounded z-30">
         {index + 1}/{list.length}
       </div>
