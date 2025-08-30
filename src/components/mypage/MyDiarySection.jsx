@@ -11,17 +11,20 @@ const MyDiarySection = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const loadDiaries = async () => {
-      try {
-        const data = await fetchMyDiaries(accessToken);
-        setDiaries(data);
-      } catch (error) {
-        console.error('내 여행일기 불러오기 실패:', error);
-      }
-    };
+  const loadDiaries = async () => {
+    try {
+      const data = await fetchMyDiaries(accessToken);
+      const myNickname = useUserStore.getState().nickname;
 
-    loadDiaries();
-  }, [accessToken]);
+      const filtered = data.filter((d) => d.userNickname === myNickname);
+      setDiaries(filtered);
+    } catch (error) {
+      console.error('내 여행일기 불러오기 실패:', error);
+    }
+  };
+
+  loadDiaries();
+}, [accessToken]);
 
   const handleWriteDiary = () => {
     navigate('/write/travel/diary');
@@ -44,6 +47,7 @@ const MyDiarySection = () => {
               key={diary.boardId}
               title={diary.title}
               userNickname={diary.userNickname}
+              userProfileImage={diary.userProfileImage}
               content={diary.content}
               createdAt={diary.createdAt}
               imageUrl={diary.imageUrl}
