@@ -32,7 +32,7 @@ const ImageCarousel = ({ images = [], altPrefix = '업로드 이미지', classNa
 
   return (
     <div
-      className={`relative w-full overflow-hidden bg-gray-100 rounded-lg ${className}`}
+      className={`relative w-full overflow-hidden  rounded-lg ${className}`}
       tabIndex={0}
       onKeyDown={onKeyDown}
       onTouchStart={onTouchStart}
@@ -79,8 +79,7 @@ const ImageCarousel = ({ images = [], altPrefix = '업로드 이미지', classNa
                 aria-label={`${i + 1}번째로 이동`}
                 onClick={() => setIdx(i)}
                 className={`h-2.5 w-2.5 rounded-full transition-all ${
-                  i === idx ? 'bg-white shadow-md' : 'bg-white/60 hover:bg-white/80'
-                }`}
+                i === idx ? 'bg-sky-500 shadow-md' : 'bg-sky-200 hover:bg-sky-400'                }`}
               />
             ))}
           </div>

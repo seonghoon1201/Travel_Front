@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { CalendarDays } from 'lucide-react';
 
 import ImageCarousel from '../../components/common/ImageCarousel';
+import CommentList from '../../components/comment/CommentList';
 import profileDefault from '../../assets/profile_default.png';
 import BackHeader from '../../components/header/BackHeader';
 import DefaultLayout from '../../layouts/DefaultLayout';
@@ -16,8 +17,17 @@ const TravelDiaryDetail = () => {
   const { id } = useParams();
   const [diary, setDiary] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [commentCount, setCommentCount] = useState(0);
+
 
   const token = useUserStore((state) => state.accessToken);
+
+  const accessToken     = useUserStore(s => s.accessToken);
+  const nickname        = useUserStore(s => s.nickname);
+  const profileImageUrl = useUserStore(s => s.profileImageUrl);
+  const isLoggedIn      = useUserStore(s => s.isLoggedIn);
+
+  const currentUser = isLoggedIn ? { nickname, profileImage: profileImageUrl } : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -112,12 +122,7 @@ const TravelDiaryDetail = () => {
           {/* 이미지 업로드 */}
           {images.length > 0 && (
             <div className="space-y-3">
-              <h3 className="text-sm font-medium text-gray-700 flex items-center justify-between mt-2">
-                <span> 이미지</span>
-                <span className="text-xs text-gray-500">
-                  총 {images.length}장
-                </span>
-              </h3>
+
               <ImageCarousel 
                 images={images} 
                 altPrefix="여행일기 이미지" 
@@ -168,11 +173,8 @@ const TravelDiaryDetail = () => {
         )}
 
         {/* 댓글 섹션 (추후 구현) */}
-        <div className="mt-6 bg-white rounded-xl shadow-md p-6">
-          <h3 className="text-sm font-medium text-gray-700 mb-4">댓글</h3>
-          <div className="text-center text-gray-400 py-8">
-            댓글 기능은 준비 중입니다.
-          </div>
+        <div className="mt-6 px-4">
+          <CommentList boardId={diary?.boardId} />
         </div>
       </div>
     </DefaultLayout>
