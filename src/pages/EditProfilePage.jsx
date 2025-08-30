@@ -6,7 +6,7 @@ import { Pencil, X } from 'lucide-react';
 import useUserStore from '../store/userStore';
 import profileDefault from '../assets/profile_default.png';
 import { uploadProfileImage } from '../api/file/uploadProfileImage';
-import { userprofileUpdate } from '../api/user/userprofileUpdate';
+import { userprofileUpdate } from '../api/user/userProfileUpdate';
 
 const EditProfile = () => {
   const navigate = useNavigate();
