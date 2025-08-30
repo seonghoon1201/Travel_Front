@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getItem, setItem } from '../../utils/localStorage';
 import { API_BASE_URL } from '../config';
 
-export const userprofileUpdate = async ({ userNickname, userProfileImage }) => {
+export const userProfileUpdate = async ({ userNickname, userProfileImage }) => {
   const accessToken = getItem('accessToken');
 
   try {
