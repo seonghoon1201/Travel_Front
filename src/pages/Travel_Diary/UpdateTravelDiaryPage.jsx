@@ -9,6 +9,8 @@ import { getDiaryDetail } from '../../api/board/getDiaryDetail';
 import { updateDiary } from '../../api/board/updateDiary';
 import { uploadProfileImage } from '../../api/file/uploadProfileImage';
 
+
+
 const UpdateTravelDiaryPage = () => {
   const { boardId } = useParams();
   const navigate = useNavigate();

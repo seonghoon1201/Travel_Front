@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { CalendarDays } from 'lucide-react';
-
 import ImageCarousel from '../../components/common/ImageCarousel';
 import CommentList from '../../components/comment/CommentList';
 import profileDefault from '../../assets/profile_default.png';
@@ -9,9 +8,8 @@ import BackHeader from '../../components/header/BackHeader';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import PostActionModal from '../../components/modal/PostActionModal';
 import KakaoMap from '../../components/map/KakaoMap';
-
-import useUserStore from '../../store/userStore';
-import { getDiaryDetail } from '../../api/board/getDiaryDetail';
+import useUserStore from '../../store/userStore'; // 경로 수정
+import { getDiaryDetail } from '../../api';
 
 const TravelDiaryDetail = () => {
   const { id } = useParams();
@@ -68,10 +66,14 @@ const TravelDiaryDetail = () => {
     );
   }
 
+
   // 태그: 문자열/배열 모두 지원
   const tags =
     typeof diary.tag === 'string'
-      ? diary.tag.split(',').map((t) => t.trim()).filter(Boolean)
+      ? diary.tag
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean)
       : Array.isArray(diary.tag)
       ? diary.tag.filter(Boolean)
       : [];
@@ -103,7 +105,10 @@ const TravelDiaryDetail = () => {
               </div>
             </div>
             <div className="text-gray-400 text-xl font-bold">
-              <PostActionModal id={diary.boardId || id} writerNickname={diary.userNickname} />
+              <PostActionModal
+                id={diary.boardId || id}
+                writerNickname={diary.userNickname}
+              />
             </div>
           </div>
            {/* 이미지 업로드 */}
@@ -139,6 +144,24 @@ const TravelDiaryDetail = () => {
               </div>
             </div>
           )}
+
+          {/* 업로드 이미지: 단일/복수 모두 지원 */}
+          {images.length > 0 &&
+            (images.length === 1 ? (
+              <ImageCarousel images={images} altPrefix="여행일기 이미지" />
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {images.map((url, idx) => (
+                  <img
+                    key={`${url}-${idx}`}
+                    src={url}
+                    alt={`업로드 이미지 ${idx + 1}`}
+                    className="rounded-lg w-full h-40 object-cover"
+                  />
+                ))}
+              </div>
+            ))}
+
 
           {/* 일정 버튼 */}
           <div className="flex justify-end items-center pt-4">
