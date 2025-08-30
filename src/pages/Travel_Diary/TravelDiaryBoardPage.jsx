@@ -22,6 +22,7 @@ const TravelDiaryBoardPage = () => {
           id: item.boardId,
           title: item.title,
           userNickname: item.userNickname,
+          userProfileImage: item.userProfileImage,
           tags: item.tag ? item.tag.split(',') : [], // 문자열 → 배열 변환
           imageUrl: item.imageUrl || '',
         }));
@@ -76,6 +77,7 @@ const TravelDiaryBoardPage = () => {
                 id={diary.id}
                 title={diary.title}
                 userNickname={diary.userNickname}
+                 userProfileImage={diary.userProfileImage}
                 period={diary.period}
                 tags={diary.tags}
                 imageUrl={diary.imageUrl}

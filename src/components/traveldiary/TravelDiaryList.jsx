@@ -15,12 +15,6 @@ const TravelDiaryList = ({ title, showMore }) => {
       try {
         const res = await getDiary(0, 6);
 
-        console.log('전체 API 응답:', res);
-        console.log('첫 번째 아이템:', res.data[0]);
-        console.log('imageUrl:', res.data[0]?.imageUrl);
-        console.log('imageUrls:', res.data[0]?.imageUrls);
-
-
         const raw = Array.isArray(res?.data)
           ? res.data
           : (Array.isArray(res?.data?.content) ? res.data.content : []);
