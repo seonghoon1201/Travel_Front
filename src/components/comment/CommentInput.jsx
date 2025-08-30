@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Send } from 'lucide-react';
 import useUserStore from '../../store/userStore';
 import defaultProfile from '../../assets/profile_default.png';
-// (선택) 상대경로일 수 있으면 API_BASE_URL로 절대경로화
 import { API_BASE_URL } from '../../api/config';
 
 const normalizeUrl = (u) => {

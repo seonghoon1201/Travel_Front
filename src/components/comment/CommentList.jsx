@@ -9,10 +9,7 @@ import useUserStore from '../../store/userStore';
 import { normalizeBoardId } from '../../utils/normalizeBoardId';
 
 const PAGE_SIZE = 5;
-
-// 최신순(내림차순) 정렬 함수: 최근(createdAt)이 위로
-const byNewest = (a, b) =>
-  new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+const byNewest = (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
 
 const CommentList = ({ boardId }) => {
   const [comments, setComments] = useState([]);
@@ -21,25 +18,26 @@ const CommentList = ({ boardId }) => {
   const [page, setPage] = useState(0);
   const [hasNext, setHasNext] = useState(false);
 
-  const { nickname, profileImageUrl } = useUserStore();
+  // ✅ userId, nickname, profileImageUrl 모두 가져오기
+  const { userId: currentUserId, nickname, profileImageUrl } = useUserStore();
   const safeId = normalizeBoardId(boardId);
 
-  // 이미 로드된 commentId 중복 방지용
   const commentMap = useMemo(() => {
     const map = new Map();
     comments.forEach((c) => map.set(String(c.commentId), true));
     return map;
   }, [comments]);
 
+  // ✅ userId 매핑 추가
   const toItem = (c) => ({
     commentId: c.commentId ?? c.id ?? crypto.randomUUID(),
     content: c.content ?? '',
+    userId: c.userId ?? c.writerId ?? c.authorId ?? null,
     userNickname: c.userNickname ?? c.nickname ?? '익명',
     userProfileImage: c.userProfileImage ?? c.profileImageUrl ?? '',
     createdAt: c.createdAt ?? null,
   });
 
-  // 최초 로드 / board 변경 시
   useEffect(() => {
     const init = async () => {
       if (!safeId) {
@@ -62,11 +60,9 @@ const CommentList = ({ boardId }) => {
     init();
   }, [safeId]);
 
-  // 더 보기
   const loadMore = async () => {
     if (!hasNext || moreLoading) return;
     setMoreLoading(true);
-
     const nextPage = page + 1;
     const res = await getComments(safeId, nextPage, PAGE_SIZE);
 
@@ -76,7 +72,7 @@ const CommentList = ({ boardId }) => {
 
     setComments((prev) => {
       const merged = [...prev, ...more];
-      merged.sort(byNewest); // 병합 후 최신순 보장
+      merged.sort(byNewest);
       return merged;
     });
 
@@ -85,7 +81,7 @@ const CommentList = ({ boardId }) => {
     setMoreLoading(false);
   };
 
-  // 작성(낙관적 업데이트: 위에 바로 추가)
+  // 작성
   const handleCreate = async (content) => {
     try {
       if (!safeId) return alert('잘못된 게시글 ID입니다.');
@@ -94,13 +90,13 @@ const CommentList = ({ boardId }) => {
       const optimistic = {
         commentId: tempId,
         content,
+        userId: currentUserId ?? null,
         userNickname: nickname || '나',
         userProfileImage: profileImageUrl || '',
         createdAt: new Date().toISOString(),
         _pending: true,
       };
 
-      // 최신이 위이므로 앞에 추가
       setComments((prev) => {
         const next = [optimistic, ...prev];
         next.sort(byNewest);
@@ -113,14 +109,11 @@ const CommentList = ({ boardId }) => {
       if (c && typeof c === 'object') {
         const real = toItem(c);
         setComments((prev) => {
-          const replaced = prev.map((x) =>
-            x.commentId === tempId ? real : x
-          );
+          const replaced = prev.map((x) => (x.commentId === tempId ? real : x));
           replaced.sort(byNewest);
           return replaced;
         });
       } else {
-        // 서버가 객체를 즉시 안 주면 첫 페이지 재동기화 (최신순 유지)
         const sync = await getComments(safeId, 0, PAGE_SIZE);
         const synced = (sync?.data?.comments || []).map(toItem);
         synced.sort(byNewest);
@@ -130,14 +123,12 @@ const CommentList = ({ boardId }) => {
       }
     } catch (e) {
       console.error('댓글 생성 에러:', e);
-      // 실패 시 임시 아이템 롤백
-      setComments((prev) =>
-        prev.filter((x) => !String(x.commentId).startsWith('temp-'))
-      );
+      setComments((prev) => prev.filter((x) => !String(x.commentId).startsWith('temp-')));
       alert(e?.message || '댓글 작성 실패');
     }
   };
 
+  // ✅ 삭제 (모달에서 호출)
   const handleDelete = async (commentId) => {
     try {
       const res = await deleteComment(commentId);
@@ -151,6 +142,29 @@ const CommentList = ({ boardId }) => {
     } catch (e) {
       console.error('댓글 삭제 에러:', e);
     }
+  };
+
+  // ✅ 수정 (임시: prompt로 내용 입력 → 로컬만 반영 / 필요하면 update API 연결)
+  const handleEdit = async (commentId) => {
+    const target = comments.find((c) => c.commentId === commentId);
+    if (!target) return;
+    const nextContent = window.prompt('댓글을 수정하세요:', target.content);
+    if (nextContent == null || nextContent === target.content) return;
+
+    // TODO: updateComment(commentId, nextContent) 호출로 서버 반영
+    setComments((prev) => {
+      const next = prev.map((c) =>
+        c.commentId === commentId ? { ...c, content: nextContent } : c
+      );
+      next.sort(byNewest);
+      return next;
+    });
+  };
+
+  // ✅ 신고 (임시)
+  const handleReport = async (commentId) => {
+    // TODO: reportComment(commentId) API 연동
+    alert('신고가 접수되었습니다. (데모)');
   };
 
   if (loading) {
@@ -169,12 +183,17 @@ const CommentList = ({ boardId }) => {
       </h3>
 
       {comments.length === 0 ? (
-        <div className="text-gray-500 py-4">
-          아직 댓글이 없습니다. 첫 댓글을 작성해보세요!
-        </div>
+        <div className="text-gray-500 py-4">아직 댓글이 없습니다. 첫 댓글을 작성해보세요!</div>
       ) : (
         <>
-          <CommentItemList comments={comments} onDelete={handleDelete} />
+          {/* ✅ 모달 콜백들 내려보내기 */}
+          <CommentItemList
+            comments={comments}
+            userId={currentUserId}
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+            onReport={handleReport}
+          />
           {hasNext && (
             <div className="mt-3">
               <button
@@ -191,6 +210,12 @@ const CommentList = ({ boardId }) => {
 
       <CommentInput onSubmit={handleCreate} disabled={loading || moreLoading} />
 
+      <div className="mt-4 p-2 bg-gray-100 rounded text-xs">
+        <div>boardId: {boardId}</div>
+        <div>댓글 수(현재 로드): {comments.length}</div>
+        <div>현재 페이지: {page}</div>
+        <div>hasNext: {String(hasNext)}</div>
+      </div>
     </div>
   );
 };
