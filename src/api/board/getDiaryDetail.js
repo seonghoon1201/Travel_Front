@@ -1,15 +1,18 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 import { getItem } from '../../utils/localStorage';
+import { normalizeBoardId } from '../../utils/normalizeBoardId';
 
 export const getDiaryDetail = async (boardId) => {
   const token = getItem('accessToken');
+  const id = normalizeBoardId(boardId); 
 
   try {
-    const res = await axios.get(`${API_BASE_URL}/board/${boardId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const headers = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const res = await axios.get(`${API_BASE_URL}/board/${encodeURIComponent(id)}`, {
+      headers,
     });
     return { success: true, data: res.data };
   } catch (error) {

@@ -1,6 +1,6 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
-const API_BASE_URL = 'http://localhost:8080';
 
 // 내 여행 불러오기
 export const fetchMyTravel = async (accessToken) => {
@@ -12,7 +12,7 @@ export const fetchMyTravel = async (accessToken) => {
 
 // 내 여행일기 불러오기
 export const fetchMyDiaries = async (accessToken) => {
-  const res = await axios.get('http://localhost:8080/board', {
+  const res = await axios.get(`${API_BASE_URL}/board`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   return res.data;
