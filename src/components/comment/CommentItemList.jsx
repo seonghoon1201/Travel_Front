@@ -1,6 +1,11 @@
 import React from 'react';
 import { MoreHorizontal } from 'lucide-react';
 import dayjs from 'dayjs';
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const CommentItemList = ({ comments, userId, onDelete }) => {
 
@@ -35,8 +40,8 @@ const CommentItemList = ({ comments, userId, onDelete }) => {
                 </span>
                 <span className="text-xs text-gray-400">
                   {comment.createdAt && dayjs(comment.createdAt).isValid()
-                    ? dayjs(comment.createdAt).format('MM.DD HH:mm')
-                    : '시간 정보 없음'}
+                    ? dayjs.utc(comment.createdAt).tz("Asia/Seoul").format("MM.DD HH:mm")
+                    : "시간 정보 없음"}
                 </span>
               </div>
               <p className="text-sm mt-1">

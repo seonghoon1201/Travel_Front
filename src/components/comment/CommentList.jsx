@@ -1,5 +1,5 @@
 // src/components/comment/CommentList.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import CommentItemList from './CommentItemList';
 import CommentInput from './CommentInput';
 import { getComments } from '../../api/comment/getComment';
@@ -8,62 +8,88 @@ import { createComment } from '../../api/comment/createComment';
 import useUserStore from '../../store/userStore';
 import { normalizeBoardId } from '../../utils/normalizeBoardId';
 
+const PAGE_SIZE = 5;
+
+// 최신순(내림차순) 정렬 함수: 최근(createdAt)이 위로
+const byNewest = (a, b) =>
+  new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+
 const CommentList = ({ boardId }) => {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { nickname, profileImageUrl } = useUserStore();
+  const [moreLoading, setMoreLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
 
+  const { nickname, profileImageUrl } = useUserStore();
   const safeId = normalizeBoardId(boardId);
 
-  // 댓글 조회 (showSpinner=false면 UI 스피너 없이 조용히 갱신)
-  const fetchComments = async (showSpinner = true) => {
-    try {
+  // 이미 로드된 commentId 중복 방지용
+  const commentMap = useMemo(() => {
+    const map = new Map();
+    comments.forEach((c) => map.set(String(c.commentId), true));
+    return map;
+  }, [comments]);
+
+  const toItem = (c) => ({
+    commentId: c.commentId ?? c.id ?? crypto.randomUUID(),
+    content: c.content ?? '',
+    userNickname: c.userNickname ?? c.nickname ?? '익명',
+    userProfileImage: c.userProfileImage ?? c.profileImageUrl ?? '',
+    createdAt: c.createdAt ?? null,
+  });
+
+  // 최초 로드 / board 변경 시
+  useEffect(() => {
+    const init = async () => {
       if (!safeId) {
         setComments([]);
+        setHasNext(false);
+        setLoading(false);
         return;
       }
-      if (showSpinner) setLoading(true);
-
-      const res = await getComments(safeId);
-      const raw =
-        (Array.isArray(res?.data?.comments) && res.data.comments) ||
-        (Array.isArray(res?.data) && res.data) ||
-        [];
-
-      const list = raw
-        .map((c) => ({
-          commentId: c.commentId ?? c.id ?? crypto.randomUUID(),
-          content: c.content ?? '',
-          userNickname: c.userNickname ?? c.nickname ?? '익명',
-          userProfileImage: c.userProfileImage ?? c.profileImageUrl ?? '',
-          createdAt: c.createdAt ?? null,
-        }))
-        // 최신순으로 정렬(원하면 asc로 바꿔도 됨)
-        .sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
-
+      setLoading(true);
+      setPage(0);
+      const res = await getComments(safeId, 0, PAGE_SIZE);
+      const list = Array.isArray(res?.data?.comments)
+        ? res.data.comments.map(toItem)
+        : [];
+      list.sort(byNewest);
       setComments(list);
-    } catch (e) {
-      console.error('댓글 조회 에러:', e);
-      setComments([]);
-    } finally {
-      if (showSpinner) setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchComments(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      setHasNext(Boolean(res?.data?.hasNext));
+      setLoading(false);
+    };
+    init();
   }, [safeId]);
 
-  // 낙관적 업데이트 + 이후 동기화
+  // 더 보기
+  const loadMore = async () => {
+    if (!hasNext || moreLoading) return;
+    setMoreLoading(true);
+
+    const nextPage = page + 1;
+    const res = await getComments(safeId, nextPage, PAGE_SIZE);
+
+    const more = (res?.data?.comments || [])
+      .map(toItem)
+      .filter((c) => !commentMap.get(String(c.commentId)));
+
+    setComments((prev) => {
+      const merged = [...prev, ...more];
+      merged.sort(byNewest); // 병합 후 최신순 보장
+      return merged;
+    });
+
+    setHasNext(Boolean(res?.data?.hasNext));
+    setPage(nextPage);
+    setMoreLoading(false);
+  };
+
+  // 작성(낙관적 업데이트: 위에 바로 추가)
   const handleCreate = async (content) => {
     try {
-      if (!safeId) {
-        alert('잘못된 게시글 ID입니다.');
-        return;
-      }
+      if (!safeId) return alert('잘못된 게시글 ID입니다.');
 
-      // 1) 화면에 먼저 추가 (임시 ID)
       const tempId = `temp-${Date.now()}`;
       const optimistic = {
         commentId: tempId,
@@ -71,35 +97,43 @@ const CommentList = ({ boardId }) => {
         userNickname: nickname || '나',
         userProfileImage: profileImageUrl || '',
         createdAt: new Date().toISOString(),
-        _pending: true, // (선택) UI에서 흐림 처리 등에 사용 가능
+        _pending: true,
       };
-      setComments((prev) => [...prev, optimistic]);
 
-      // 2) 서버 저장
+      // 최신이 위이므로 앞에 추가
+      setComments((prev) => {
+        const next = [optimistic, ...prev];
+        next.sort(byNewest);
+        return next;
+      });
+
       const res = await createComment({ boardId: safeId, content });
       const c = res?.data;
 
       if (c && typeof c === 'object') {
-        // 3A) 서버가 댓글 객체를 반환 → 임시 아이템을 실제 아이템으로 교체
-        const real = {
-          commentId: c.commentId ?? c.id ?? optimistic.commentId,
-          content: c.content ?? optimistic.content,
-          userNickname: c.userNickname ?? optimistic.userNickname,
-          userProfileImage: c.userProfileImage ?? optimistic.userProfileImage,
-          createdAt: c.createdAt ?? optimistic.createdAt,
-        };
-        setComments((prev) =>
-          prev.map((x) => (x.commentId === tempId ? real : x))
-        );
+        const real = toItem(c);
+        setComments((prev) => {
+          const replaced = prev.map((x) =>
+            x.commentId === tempId ? real : x
+          );
+          replaced.sort(byNewest);
+          return replaced;
+        });
       } else {
-        // 3B) 객체가 없거나 전파 지연 가능성 → 잠깐 기다렸다가 조용히 재조회
-        await new Promise((r) => setTimeout(r, 300));
-        await fetchComments(false);
+        // 서버가 객체를 즉시 안 주면 첫 페이지 재동기화 (최신순 유지)
+        const sync = await getComments(safeId, 0, PAGE_SIZE);
+        const synced = (sync?.data?.comments || []).map(toItem);
+        synced.sort(byNewest);
+        setComments(synced);
+        setPage(0);
+        setHasNext(Boolean(sync?.data?.hasNext));
       }
     } catch (e) {
       console.error('댓글 생성 에러:', e);
       // 실패 시 임시 아이템 롤백
-      setComments((prev) => prev.filter((x) => !String(x.commentId).startsWith('temp-')));
+      setComments((prev) =>
+        prev.filter((x) => !String(x.commentId).startsWith('temp-'))
+      );
       alert(e?.message || '댓글 작성 실패');
     }
   };
@@ -108,7 +142,11 @@ const CommentList = ({ boardId }) => {
     try {
       const res = await deleteComment(commentId);
       if (res?.success) {
-        setComments((prev) => prev.filter((c) => c.commentId !== commentId));
+        setComments((prev) => {
+          const next = prev.filter((c) => c.commentId !== commentId);
+          next.sort(byNewest);
+          return next;
+        });
       }
     } catch (e) {
       console.error('댓글 삭제 에러:', e);
@@ -135,16 +173,24 @@ const CommentList = ({ boardId }) => {
           아직 댓글이 없습니다. 첫 댓글을 작성해보세요!
         </div>
       ) : (
-        <CommentItemList comments={comments} onDelete={handleDelete} />
+        <>
+          <CommentItemList comments={comments} onDelete={handleDelete} />
+          {hasNext && (
+            <div className="mt-3">
+              <button
+                onClick={loadMore}
+                disabled={moreLoading}
+                className="px-3 py-1.5 rounded bg-gray-100 hover:bg-gray-200 text-sm"
+              >
+                {moreLoading ? '불러오는 중...' : '댓글 더 보기'}
+              </button>
+            </div>
+          )}
+        </>
       )}
 
-      <CommentInput onSubmit={handleCreate} disabled={loading} />
+      <CommentInput onSubmit={handleCreate} disabled={loading || moreLoading} />
 
-      {/* 디버깅용 - 필요 없으면 제거 */}
-      <div className="mt-4 p-2 bg-gray-100 rounded text-xs">
-        <div>boardId: {boardId}</div>
-        <div>댓글 수: {comments.length}</div>
-      </div>
     </div>
   );
 };
