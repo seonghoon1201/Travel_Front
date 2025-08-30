@@ -6,7 +6,8 @@ import { Pencil, X } from 'lucide-react';
 import useUserStore from '../store/userStore';
 import profileDefault from '../assets/profile_default.png';
 import { uploadProfileImage } from '../api/file/uploadProfileImage';
-import { userprofileUpdate } from '../api/user/userprofileUpdate';
+import { userprofileUpdate } from '../api/user/userProfileUpdate';
+
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -71,7 +72,7 @@ const EditProfile = () => {
       }
 
       // 2) 닉네임 + 최종 URL로 프로필 수정
-      const result = await userprofileUpdate({
+      const result = await userProfileUpdate({
         userNickname: nickname,
         userProfileImage: finalImageUrl,
       });
