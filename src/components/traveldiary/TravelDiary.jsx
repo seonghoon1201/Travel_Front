@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 const TravelDiary = ({
   id,
+  boardId,
   title,
   userProfileImage = '',
   userNickname,
@@ -11,17 +12,20 @@ const TravelDiary = ({
   tags = [],
   imageUrl,
   variant = 'default',
-  showAvatarInCompact = false, 
+  showAvatarInCompact = false,
 }) => {
   const navigate = useNavigate();
-  const handleClick = () => navigate(`/board/travel/diary/${id}`);
+
+  const diaryId = id ?? boardId ?? crypto.randomUUID();
+  const handleClick = () => navigate(`/board/travel/diary/${diaryId}`);
 
   const isCompact = variant === 'compact';
   const coverH = isCompact ? 'h-[120px]' : 'h-40';
 
-  const safeProfileSrc = userProfileImage && String(userProfileImage).trim().length > 0
-    ? userProfileImage
-    : profileDefault;
+  const safeProfileSrc =
+    userProfileImage && String(userProfileImage).trim().length > 0
+      ? userProfileImage
+      : profileDefault;
 
   return (
     <div
@@ -51,28 +55,21 @@ const TravelDiary = ({
               }
             }}
             alt="profile"
-            className="
-              absolute -bottom-6 left-4 z-10
-              w-12 h-12 rounded-full object-cover
-              border-2 border-white shadow
-              bg-gray-200
-            "
+            className="absolute -bottom-6 left-4 z-10 w-12 h-12 rounded-full object-cover border-2 border-white shadow bg-gray-200"
             loading="lazy"
           />
         )}
       </div>
 
-      <div className={`p-4 ${(!isCompact || showAvatarInCompact) ? 'pt-7' : ''}`}>
-        <div className={`flex items-center gap-2 mb-1`}>
-          <h2 className={`font-semibold ${isCompact ? 'truncate' : ''}`}>
-            {title}
-          </h2>
+      <div className={`p-4 ${!isCompact || showAvatarInCompact ? 'pt-7' : ''}`}>
+        <div className="flex items-center gap-2 mb-1">
+          <h2 className={`font-semibold ${isCompact ? 'truncate' : ''}`}>{title}</h2>
         </div>
 
         {!isCompact && (
           <>
             <p className="text-sm text-gray-600">
-              {userNickname}의 일정 · {period}
+              {userNickname}의 일정{period ? ` · ${period}` : ''}
             </p>
             {!!tags.length && (
               <div className="mt-2 text-xs text-gray-400 space-x-1">

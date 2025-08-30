@@ -45,6 +45,7 @@ const MyDiarySection = () => {
           {diaries.map((diary) => (
             <TravelDiary
               key={diary.boardId}
+              id={diary.boardId}
               title={diary.title}
               userNickname={diary.userNickname}
               userProfileImage={diary.userProfileImage}
