@@ -9,10 +9,8 @@ import DefaultLayout from '../../layouts/DefaultLayout';
 import PostActionModal from '../../components/modal/PostActionModal';
 import KakaoMap from '../../components/map/KakaoMap';
 
-
 import useUserStore from '../../store/userStore'; // 경로 수정
 import { getDiaryDetail } from '../../api';
-
 
 const TravelDiaryDetail = () => {
   const { id } = useParams();
@@ -45,13 +43,18 @@ const TravelDiaryDetail = () => {
     };
   }, [id, token]);
 
-  if (loading) return <p className="text-center text-gray-400">불러오는 중...</p>;
-  if (!diary) return <p className="text-center text-gray-400">데이터가 없습니다.</p>;
+  if (loading)
+    return <p className="text-center text-gray-400">불러오는 중...</p>;
+  if (!diary)
+    return <p className="text-center text-gray-400">데이터가 없습니다.</p>;
 
   // 태그: 문자열/배열 모두 지원
   const tags =
     typeof diary.tag === 'string'
-      ? diary.tag.split(',').map((t) => t.trim()).filter(Boolean)
+      ? diary.tag
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean)
       : Array.isArray(diary.tag)
       ? diary.tag.filter(Boolean)
       : [];
@@ -83,7 +86,10 @@ const TravelDiaryDetail = () => {
               </div>
             </div>
             <div className="text-gray-400 text-xl font-bold">
-              <PostActionModal id={diary.boardId || id} writerNickname={diary.userNickname} />
+              <PostActionModal
+                id={diary.boardId || id}
+                writerNickname={diary.userNickname}
+              />
             </div>
           </div>
 
@@ -93,8 +99,8 @@ const TravelDiaryDetail = () => {
           </p>
 
           {/* 업로드 이미지: 단일/복수 모두 지원 */}
-          {images.length > 0 && (
-            images.length === 1 ? (
+          {images.length > 0 &&
+            (images.length === 1 ? (
               <ImageCarousel images={images} altPrefix="여행일기 이미지" />
             ) : (
               <div className="grid grid-cols-2 gap-2">
@@ -107,8 +113,7 @@ const TravelDiaryDetail = () => {
                   />
                 ))}
               </div>
-            )
-          )}
+            ))}
 
           {/* 일정 버튼 */}
           <div className="flex justify-end items-center">
