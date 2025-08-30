@@ -5,9 +5,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
 
-import { getDiaryDetail } from '../../api';
-import { updateDiary } from '../../api';
-import { uploadProfileImage } from '../../api'; // 이미지 업로드 API
+import { getDiaryDetail } from '../../api/board/getDiaryDetail';
+import { updateDiary } from '../../api/board/updateDiary';
+import { uploadProfileImage } from '../../api/file/uploadProfileImage';
+
+
 
 const UpdateTravelDiaryPage = () => {
   const { boardId } = useParams();
@@ -19,19 +21,26 @@ const UpdateTravelDiaryPage = () => {
   const [inputValue, setInputValue] = useState('');
 
   // 이미지 상태
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState('');
-
+  const [existingImageUrls, setExistingImageUrls] = useState([]); // 서버 저장된 이미지
+  const [selectedFiles, setSelectedFiles] = useState([]); // 새로 추가한 파일
+  const [previewUrls, setPreviewUrls] = useState([]); // 로컬 미리보기 URL
+  
   // 기존 데이터 불러오기
   useEffect(() => {
     const fetchDiary = async () => {
       const res = await getDiaryDetail(boardId);
-      if (res.success) {
-        setTitle(res.data.title);
-        setContent(res.data.content);
-        setTags(res.data.tag ? res.data.tag.split(',') : []);
-        if (res.data.imageUrl) setPreviewUrl(res.data.imageUrl); // 기존 이미지 미리보기
-      }
+      if (!res?.success) return;
+
+      setTitle(res.data.title ?? '');
+      setContent(res.data.content ?? '');
+      setTags(res.data.tag ? res.data.tag.split(',').filter(Boolean) : []);
+
+      const serverImages = Array.isArray(res.data.imageUrls)
+        ? res.data.imageUrls
+        : res.data.imageUrl
+        ? [res.data.imageUrl]
+        : [];
+      setExistingImageUrls(serverImages);
     };
     fetchDiary();
   }, [boardId]);
@@ -60,14 +69,33 @@ const UpdateTravelDiaryPage = () => {
     setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
-  /** 이미지 선택 */
+  // 이미지 선택
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
 
-    setSelectedFile(file);
-    setPreviewUrl(URL.createObjectURL(file)); // 미리보기용
+    const nextFiles = [...selectedFiles, ...files];
+    const nextPreviews = [...previewUrls, ...files.map((f) => URL.createObjectURL(f))];
+
+    setSelectedFiles(nextFiles);
+    setPreviewUrls(nextPreviews);
   };
+
+  const removeExistingImage = (url) => {
+    setExistingImageUrls(existingImageUrls.filter((u) => u !== url));
+  };
+
+  const removeLocalImage = (idx) => {
+    URL.revokeObjectURL(previewUrls[idx]);
+    setPreviewUrls(previewUrls.filter((_, i) => i !== idx));
+    setSelectedFiles(selectedFiles.filter((_, i) => i !== idx));
+  };
+
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach((u) => URL.revokeObjectURL(u));
+    };
+  }, [previewUrls]);
 
   // 수정 API 호출
   const handleUpdate = async () => {
@@ -77,35 +105,42 @@ const UpdateTravelDiaryPage = () => {
     }
 
     try {
-      let uploadedUrl = previewUrl;
-
-      // 새 파일 선택 시 업로드
-      if (selectedFile) {
-        const uploadRes = await uploadProfileImage(selectedFile);
-        if (!uploadRes.success) {
-          alert('이미지 업로드 실패');
+      let newUploadedUrls = [];
+      if (selectedFiles.length) {
+        const results = await Promise.all(selectedFiles.map((f) => uploadProfileImage(f)));
+        const failed = results.find((r) => !r?.success);
+        if (failed) {
+          alert('이미지 업로드 중 일부 실패');
           return;
         }
-        uploadedUrl = uploadRes.imageUrl;
+        newUploadedUrls = results.map((r) => r.imageUrl);
       }
+
+      const finalImageUrls = [...existingImageUrls, ...newUploadedUrls];
 
       const result = await updateDiary(boardId, {
         title,
         content,
-        tag: tags.length > 0 ? tags.join(',') : '',
-        imageUrl: uploadedUrl || '', // 기존 이미지 유지 or 새 이미지
+        tag: tags.join(','),
+        imageUrls: finalImageUrls,
       });
 
-      if (result.success) {
+      if (result?.success) {
         alert('수정 완료!');
         navigate(`/board/travel/diary/${boardId}`);
       } else {
-        alert(`수정 실패: ${result.error}`);
+        alert(`수정 실패: ${result?.error ?? '원인 미상'}`);
       }
     } catch (err) {
       alert('오류 발생: ' + err.message);
     }
   };
+
+  // 통합된 이미지 목록 생성
+  const combinedPreviews = [
+    ...existingImageUrls.map((url) => ({ type: 'server', url })),
+    ...previewUrls.map((url, idx) => ({ type: 'local', url, idx })),
+  ];
 
   return (
     <DefaultLayout>
@@ -114,7 +149,7 @@ const UpdateTravelDiaryPage = () => {
 
         <div>
           <div className="bg-white rounded-xl shadow-md p-4 space-y-4">
-            {/* 제목 입력*/}
+            {/* 제목 입력 */}
             <div>
               <input
                 type="text"
@@ -160,13 +195,14 @@ const UpdateTravelDiaryPage = () => {
               className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
             />
 
-            {/* 이미지 업로드 + 미리보기 */}
+            {/* 이미지 업로드 버튼 */}
             <div className="w-full flex justify-between items-center">
               <label className="flex items-center gap-1 text-sm text-white bg-gray-300 px-3 py-1.5 rounded-full cursor-pointer">
-                이미지 변경
+                이미지 추가
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   className="hidden"
                   onChange={handleImageChange}
                 />
@@ -178,13 +214,33 @@ const UpdateTravelDiaryPage = () => {
               </button>
             </div>
 
-            {previewUrl && (
-              <div className="mt-2">
-                <img
-                  src={previewUrl}
-                  alt="미리보기"
-                  className="rounded-lg w-full object-cover"
-                />
+            {/* 이미지 미리보기 */}
+            {combinedPreviews.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <h3 className="text-sm font-medium text-gray-700">이미지 미리보기</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {combinedPreviews.map((item, index) => (
+                    <div key={`${item.type}-${index}`} className="relative">
+                      <img
+                        src={item.url}
+                        alt={`미리보기 ${index + 1}`}
+                        className="w-full h-24 object-cover rounded-lg border"
+                      />
+                      <button
+                        onClick={() => {
+                          if (item.type === 'server') {
+                            removeExistingImage(item.url);
+                          } else {
+                            removeLocalImage(item.idx);
+                          }
+                        }}
+                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 text-xs hover:bg-red-600"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -192,7 +248,7 @@ const UpdateTravelDiaryPage = () => {
             <div className="w-full mt-6">
               <button
                 onClick={handleUpdate}
-                className="w-full py-3 bg-blue-500 text-white rounded-xl text-sm shadow"
+                className="w-full py-3 bg-blue-500 text-white rounded-xl text-sm shadow hover:bg-blue-600"
               >
                 수정 완료
               </button>
