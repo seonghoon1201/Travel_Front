@@ -111,15 +111,7 @@ const TravelDiaryDetail = () => {
               <PostActionModal id={diary.boardId || id} writerNickname={diary.userNickname} />
             </div>
           </div>
-
-          {/* 본문 */}
-          <div className="pb-6 border-b-2">
-            <p className="text-gray-700 whitespace-pre-line leading-relaxed">
-              {diary.content || '내용 없음'}
-            </p>
-          </div>
-
-          {/* 이미지 업로드 */}
+           {/* 이미지 업로드 */}
           {images.length > 0 && (
             <div className="space-y-3">
 
@@ -130,6 +122,12 @@ const TravelDiaryDetail = () => {
               />
             </div>
           )}
+          {/* 본문 */}
+          <div className="pb-6 border-b-2">
+            <p className="text-gray-700 whitespace-pre-line leading-relaxed">
+              {diary.content || '내용 없음'}
+            </p>
+          </div>
 
           {/* 태그 */}
           {tags.length > 0 && (
