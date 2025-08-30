@@ -9,8 +9,10 @@ import DefaultLayout from '../../layouts/DefaultLayout';
 import PostActionModal from '../../components/modal/PostActionModal';
 import KakaoMap from '../../components/map/KakaoMap';
 
-import useUserStore from '../../store/userStore';
-import { getDiaryDetail } from '../../api/board/getDiaryDetail';
+
+import useUserStore from '../../store/userStore'; // 경로 수정
+import { getDiaryDetail } from '../../api';
+
 
 const TravelDiaryDetail = () => {
   const { id } = useParams();

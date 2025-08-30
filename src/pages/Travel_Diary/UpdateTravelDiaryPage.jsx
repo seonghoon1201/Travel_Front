@@ -5,9 +5,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
 
-import { getDiaryDetail } from '../../api/board/getDiaryDetail';
-import { updateDiary } from '../../api/board/updateDiary';
-import { uploadProfileImage } from '../../api/file/uploadProfileImage'; // 이미지 업로드 API
+import { getDiaryDetail } from '../../api';
+import { updateDiary } from '../../api';
+import { uploadProfileImage } from '../../api'; // 이미지 업로드 API
 
 const UpdateTravelDiaryPage = () => {
   const { boardId } = useParams();

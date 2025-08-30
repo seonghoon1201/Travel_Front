@@ -98,61 +98,62 @@ const PlanStylePage = () => {
     <DefaultLayout>
       <div className="w-full max-w-sm mx-auto">
         <BackHeader title="여행 스타일 선택" />
+        <div className="px-4">
+          <div className="mt-6 space-y-8">
+            {/* 누구와 */}
+            <div>
+              <p className="text-sm font-semibold text-gray-800 mb-3">누구와</p>
+              <div className={gridClass}>
+                {companions.map((item) => (
+                  <CategoryButton
+                    key={item}
+                    label={item}
+                    isActive={selectedCompanion === item}
+                    onClick={() => setSelectedCompanion(item)}
+                  />
+                ))}
+              </div>
+            </div>
 
-        <div className="mt-6 space-y-8">
-          {/* 누구와 */}
-          <div>
-            <p className="text-sm font-semibold text-gray-800 mb-3">누구와</p>
-            <div className={gridClass}>
-              {companions.map((item) => (
-                <CategoryButton
-                  key={item}
-                  label={item}
-                  isActive={selectedCompanion === item}
-                  onClick={() => setSelectedCompanion(item)}
-                />
-              ))}
+            {/* 여행 스타일 */}
+            <div>
+              <p className="text-sm font-semibold text-gray-800 mb-3">
+                여행 스타일
+              </p>
+              <div className={gridClass}>
+                {travelStyles.map((style) => (
+                  <CategoryButton
+                    key={style}
+                    label={style}
+                    isActive={selectedStyles.includes(style)}
+                    onClick={() => toggleStyle(style)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* 이동 수단 */}
+            <div>
+              <p className="text-sm font-semibold text-gray-800 mb-3">
+                이동 수단
+              </p>
+              <div className={gridClass}>
+                {transports.map((mode) => (
+                  <CategoryButton
+                    key={mode}
+                    label={mode}
+                    isActive={selectedTransport === mode}
+                    onClick={() => setSelectedTransport(mode)}
+                  />
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* 여행 스타일 */}
-          <div>
-            <p className="text-sm font-semibold text-gray-800 mb-3">
-              여행 스타일
-            </p>
-            <div className={gridClass}>
-              {travelStyles.map((style) => (
-                <CategoryButton
-                  key={style}
-                  label={style}
-                  isActive={selectedStyles.includes(style)}
-                  onClick={() => toggleStyle(style)}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* 이동 수단 */}
-          <div>
-            <p className="text-sm font-semibold text-gray-800 mb-3">
-              이동 수단
-            </p>
-            <div className={gridClass}>
-              {transports.map((mode) => (
-                <CategoryButton
-                  key={mode}
-                  label={mode}
-                  isActive={selectedTransport === mode}
-                  onClick={() => setSelectedTransport(mode)}
-                />
-              ))}
-            </div>
-          </div>
+          <PrimaryButton onClick={handleSubmit} className="mt-10 w-full">
+            완료
+          </PrimaryButton>
         </div>
-
-        <PrimaryButton onClick={handleSubmit} className="mt-10 w-full">
-          완료
-        </PrimaryButton>
       </div>
     </DefaultLayout>
   );

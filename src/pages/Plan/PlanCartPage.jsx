@@ -270,158 +270,161 @@ const PlanCartPage = () => {
     <DefaultLayout>
       <div className="w-full max-w-sm mx-auto">
         <BackHeader title={`${locationIds[0] || '여행지'} 여행`} />
-
-        {/* ✅ 지도 영역 */}
-        <div className="w-full h-64 rounded-lg bg-gray-200 overflow-hidden">
-          <div ref={mapContainerRef} className="w-full h-full" />
-        </div>
-
-        <div className="mt-4">
-          <p className="text-sm text-center flex justify-center items-center gap-1">
-            현재 설정하신 예산에서{' '}
-            <span
-              className={
-                remainingBudget < 0
-                  ? 'text-red-500 font-bold'
-                  : 'text-blue-500 font-bold'
-              }
-            >
-              {remainingBudget.toLocaleString()}원{' '}
-              {remainingBudget < 0 ? '초과' : '여유'}
-            </span>{' '}
-            입니다.
-          </p>
-          <Flex gap="small" vertical className="mt-2">
-            <Progress
-              percent={percentUsed}
-              status={remainingBudget < 0 ? 'exception' : 'active'}
-            />
-          </Flex>
-        </div>
-
-        <div className="relative mt-6">
-          <div className="flex flex-wrap gap-2 justify-center">
-            {Object.keys(dummyItems).map((category) => (
-              <CategoryButton
-                key={category}
-                label={category}
-                isActive={activeCategory === category}
-                onClick={() => {
-                  setActiveCategory(category);
-                  handleFetchItems(category); // ✅ API 호출
-                }}
-              />
-            ))}
+        <div className="px-4">
+          {/* ✅ 지도 영역 */}
+          <div className="w-full h-64 rounded-lg bg-gray-200 overflow-hidden">
+            <div ref={mapContainerRef} className="w-full h-full" />
           </div>
 
-          <Tooltip
-            title={
-              <div className="text-sm leading-5">
-                ❤️ 즐겨찾기는 가고 싶은 모든 장소를 모아둘 수 있어요.
-                <br />
-                🛒 장바구니에 추가된 장소를 최대한 활용해 일정을 짜드립니다.
-              </div>
-            }
-            placement="left"
-          >
-            <button className="absolute top-0 right-0 p-1">
-              <HelpCircle
-                size={18}
-                className="text-gray-500 hover:text-gray-700 cursor-pointer"
-              />
-            </button>
-          </Tooltip>
-        </div>
-
-        <div className="mt-4 space-y-4">
-          {itemsToShow.map((item) => {
-            const isAdded = cartItems.some(
-              (cartItem) => cartItem.id === item.id
-            );
-            const hasGeo = !!(
-              item?.location &&
-              typeof item.location.lat === 'number' &&
-              typeof item.location.lng === 'number'
-            );
-
-            return (
-              <div
-                key={item.id}
-                className="relative flex items-center justify-between p-2 border rounded-lg"
-                onClick={() => hasGeo && panToItem(item)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <img
-                      src={item.imageUrl}
-                      alt={item.name}
-                      className="w-14 h-14 rounded-md object-cover"
-                    />
-                    <FavoriteButton
-                      isActive={isFavorite(item.id)}
-                      toggleFavorite={() => toggleFavorite(item.id)}
-                    />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-gray-800">
-                      {item.name}
-                    </div>
-                    <div className="text-xs text-gray-500">{item.address}</div>
-                    <div className="text-xs text-gray-500">
-                      ₩{item.price.toLocaleString()}
-                    </div>
-                    {!hasGeo && (
-                      <div className="text-[10px] text-gray-400">
-                        지도 좌표 없음
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <CartButton
-                  isAdded={isAdded}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleCartClick(item);
-                  }}
-                />
-              </div>
-            );
-          })}
-        </div>
-
-        <PrimaryButton
-          className="mt-8 w-full"
-          onClick={() => navigate('/plan/auto')}
-        >
-          자동 일정 짜기
-        </PrimaryButton>
-
-        {cartItems.length > 0 && (
-          <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-3 shadow-md z-10">
-            <div className="flex items-center justify-between text-sm font-semibold">
-              <span>🛒 {cartItems.length}개 장소 선택됨</span>
+          <div className="mt-4">
+            <p className="text-sm text-center flex justify-center items-center gap-1">
+              현재 설정하신 예산에서{' '}
               <span
                 className={
-                  remainingBudget < 0 ? 'text-red-500' : 'text-gray-800'
+                  remainingBudget < 0
+                    ? 'text-red-500 font-bold'
+                    : 'text-blue-500 font-bold'
                 }
               >
-                총 ₩
-                {cartItems
-                  .reduce((sum, item) => sum + item.price, 0)
-                  .toLocaleString()}
-              </span>
-            </div>
+                {remainingBudget.toLocaleString()}원{' '}
+                {remainingBudget < 0 ? '초과' : '여유'}
+              </span>{' '}
+              입니다.
+            </p>
+            <Flex gap="small" vertical className="mt-2">
+              <Progress
+                percent={percentUsed}
+                status={remainingBudget < 0 ? 'exception' : 'active'}
+              />
+            </Flex>
           </div>
-        )}
 
-        {selectedPlace && (
-          <AmountInputModal
-            visible={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            onSubmit={handleAddToCart}
-            place={selectedPlace}
-          />
-        )}
+          <div className="relative mt-6">
+            <div className="flex flex-wrap gap-2 justify-center">
+              {Object.keys(dummyItems).map((category) => (
+                <CategoryButton
+                  key={category}
+                  label={category}
+                  isActive={activeCategory === category}
+                  onClick={() => {
+                    setActiveCategory(category);
+                    handleFetchItems(category); // ✅ API 호출
+                  }}
+                />
+              ))}
+            </div>
+
+            <Tooltip
+              title={
+                <div className="text-sm leading-5">
+                  ❤️ 즐겨찾기는 가고 싶은 모든 장소를 모아둘 수 있어요.
+                  <br />
+                  🛒 장바구니에 추가된 장소를 최대한 활용해 일정을 짜드립니다.
+                </div>
+              }
+              placement="left"
+            >
+              <button className="absolute top-0 right-0 p-1">
+                <HelpCircle
+                  size={18}
+                  className="text-gray-500 hover:text-gray-700 cursor-pointer"
+                />
+              </button>
+            </Tooltip>
+          </div>
+
+          <div className="mt-4 space-y-4">
+            {itemsToShow.map((item) => {
+              const isAdded = cartItems.some(
+                (cartItem) => cartItem.id === item.id
+              );
+              const hasGeo = !!(
+                item?.location &&
+                typeof item.location.lat === 'number' &&
+                typeof item.location.lng === 'number'
+              );
+
+              return (
+                <div
+                  key={item.id}
+                  className="relative flex items-center justify-between p-2 border rounded-lg"
+                  onClick={() => hasGeo && panToItem(item)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="w-14 h-14 rounded-md object-cover"
+                      />
+                      <FavoriteButton
+                        isActive={isFavorite(item.id)}
+                        toggleFavorite={() => toggleFavorite(item.id)}
+                      />
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-gray-800">
+                        {item.name}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {item.address}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        ₩{item.price.toLocaleString()}
+                      </div>
+                      {!hasGeo && (
+                        <div className="text-[10px] text-gray-400">
+                          지도 좌표 없음
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <CartButton
+                    isAdded={isAdded}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCartClick(item);
+                    }}
+                  />
+                </div>
+              );
+            })}
+          </div>
+
+          <PrimaryButton
+            className="mt-8 w-full"
+            onClick={() => navigate('/plan/auto')}
+          >
+            자동 일정 짜기
+          </PrimaryButton>
+
+          {cartItems.length > 0 && (
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-3 shadow-md z-10">
+              <div className="flex items-center justify-between text-sm font-semibold">
+                <span>🛒 {cartItems.length}개 장소 선택됨</span>
+                <span
+                  className={
+                    remainingBudget < 0 ? 'text-red-500' : 'text-gray-800'
+                  }
+                >
+                  총 ₩
+                  {cartItems
+                    .reduce((sum, item) => sum + item.price, 0)
+                    .toLocaleString()}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {selectedPlace && (
+            <AmountInputModal
+              visible={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              onSubmit={handleAddToCart}
+              place={selectedPlace}
+            />
+          )}
+        </div>
       </div>
     </DefaultLayout>
   );
