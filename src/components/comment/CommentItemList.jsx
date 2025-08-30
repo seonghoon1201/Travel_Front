@@ -1,12 +1,9 @@
 import React from 'react';
 import { MoreHorizontal } from 'lucide-react';
 import dayjs from 'dayjs';
-import defaultProfile from '../../assets/profile_default.png';
 
 const CommentItemList = ({ comments, userId, onDelete }) => {
-  console.log('CommentItemList props:', { comments, userId }); // 디버깅
 
-  // comments가 배열인지 확인
   if (!Array.isArray(comments)) {
     console.warn('comments가 배열이 아닙니다:', comments);
     return <div className="text-red-500">댓글 데이터 오류</div>;
@@ -19,18 +16,15 @@ const CommentItemList = ({ comments, userId, onDelete }) => {
   return (
     <div className="space-y-2">
       {comments.map((comment, index) => {
-        console.log(`댓글 ${index}:`, comment); // 디버깅
         
         return (
           <div key={comment.commentId || `comment-${index}`} className="flex items-start gap-2 py-2">
             {/* 프로필 이미지 */}
             <img
-              src={comment.userProfileImage || defaultProfile}
+              src={comment.userProfileImage }
               alt="profile"
               className="w-8 h-8 rounded-full object-cover bg-gray-200"
-              onError={(e) => {
-                e.currentTarget.src = defaultProfile;
-              }}
+
             />
 
             {/* 본문 */}
@@ -61,10 +55,6 @@ const CommentItemList = ({ comments, userId, onDelete }) => {
               </button>
             )}
 
-            {/* 디버깅 정보 - 나중에 제거 */}
-            <div className="text-xs text-gray-400">
-              ID: {comment.commentId?.slice(-4) || 'none'}
-            </div>
           </div>
         );
       })}

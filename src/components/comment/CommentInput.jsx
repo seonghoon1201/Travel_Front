@@ -48,7 +48,7 @@ const CommentInput = ({ onSubmit, disabled = false }) => {
           <img
             src={normalizeUrl(profileImageUrl) || defaultProfile}
             alt="내 프로필"
-            className="w-8 h-8 rounded-full object-cover bg-gray-200"
+            className="w-10 h-10 rounded-full object-cover bg-gray-200"
             onError={(e) => { e.currentTarget.src = defaultProfile; }}
           />
           <div className="flex-1">
