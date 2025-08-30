@@ -9,7 +9,7 @@ import PostActionModal from '../../components/modal/PostActionModal';
 import KakaoMap from '../../components/map/KakaoMap';
 
 import useUserStore from '../../store/userStore'; // 경로 수정
-import { getDiaryDetail } from '../../api/board/getDiaryDetail';
+import { getDiaryDetail } from '../../api';
 
 const TravelDiaryDetail = () => {
   const { id } = useParams();

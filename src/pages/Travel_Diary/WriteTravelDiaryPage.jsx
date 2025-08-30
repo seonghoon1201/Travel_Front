@@ -6,8 +6,8 @@ import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
 import PrimaryButton from '../../components/common/PrimaryButton';
 
-import { writeDiary } from '../../api/board/writeDiary';
-import { uploadProfileImage } from '../../api/file/uploadProfileImage';
+import { writeDiary } from '../../api';
+import { uploadProfileImage } from '../../api';
 
 const WriteTravelDiary = () => {
   const navigate = useNavigate();

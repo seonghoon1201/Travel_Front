@@ -6,7 +6,7 @@ import BackHeader from '../../components/header/BackHeader';
 import SearchBar from '../../components/common/SearchBar';
 import TravelDiary from '../../components/traveldiary/TravelDiary';
 import DefaultLayout from '../../layouts/DefaultLayout';
-import { getDiary } from '../../api/board/getDiary';
+import { getDiary } from '../../api';
 
 const TravelDiaryBoardPage = () => {
   const navigate = useNavigate();
