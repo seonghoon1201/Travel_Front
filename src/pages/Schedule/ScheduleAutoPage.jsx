@@ -30,18 +30,19 @@ const clean = (obj) =>
     )
   );
 
-// contentId 기준 중복 제거 + 타입 정규화
+// contentId 기준 중복 제거 + 문자열 강제
 const toScheduleItems = (items = []) => {
   const seen = new Set();
   const result = [];
   for (const it of items) {
-    const contentId = String(
-      it?.contentId ?? it?.id ?? it?.contentID ?? it?.content_id ?? ''
-    ).trim();
+    const raw =
+      it?.contentId ?? it?.id ?? it?.contentID ?? it?.content_id ?? '';
+    const contentId = String(raw).trim(); // ✅ 숫자여도 문자열로 강제
     if (!contentId || seen.has(contentId)) continue;
+
     seen.add(contentId);
     const cost = Math.max(0, Math.round(Number(it?.price ?? it?.cost ?? 0)));
-    result.push({ contentId, cost });
+    result.push({ contentId, cost }); // ✅ 그대로 string contentId 전송
   }
   return result;
 };
@@ -55,7 +56,6 @@ function makeTripTitle(locationIds) {
 const ScheduleAutoPage = () => {
   const navigate = useNavigate();
   const scheduleStore = useScheduleStore();
-  const cartItems = useCartStore((s) => s.items);
 
   const getSchedulePayload = usePlanStore((s) => s.getSchedulePayload);
   const locationIds = usePlanStore((s) => s.locationIds);
@@ -64,7 +64,13 @@ const ScheduleAutoPage = () => {
 
   useEffect(() => {
     (async () => {
-      // 카트 비었으면 방어
+      // 0) 서버 카트 재조회 (최신 상태 동기화)
+      try {
+        await useCartStore.getState().loadFromServer();
+      } catch (_) {
+        // 실패해도 이후 가드가 안내함
+      }
+      const cartItems = useCartStore.getState().items;
       if (!cartItems.length) {
         message.warning('장바구니가 비어있어요.');
         navigate(-1);
@@ -129,7 +135,7 @@ const ScheduleAutoPage = () => {
         );
 
         // 카트 → scheduleItem (중복제거)
-        const scheduleItem = toScheduleItems(cartItems);
+        const scheduleItem = toScheduleItems(useCartStore.getState().items);
         if (!scheduleItem.length) {
           message.error(
             '일정에 담을 장소가 없어요. 장소를 장바구니에 추가해 주세요.'
@@ -149,7 +155,7 @@ const ScheduleAutoPage = () => {
           scheduleStyle: style, // 예: '쇼핑', '힐링' 등
           startPlace,
           startTime, // 'HH:mm'
-          scheduleItem, // [{ contentId, cost }]
+          scheduleItem, // [{ contentId: string, cost: number }]
         });
 
         // 🔎 콘솔에 "백엔드에 보낼 바디"와 근거 로그 출력

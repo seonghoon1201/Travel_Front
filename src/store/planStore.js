@@ -1,11 +1,15 @@
 // src/store/planStore.js
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import useCartStore from './cartStore'; // getSchedulePayload에서 카트 항목을 참조(우선 사용)
+import useCartStore from './cartStore'; // 새 일정 세션 시작에서 카트 초기화
 
 const usePlanStore = create(
   persist(
     (set, get) => ({
+      // ---- 플로우 상태 ----
+      inPlanFlow: false, // /plan/* 안에 있는지 여부
+      planSessionId: null, // 새 일정 시작 시 구분용(필요하면 사용)
+
       // ---- 기본 상태 ----
       locationIds: [], // 지역 id 배열
       locationCodes: [], // [{ ldongRegnCd, ldongSignguCd }] 배열
@@ -18,8 +22,8 @@ const usePlanStore = create(
       people: 1,
       budget: 0,
 
-      // (구) planStore.cartItems — cartStore로 분리했지만, 호환을 위해 필드는 남겨둠
-      cartItems: [], // [{ contentId, cost/price }]
+      // (구) planStore.cartItems — 호환을 위해 남겨두지만 실제로는 cartStore 사용
+      cartItems: [],
 
       departurePlace: '', // => API: startPlace
       departureTime: '', // => API: startTime ('HH:mm')
@@ -31,7 +35,7 @@ const usePlanStore = create(
       scheduleType: 'GROUP', // 'GROUP' | 'SOLO'
       scheduleStyle: '', // 단일값
 
-      // 즐겨찾기 (persist로 자동 저장)
+      // 즐겨찾기
       favorites: [],
 
       // ---- 액션 ----
@@ -95,6 +99,102 @@ const usePlanStore = create(
       setScheduleType: (v) => set({ scheduleType: v }),
       setScheduleStyle: (v) => set({ scheduleStyle: v }),
 
+      // ✅ 라우트 경계에서 호출: /plan/* 들어옴
+      beginPlanFlow: () => set({ inPlanFlow: true, planSessionId: Date.now() }),
+
+      // ✅ 라우트 경계 언마운트 시 호출: /plan/* 벗어남 → 상태 정리
+      endPlanFlow: async () => {
+        try {
+          await useCartStore.getState().resetForNewPlan();
+        } catch (_) {}
+        set({
+          inPlanFlow: false,
+          planSessionId: null,
+          locationIds: [],
+          locationCodes: [],
+          startDate: null,
+          endDate: null,
+          companion: '',
+          styles: [],
+          transport: '',
+          invitees: [],
+          people: 1,
+          budget: 0,
+          cartItems: [],
+          departurePlace: '',
+          departureTime: '',
+          scheduleName: '',
+          groupId: '',
+          groupName: '',
+          scheduleType: 'GROUP',
+          scheduleStyle: '',
+          // favorites 유지
+        });
+      },
+
+      // ✅ 세션 시작: 카트/입력값을 비우되, 지역정보는 유지
+      startNewPlanSession: async () => {
+        await useCartStore
+          .getState()
+          .resetForNewPlan()
+          .catch(() => {});
+        set((state) => ({
+          // 지역은 유지
+          locationIds: state.locationIds,
+          locationCodes: state.locationCodes,
+          // 나머지 입력값 초기화
+          startDate: null,
+          endDate: null,
+          companion: '',
+          styles: [],
+          transport: '',
+          invitees: [],
+          people: 1,
+          budget: 0,
+          cartItems: [],
+          departurePlace: '',
+          departureTime: '',
+          scheduleName: '',
+          groupId: '',
+          groupName: '',
+          scheduleType: 'GROUP',
+          scheduleStyle: '',
+          // favorites는 그대로 둠
+        }));
+      },
+
+      // ✅ 세션 종료: 플랜/카트/세션스토리지 전부 삭제 (플로우 이탈/로그아웃)
+      endPlanSession: async () => {
+        await useCartStore
+          .getState()
+          .resetForNewPlan()
+          .catch(() => {});
+        set({
+          locationIds: [],
+          locationCodes: [],
+          startDate: null,
+          endDate: null,
+          companion: '',
+          styles: [],
+          transport: '',
+          invitees: [],
+          people: 1,
+          budget: 0,
+          cartItems: [],
+          departurePlace: '',
+          departureTime: '',
+          scheduleName: '',
+          groupId: '',
+          groupName: '',
+          scheduleType: 'GROUP',
+          scheduleStyle: '',
+          favorites: [],
+        });
+        try {
+          sessionStorage.removeItem('plan-store-v2');
+        } catch {}
+      },
+
       // ---- 최종 페이로드 생성 ----
       /**
        * 백엔드 /schedule/create 등에 보낼 바디 생성
@@ -126,7 +226,7 @@ const usePlanStore = create(
           String(it);
 
         const scheduleItem = sourceItems.map((it) => ({
-          contentId: toContentId(it),
+          contentId: String(toContentId(it)),
           cost: Number(it?.cost ?? it?.price ?? 0),
         }));
 
@@ -146,7 +246,7 @@ const usePlanStore = create(
         };
       },
 
-      // ---- 초기화 ----
+      // ---- 전체 초기화 ----
       reset: () =>
         set({
           locationIds: [],
@@ -170,21 +270,46 @@ const usePlanStore = create(
           favorites: [],
         }),
 
-      // 영구 저장값까지 전부 삭제(로그아웃 등)
+      // ✅ 영구 저장(세션)까지 완전 삭제 — 로그아웃 등에서 호출
       clearPersisted: () => {
-        set({}, true);
+        set({
+          inPlanFlow: false,
+          planSessionId: null,
+          locationIds: [],
+          locationCodes: [],
+          startDate: null,
+          endDate: null,
+          companion: '',
+          styles: [],
+          transport: '',
+          invitees: [],
+          people: 1,
+          budget: 0,
+          cartItems: [],
+          departurePlace: '',
+          departureTime: '',
+          scheduleName: '',
+          groupId: '',
+          groupName: '',
+          scheduleType: 'GROUP',
+          scheduleStyle: '',
+          favorites: [],
+        });
         try {
-          localStorage.removeItem('plan-store-v2');
+          sessionStorage.removeItem('plan-store-v2');
         } catch {}
       },
     }),
     {
       name: 'plan-store-v2',
       version: 2,
-      storage: createJSONStorage(() => localStorage),
+      // ✅ 같은 탭 새로고침만 유지
+      storage: createJSONStorage(() => sessionStorage),
 
-      // 꼭 필요한 필드만 저장 (UI 일시상태 등 제외)
+      // 꼭 필요한 필드만 저장
       partialize: (s) => ({
+        inPlanFlow: s.inPlanFlow,
+        planSessionId: s.planSessionId,
         locationIds: s.locationIds,
         locationCodes: s.locationCodes,
         startDate: s.startDate,
@@ -203,10 +328,9 @@ const usePlanStore = create(
         scheduleType: s.scheduleType,
         scheduleStyle: s.scheduleStyle,
         favorites: s.favorites,
-        // cartItems는 cartStore가 담당(중복 방지)
       }),
 
-      // 과거 키(ldong*/lDong*/ldong*) → 현재 키(ldong*)로 마이그레이션
+      // 과거 키 마이그레이션
       migrate: (persistedState, _version) => {
         const s = { ...(persistedState || {}) };
         if (Array.isArray(s.locationCodes)) {
@@ -227,7 +351,6 @@ const usePlanStore = create(
             ),
           }));
         }
-        // 이전에 수동 저장하던 favorites는 무시해도 됨(여기서 persist됨)
         return s;
       },
     }
