@@ -42,10 +42,17 @@ const PlanInvitePage = () => {
     return `${APP_ORIGIN}/invite?${params.toString()}`;
   }, [groupId, groupName]);
 
-  async function fetchMembers(gid, setInviteesFn) {
+  async function fetchMembers(gid, setInviteesFn, myUserId) {
     try {
       const myGroup = await GroupAPI.getById(gid);
-      setInviteesFn(myGroup?.users || []); // [{ userId, username }]
+      const members = (myGroup?.users || [])
+        .map((u) => ({
+          userId: u.userId,
+          username: u.username ?? u.userName ?? '',
+        }))
+        // ✅ 본인은 제외하고 '초대한 다른 사람'만 상태에 보관
+        .filter((u) => String(u.userId) !== String(myUserId));
+      setInviteesFn(members);
     } catch (e) {
       console.error(e);
     }
@@ -62,15 +69,21 @@ const PlanInvitePage = () => {
           const bodyName = groupName || `${username || '나'}의 여행 그룹`;
           const { groupId: createdId } = await GroupAPI.create(bodyName);
           gid = createdId;
+          // 혹시 /group/create 응답에 groupId가 없으면, 목록에서 동일 이름 최신 항목을 잡는 폴백
+          if (!gid) {
+            const list = await GroupAPI.list();
+            gid = list.find((g) => g.groupName === bodyName)?.groupId;
+          }
+          if (!gid) throw new Error('그룹 생성 응답에 groupId가 없습니다.');
           setGroupId(gid);
           if (!groupName) setGroupName(bodyName);
         }
 
         // 2) 멤버 1회 조회
-        await fetchMembers(gid, setInvitees);
+        await fetchMembers(gid, setInvitees, userId);
 
         // 3) 폴링(5초)
-        poll = setInterval(() => fetchMembers(gid, setInvitees), 5000);
+        poll = setInterval(() => fetchMembers(gid, setInvitees, userId), 5000);
       } catch (e) {
         console.error(e);
         message.error('초대 준비 중 오류가 발생했어요.');
@@ -120,7 +133,7 @@ const PlanInvitePage = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto">
+      <div className="w-full max-w-sm mx-auto pb-28">
         <BackHeader title={`${locationIds?.[0] || groupName || '여행'} 초대`} />
         <div className="px-4">
           <div className="mt-6">
@@ -153,9 +166,9 @@ const PlanInvitePage = () => {
               {(invitees || []).map((u) => (
                 <div key={u.userId} className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs">
-                    {u.username?.[0] || '친'}
+                    {(u.username ?? u.userName ?? '친')?.[0] || '친'}
                   </div>
-                  <span className="text-sm">{u.username}</span>
+                  <span className="text-sm">{u.username ?? u.userName}</span>
                 </div>
               ))}
               {!invitees?.length && !loading && (
@@ -166,9 +179,13 @@ const PlanInvitePage = () => {
             </div>
           </div>
 
-          <PrimaryButton onClick={handleNext} className="mt-10 w-full">
-            예산 설정하러 가기
-          </PrimaryButton>
+          <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
+            <div className="mx-auto max-w-sm px-4 py-3">
+              <PrimaryButton onClick={handleNext} className="w-full">
+                예산 설정하러 가기
+              </PrimaryButton>
+            </div>
+          </div>
         </div>
       </div>
     </DefaultLayout>
