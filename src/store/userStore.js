@@ -1,6 +1,8 @@
 // src/store/userStore.js
 import { create } from 'zustand';
 import { getItem, setItem, removeItem } from '../utils/localStorage';
+import usePlanStore from './planStore';
+import useCartStore from './cartStore';
 
 // 토큰 정규화: "Bearer " 접두어 제거 + 트림
 const stripBearer = (raw) => {
@@ -71,7 +73,7 @@ const useUserStore = create((set, get) => ({
     setItem('refreshToken', rt);
   },
 
-  // 로그아웃
+  // ✅ 로그아웃: 사용자 상태 + 플랜/카트 모두 정리
   logout: () => {
     set((state) => ({
       ...state,
@@ -85,6 +87,14 @@ const useUserStore = create((set, get) => ({
       isLoggedIn: false,
     }));
     trackedKeys.forEach((k) => removeItem(k));
+
+    try {
+      // 플랜/카트 세션 저장소까지 삭제
+      usePlanStore.getState().clearPersisted();
+      useCartStore.getState().clearPersisted();
+    } catch (e) {
+      // noop
+    }
   },
 
   // (선택) 새로고침 복원 — 사실 초기화에서 이미 복원되므로 없어도 OK
