@@ -178,19 +178,7 @@ const RegionDetailPage = () => {
           {/* 날씨 */}
           <div className="px-4 pt-4">
             <h3 className="text-base font-semibold text-gray-800 mb-2">날씨</h3>
-            
-            {/* 디버깅 정보 */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="mb-2 p-2 bg-yellow-100 rounded text-xs">
-                <p>날씨 디버그: city = "{decodedCity}"</p>
-                <p>날씨 디버그: weatherLoading = {String(weatherLoading)}</p>
-                <p>날씨 디버그: weather = {weather ? 'API 응답 있음' : '없음'}</p>
-                {weather && (
-                  <p>날씨 디버그: weather.main = {weather.main ? '있음' : '없음'}</p>
-                )}
-              </div>
-            )}
-
+        
             {weatherLoading ? (
               <div className="flex items-center justify-center px-4 py-3 bg-white rounded-lg shadow">
                 <p className="text-sm text-gray-500">날씨 정보를 불러오는 중...</p>
@@ -205,9 +193,12 @@ const RegionDetailPage = () => {
                   />
                   <div className="text-sm text-gray-700">
                     <p className="font-medium">
-                      최저 {weather?.main?.temp_min ?? '-'}°C / 최고 {weather?.main?.temp_max ?? '-'}°C
+                      최저 {weather?.main?.temp_min ?? '-'}°C 
+                      <br /> 
+                      최고 {weather?.main?.temp_max ?? '-'}°C
                     </p>
                     <p className="text-gray-500">
+                      현재상태 : 
                       {weather?.weather?.[0]?.description ?? ''}
                     </p>
                   </div>
