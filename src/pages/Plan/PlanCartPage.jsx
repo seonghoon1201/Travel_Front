@@ -1,7 +1,7 @@
-// src/pages/PlanCartPage.jsx
+// src/pages/Plan/PlanCartPage.jsx
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Progress, Flex, message, Tooltip } from 'antd';
+import { Progress, Flex, message, Tooltip, Drawer } from 'antd';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -11,92 +11,196 @@ import FavoriteButton from '../../components/common/FavoriteButton';
 import AmountInputModal from '../../components/modal/AmountInputModal';
 import { HelpCircle } from 'lucide-react';
 import usePlanStore from '../../store/planStore';
-import { loadKakao } from '../../utils/kakao';
+import { loadKakaoMap } from '../../utils/kakaoMapLoader';
+import { getPlacesByRegionTheme, getRegions } from '../../api';
+import useCartStore from '../../store/cartStore';
 
-const dummyItems = {
-  관광: [
-    {
-      id: 1,
-      name: '아쿠아플라넷 제주',
-      address: '서귀포시 성산읍 섭지코지로 95',
-      price: 30000,
-      imageUrl: '/assets/dummy.jpg',
-      // 예시 좌표(섭지코지 인근)
-      location: { lat: 33.4426, lng: 126.9208 },
-    },
-    {
-      id: 2,
-      name: '성산일출봉',
-      address: '서귀포시 성산읍 일출로 284-12',
-      price: 10000,
-      imageUrl: '/assets/dummy.jpg',
-      location: { lat: 33.459, lng: 126.9425 },
-    },
-  ],
-  맛집: [],
-  숙소: [],
-  힐링: [],
-  레저: [],
+const THEMES = ['관광', '맛집', '숙소', '힐링', '레저'];
+const THEME_PARAM_MAP = {
+  관광: '관광지',
+  맛집: '맛집',
+  숙소: '숙소',
+  힐링: '힐링',
+  레저: '레저',
 };
+
+const FALLBACK_IMG = '/assets/dummy.jpg';
 
 const PlanCartPage = () => {
   const navigate = useNavigate();
   const {
     locationIds,
+    locationCodes,
+    setLocationCodes,
     budget,
-    cartItems,
     favorites,
     toggleFavorite,
     isFavorite,
+  } = usePlanStore();
+
+  // cart 전용 스토어
+  const {
+    items: cartItems,
     addToCart,
     setCartItems,
-  } = usePlanStore();
+    removeByContentId,
+    clear: clearCart,
+    loadFromServer,
+    isInCart,
+  } = useCartStore();
 
   const [activeCategory, setActiveCategory] = useState('관광');
   const [remainingBudget, setRemainingBudget] = useState(budget);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
 
-  // ✅ API 응답 아이템 상태
+  const [codePair, setCodePair] = useState(null);
+  const [codeInvalid, setCodeInvalid] = useState(false);
   const [apiItems, setApiItems] = useState([]);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingList, setLoadingList] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
-  const API_BASE_URL = process.env.REACT_APP_API_URL;
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // ---------- 지도 관련 refs ----------
+  // 지도 refs
   const mapContainerRef = useRef(null);
-  const mapRef = useRef(null); // kakao.maps.Map 인스턴스
-  const kakaoRef = useRef(null); // window.Kakao
-  const markersRef = useRef([]); // 생성된 마커들
-  const infoWindowRef = useRef(null); // 하나의 인포윈도우 재사용
+  const mapRef = useRef(null);
+  const kakaoRef = useRef(null);
+  const markersRef = useRef([]);
+  const infoWindowRef = useRef(null);
 
+  const canonPair = (o = {}) => ({
+    ldongRegnCd: String(
+      o.ldongRegnCd ?? o.ldongRegnCd ?? o.lDongRegnCd ?? o.ldongRegnCd ?? ''
+    ),
+    ldongSignguCd: String(
+      o.ldongSignguCd ??
+        o.ldongSignguCd ??
+        o.lDongSignguCd ??
+        o.ldongSignguCd ??
+        ''
+    ),
+  });
+  const isValidPair = (p) =>
+    Boolean((p?.ldongRegnCd || '').trim()) &&
+    Boolean((p?.ldongSignguCd || '').trim());
+
+  // 장바구니 불러오기
   useEffect(() => {
-    const used = cartItems.reduce((sum, item) => sum + item.price, 0);
+    loadFromServer().catch(() => {
+      message.error('장바구니 조회에 실패했습니다.');
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 예산 계산
+  useEffect(() => {
+    const used = cartItems.reduce(
+      (sum, item) => sum + (Number(item.price) || 0),
+      0
+    );
     setRemainingBudget(budget - used);
   }, [cartItems, budget]);
 
-  const handleFetchItems = async (category) => {
-    setApiItems([]); // 새 카테고리 선택 시 초기화
-    try {
-      const res = await fetch(
-        `${API_BASE_URL}/tour/search?category=${encodeURIComponent(
-          category
-        )}&page=0&size=20`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
+  // 지역 코드(법정동/시군구) 지정: PlanLocationPage에서 넣어둔 locationCodes 사용
+  useEffect(() => {
+    (async () => {
+      if (!Array.isArray(locationCodes) || locationCodes.length === 0) {
+        console.warn(
+          '[Cart] locationCodes가 비어있음: 지역 선택부터 진행 필요'
+        );
+        setCodePair(null);
+        setCodeInvalid(true);
+        return;
+      }
+      // 1차: store 값 정규화
+      const first = canonPair(locationCodes[0]);
+      if (isValidPair(first)) {
+        setCodePair(first);
+        setCodeInvalid(false);
+        // 저장된 필드 키가 달랐다면 한 번 정규화해서 덮어쓰기
+        if (
+          !locationCodes[0]?.ldongRegnCd ||
+          !locationCodes[0]?.ldongSignguCd
+        ) {
+          setLocationCodes([first]);
         }
-      );
-      if (!res.ok) throw new Error('API 요청 실패');
-      const result = await res.json();
+        return;
+      }
 
-      const parsed = result.content.map((item) => ({
-        id: item.contentId,
+      // 2차: /regions 조회 → locationIds[0]로 정확한 코드 재매핑
+      try {
+        const regions = await getRegions();
+        const pickedId = String(locationIds?.[0] ?? '');
+        const match = (regions || []).find(
+          (r) => String(r.regionId) === pickedId
+        );
+        const fromRegions = canonPair(match);
+        if (isValidPair(fromRegions)) {
+          setLocationCodes([fromRegions]);
+          setCodePair(fromRegions);
+          setCodeInvalid(false);
+          console.log('[Cart] 코드 보완 성공 (regions 기반)', fromRegions);
+          return;
+        }
+      } catch (e) {
+        console.warn('[Cart] /regions 매핑 실패', e);
+      }
+
+      // 3차: 실패 — 사용자 안내 및 요청 차단
+      setCodePair(null);
+      setCodeInvalid(true);
+      console.warn(
+        '[Cart] 유효한 법정동/시군구 코드를 찾을 수 없음',
+        locationCodes[0]
+      );
+      message.error(
+        '선택한 지역 코드가 유효하지 않습니다. 지역을 다시 선택해 주세요.'
+      );
+    })();
+  }, [locationCodes, locationIds, setLocationCodes]);
+
+  // 테마/페이지에 따른 목록 로드
+  const fetchList = async (reset = false) => {
+    // 코드가 유효하지 않으면 호출 금지
+    if (!codePair?.ldongRegnCd || !codePair?.ldongSignguCd || codeInvalid)
+      return;
+    const themeParam = '관광지';
+    const nextPage = reset ? 0 : page;
+    try {
+      setLoadingList(true);
+      console.log('[Cart] GET /places/region/theme', {
+        ldongRegnCd: codePair.ldongRegnCd,
+        ldongSignguCd: codePair.ldongSignguCd,
+        theme: themeParam,
+        page: nextPage,
+        size: 20,
+      });
+      const data = await getPlacesByRegionTheme({
+        ldongRegnCd: codePair.ldongRegnCd,
+        ldongSignguCd: codePair.ldongSignguCd,
+        theme: themeParam,
+        page: nextPage,
+        size: 20,
+      });
+      const content = Array.isArray(data?.content) ? data.content : [];
+      console.log('[Cart] fetchList response meta', {
+        totalElements: data?.totalElements,
+        totalPages: data?.totalPages,
+        pageNumber: data?.number,
+        numberOfElements: data?.numberOfElements,
+        first: data?.first,
+        last: data?.last,
+        sample: content.slice(0, 3),
+      });
+      const mapped = content.map((item) => ({
+        contentId: item.contentId,
         name: item.title,
-        address: `${item.addr1 ?? ''} ${item.addr2 ?? ''}`.trim(),
-        price: Math.floor(Math.random() * 10000) + 1000,
-        imageUrl: item.firstImage || '/assets/dummy.jpg',
+        address: `${item.address ?? ''} ${item.address2 ?? ''}`.trim(),
+        price: Math.floor(Math.random() * 10000) + 1000, // 임시가격
+        imageUrl: item.firstImage || FALLBACK_IMG,
         phone: item.tel,
         location: {
           lat: Number(item.mapY), // 위도
@@ -104,40 +208,83 @@ const PlanCartPage = () => {
         },
       }));
 
-      setApiItems(parsed);
-    } catch (err) {
-      console.error(err);
-      message.error('여행지 정보를 불러오지 못했어요.');
+      setApiItems((prev) => (reset ? mapped : [...prev, ...mapped]));
+      setHasMore(
+        data?.last === false || nextPage + 1 < (data?.totalPages ?? 0)
+      );
+      setPage(reset ? 1 : nextPage + 1);
+    } catch (e) {
+      console.error('[Cart] places fetch error', e?.response?.data || e);
+      message.error(
+        e?.response?.data?.message ?? '여행지 목록을 불러오지 못했어요.'
+      );
+    } finally {
+      setLoadingList(false);
     }
   };
 
-  const handleCartClick = (place) => {
-    const isAlreadyInCart = cartItems.some((item) => item.id === place.id);
-    if (isAlreadyInCart) {
-      setCartItems(cartItems.filter((item) => item.id !== place.id));
-      message.info('장바구니에서 제거되었습니다.');
-    } else {
-      setSelectedPlace(place);
-      setIsModalOpen(true);
+  // 지역코드/테마 바뀌면 초기화 후 첫 페이지 로드
+  useEffect(() => {
+    if (!codePair?.ldongRegnCd || !codePair?.ldongSignguCd || codeInvalid)
+      return;
+    setApiItems([]);
+    setPage(0);
+    setHasMore(true);
+    fetchList(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [codePair, activeCategory]);
+
+  // Kakao Map 초기화
+  useEffect(() => {
+    let disposed = false;
+    (async () => {
+      try {
+        const Kakao = await loadKakaoMap();
+        if (disposed) return;
+        kakaoRef.current = Kakao;
+
+        const { maps } = Kakao;
+        const defaultCenter = new maps.LatLng(37.5665, 126.978);
+        const map = new maps.Map(mapContainerRef.current, {
+          center: defaultCenter,
+          level: 6,
+        });
+        mapRef.current = map;
+        infoWindowRef.current = new maps.InfoWindow({ zIndex: 2 });
+        renderMarkers();
+      } catch (e) {
+        console.error('Kakao map init failed', e);
+        message.error('지도를 불러오지 못했어요.');
+      }
+    })();
+
+    return () => {
+      disposed = true;
+      clearMarkers();
+      mapRef.current = null;
+      infoWindowRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 아이템 변경 시 마커 갱신
+  useEffect(() => {
+    if (!mapRef.current || !kakaoRef.current) return;
+    renderMarkers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiItems, activeCategory]);
+
+  const clearMarkers = () => {
+    if (markersRef.current.length) {
+      markersRef.current.forEach((m) => m.setMap(null));
+      markersRef.current = [];
     }
   };
 
-  const handleAddToCart = (placeWithPrice) => {
-    addToCart(placeWithPrice);
-    message.success('장바구니에 추가되었습니다.');
-  };
-
-  // 리스트에 사용/지도에 사용할 현재 카테고리 아이템
-  const itemsToShow = useMemo(
-    () => (apiItems.length > 0 ? apiItems : dummyItems[activeCategory] || []),
-    [apiItems, activeCategory]
-  );
-
-  // 좌표가 유효한 아이템만 추리기
   const points = useMemo(() => {
-    return itemsToShow
+    return apiItems
       .map((it) => ({
-        id: it.id,
+        id: it.contentId,
         name: it.name,
         address: it.address,
         lat: it?.location?.lat,
@@ -150,67 +297,11 @@ const PlanCartPage = () => {
           !Number.isNaN(p.lat) &&
           !Number.isNaN(p.lng)
       );
-  }, [itemsToShow]);
+  }, [apiItems]);
 
-  // ---------- 지도 초기화 ----------
-  useEffect(() => {
-    let disposed = false;
-    (async () => {
-      try {
-        const Kakao = await loadKakao();
-        if (disposed) return;
-        kakaoRef.current = Kakao;
-
-        const { maps } = window.kakao;
-        // 초기 중심: 유효한 포인트가 있으면 첫 포인트, 없으면 서울시청
-        const defaultCenter = points[0]
-          ? new maps.LatLng(points[0].lat, points[0].lng)
-          : new maps.LatLng(37.5665, 126.978);
-
-        const map = new maps.Map(mapContainerRef.current, {
-          center: defaultCenter,
-          level: 6,
-        });
-        mapRef.current = map;
-        infoWindowRef.current = new maps.InfoWindow({ zIndex: 2 });
-
-        // 초깃값 마커 렌더
-        renderMarkers();
-      } catch (e) {
-        console.error('Kakao map init failed', e);
-        message.error('지도를 불러오지 못했어요.');
-      }
-    })();
-
-    return () => {
-      disposed = true;
-      // 마커 정리
-      clearMarkers();
-      mapRef.current = null;
-      infoWindowRef.current = null;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // 최초 1회
-
-  // ---------- 아이템 변경 시 마커 갱신 ----------
-  useEffect(() => {
-    if (!mapRef.current || !kakaoRef.current) return;
-    renderMarkers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [points]);
-
-  // 마커 삭제
-  const clearMarkers = () => {
-    if (markersRef.current.length) {
-      markersRef.current.forEach((m) => m.setMap(null));
-      markersRef.current = [];
-    }
-  };
-
-  // 마커 렌더 + bounds 피팅
   const renderMarkers = () => {
     const map = mapRef.current;
-    const { maps } = window.kakao;
+    const { maps } = kakaoRef.current;
     clearMarkers();
     if (!points.length) return;
 
@@ -223,9 +314,8 @@ const PlanCartPage = () => {
       markersRef.current.push(marker);
       bounds.extend(pos);
 
-      // 인포윈도우 내용 (간단)
       const html = `
-        <div style="padding:8px 10px;max-width:200px">
+        <div style="padding:8px 10px;max-width:220px">
           <div style="font-weight:700;margin-bottom:4px">${p.name}</div>
           <div style="font-size:12px;color:#666">${p.address ?? ''}</div>
         </div>
@@ -237,21 +327,17 @@ const PlanCartPage = () => {
       });
     });
 
-    // 모든 마커가 보이도록
-    if (!bounds.isEmpty()) {
-      map.setBounds(bounds);
-    }
+    if (!bounds.isEmpty()) map.setBounds(bounds);
   };
 
-  // 리스트 아이템 클릭 시 해당 위치로 이동
+  // 리스트 항목 클릭 → 지도 팬 & 인포윈도우
   const panToItem = (item) => {
     if (!item?.location || !mapRef.current) return;
-    const { maps } = window.kakao;
+    const { maps } = kakaoRef.current;
     const pos = new maps.LatLng(item.location.lat, item.location.lng);
     mapRef.current.panTo(pos);
-    // 간단히 인포윈도우도 열기
     const html = `
-      <div style="padding:8px 10px;max-width:200px">
+      <div style="padding:8px 10px;max-width:220px">
         <div style="font-weight:700;margin-bottom:4px">${item.name}</div>
         <div style="font-size:12px;color:#666">${item.address ?? ''}</div>
       </div>
@@ -263,19 +349,49 @@ const PlanCartPage = () => {
     );
   };
 
+  // 장바구니 담기/빼기
+  const handleCartClick = async (place) => {
+    const exists = isInCart(place.contentId);
+    if (exists) {
+      await removeByContentId(place.contentId); // 서버 DELETE 후 스토어 갱신
+    } else {
+      setSelectedPlace(place);
+      setIsModalOpen(true); // 가격 입력 → onSubmit에서 addToCart 호출
+    }
+  };
+
+  const handleAddToCart = async (placeWithPrice) => {
+    const price = Number(placeWithPrice.price ?? placeWithPrice.cost ?? 0);
+    await addToCart({ ...placeWithPrice, price, cost: price });
+    setIsModalOpen(false);
+  };
+
+  const itemsToShow = apiItems;
   const percentUsed =
     budget > 0 ? Math.min(100, ((budget - remainingBudget) / budget) * 100) : 0;
 
+  // 서버 동기화: 로컬 카트를 서버 카트로 전송
+  const syncCartThenGo = async () => {
+    if (!cartItems.length) {
+      message.warning('장바구니가 비어있어요.');
+      return;
+    }
+    // 🔎 사용자가 버튼 누를 때 카트 상태 로그
+    console.log('[PlanCart] 자동 일정 짜기 클릭 - cartItems', cartItems);
+    navigate('/plan/auto');
+  };
+
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto">
-        <BackHeader title={`${locationIds[0] || '여행지'} 여행`} />
+      <div className="w-full max-w-sm mx-auto pb-32">
+        <BackHeader title={`${locationIds?.[0] || '여행지'} 여행`} />
         <div className="px-4">
-          {/* ✅ 지도 영역 */}
+          {/* 지도 */}
           <div className="w-full h-64 rounded-lg bg-gray-200 overflow-hidden">
             <div ref={mapContainerRef} className="w-full h-full" />
           </div>
 
+          {/* 예산/프로그레스 */}
           <div className="mt-4">
             <p className="text-sm text-center flex justify-center items-center gap-1">
               현재 설정하신 예산에서{' '}
@@ -299,17 +415,15 @@ const PlanCartPage = () => {
             </Flex>
           </div>
 
+          {/* 테마 탭 */}
           <div className="relative mt-6">
             <div className="flex flex-wrap gap-2 justify-center">
-              {Object.keys(dummyItems).map((category) => (
+              {THEMES.map((category) => (
                 <CategoryButton
                   key={category}
                   label={category}
                   isActive={activeCategory === category}
-                  onClick={() => {
-                    setActiveCategory(category);
-                    handleFetchItems(category); // ✅ API 호출
-                  }}
+                  onClick={() => setActiveCategory(category)}
                 />
               ))}
             </div>
@@ -333,33 +447,32 @@ const PlanCartPage = () => {
             </Tooltip>
           </div>
 
+          {/* 목록 */}
           <div className="mt-4 space-y-4">
             {itemsToShow.map((item) => {
-              const isAdded = cartItems.some(
-                (cartItem) => cartItem.id === item.id
-              );
-              const hasGeo = !!(
-                item?.location &&
+              const isAdded = isInCart(item.contentId);
+              const hasGeo =
+                !!item?.location &&
                 typeof item.location.lat === 'number' &&
-                typeof item.location.lng === 'number'
-              );
+                typeof item.location.lng === 'number';
 
               return (
                 <div
-                  key={item.id}
+                  key={item.contentId}
                   className="relative flex items-center justify-between p-2 border rounded-lg"
                   onClick={() => hasGeo && panToItem(item)}
                 >
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <img
-                        src={item.imageUrl}
+                        src={item.imageUrl || FALLBACK_IMG}
                         alt={item.name}
                         className="w-14 h-14 rounded-md object-cover"
+                        onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
                       />
                       <FavoriteButton
-                        isActive={isFavorite(item.id)}
-                        toggleFavorite={() => toggleFavorite(item.id)}
+                        isActive={isFavorite(item.contentId)}
+                        toggleFavorite={() => toggleFavorite(item.contentId)}
                       />
                     </div>
                     <div>
@@ -389,33 +502,20 @@ const PlanCartPage = () => {
                 </div>
               );
             })}
+
+            {/* 더 보기 */}
+            {hasMore && (
+              <button
+                disabled={loadingList}
+                onClick={() => fetchList(false)}
+                className="mt-2 w-full rounded-xl border border-gray-200 py-2 text-sm disabled:opacity-50"
+              >
+                {loadingList ? '불러오는 중...' : '더 보기'}
+              </button>
+            )}
           </div>
 
-          <PrimaryButton
-            className="mt-8 w-full"
-            onClick={() => navigate('/plan/auto')}
-          >
-            자동 일정 짜기
-          </PrimaryButton>
-
-          {cartItems.length > 0 && (
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-3 shadow-md z-10">
-              <div className="flex items-center justify-between text-sm font-semibold">
-                <span>🛒 {cartItems.length}개 장소 선택됨</span>
-                <span
-                  className={
-                    remainingBudget < 0 ? 'text-red-500' : 'text-gray-800'
-                  }
-                >
-                  총 ₩
-                  {cartItems
-                    .reduce((sum, item) => sum + item.price, 0)
-                    .toLocaleString()}
-                </span>
-              </div>
-            </div>
-          )}
-
+          {/* 수량/가격 입력 모달 */}
           {selectedPlace && (
             <AmountInputModal
               visible={isModalOpen}
@@ -426,6 +526,85 @@ const PlanCartPage = () => {
           )}
         </div>
       </div>
+
+      {/* 하단 고정 바: 카트 보기 + 자동 일정 짜기 */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
+        <div className="mx-auto max-w-sm px-4 py-3 flex gap-2">
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="flex-1 rounded-xl border border-gray-300 py-2 text-sm"
+          >
+            카트 보기 ({cartItems.length})
+          </button>
+          <PrimaryButton onClick={syncCartThenGo} className="flex-1">
+            자동 일정 짜기
+          </PrimaryButton>
+        </div>
+      </div>
+
+      {/* 카트 보기 Drawer */}
+      <Drawer
+        title={`장바구니 (${cartItems.length})`}
+        placement="bottom"
+        height="70%"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        destroyOnClose
+      >
+        {cartItems.length === 0 ? (
+          <div className="text-sm text-gray-500">담긴 장소가 없어요.</div>
+        ) : (
+          <div className="space-y-3">
+            {cartItems.map((it) => (
+              <div
+                key={it.contentId}
+                className="flex items-center justify-between p-2 border rounded-lg"
+              >
+                <div className="flex items-center gap-3">
+                  <img
+                    src={it.imageUrl || FALLBACK_IMG}
+                    alt={it.name}
+                    className="w-12 h-12 rounded-md object-cover"
+                    onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
+                  />
+                  <div>
+                    <div className="text-sm font-semibold">{it.name}</div>
+                    <div className="text-xs text-gray-500">{it.address}</div>
+                    <div className="text-xs text-gray-500">
+                      ₩{Number(it.price || 0).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  className="text-xs text-red-500"
+                  onClick={async () => {
+                    await removeByContentId(it.contentId);
+                  }}
+                >
+                  제거
+                </button>
+              </div>
+            ))}
+            <button
+              className="w-full rounded-xl border border-gray-300 py-2 text-sm"
+              onClick={async () => {
+                await clearCart();
+              }}
+            >
+              전체 비우기
+            </button>
+          </div>
+        )}
+      </Drawer>
+
+      {/* 동기화 로딩 오버레이 */}
+      {syncing && (
+        <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-white rounded-xl px-6 py-4 shadow">
+            <div className="text-sm font-semibold">장바구니 동기화 중...</div>
+          </div>
+        </div>
+      )}
     </DefaultLayout>
   );
 };
