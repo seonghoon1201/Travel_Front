@@ -1,3 +1,4 @@
+// src/pages/PlanDatePage.jsx
 import React, { useState } from 'react';
 import { DatePicker, Input, Select, message } from 'antd';
 import 'antd/dist/reset.css';
@@ -9,7 +10,6 @@ import dayjs from 'dayjs';
 import usePlanStore from '../../store/planStore';
 
 const { RangePicker } = DatePicker;
-const { Option } = Select;
 
 const PlanDatePage = () => {
   const [dates, setDates] = useState(null);
@@ -28,22 +28,14 @@ const PlanDatePage = () => {
   );
 
   const handleNext = () => {
-    // 유효성 검사 보강
-    if (!dates || dates.length !== 2) {
+    if (!dates || dates.length !== 2)
       return message.warning('여행 시작일과 종료일을 모두 선택해 주세요.');
-    }
     const [start, end] = dates;
-    if (end.isBefore(start, 'day')) {
+    if (end.isBefore(start, 'day'))
       return message.warning('종료일은 시작일 이후로 선택해 주세요.');
-    }
-    if (!departurePlace) {
-      return message.warning('출발 장소를 입력해 주세요.');
-    }
-    if (!hour || !minute) {
-      return message.warning('출발 시각을 선택해 주세요.');
-    }
+    if (!departurePlace) return message.warning('출발 장소를 입력해 주세요.');
+    if (!hour || !minute) return message.warning('출발 시각을 선택해 주세요.');
 
-    // 시간 변환: AM/PM → 24시간
     let h = parseInt(hour, 10);
     if (ampm === 'PM' && h !== 12) h += 12;
     if (ampm === 'AM' && h === 12) h = 0;
@@ -61,7 +53,7 @@ const PlanDatePage = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto">
+      <div className="w-full max-w-sm mx-auto pb-28">
         <BackHeader title="여행 기간 선택" />
         <div className="px-4">
           <RangePicker
@@ -109,8 +101,13 @@ const PlanDatePage = () => {
               }))}
             />
           </div>
+        </div>
+      </div>
 
-          <PrimaryButton onClick={handleNext} className="mt-6 w-full">
+      {/* 하단 고정 버튼 바 */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
+        <div className="mx-auto max-w-sm px-4 py-3">
+          <PrimaryButton onClick={handleNext} className="w-full">
             {dates?.length === 2
               ? `${dayjs(dates[0]).format('YYYY.MM.DD')} ~ ${dayjs(
                   dates[1]
