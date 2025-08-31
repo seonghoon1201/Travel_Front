@@ -64,13 +64,7 @@ const HomePage = () => {
                 showMore={true}
                 navigateTo="/board/hot"
               />
-              {/* <LocationSection
-                title="요즘 핫플"
-                type="budget"
-                locations={dummyLocations}
-                showMore={true}
-                navigateTo="/board/budget"
-              /> */}
+
               <TravelDiaryList title="여행 일기" showMore={true} />
             </main>
           </div>

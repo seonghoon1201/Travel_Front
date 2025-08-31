@@ -4,7 +4,7 @@ import { getHotRegions } from '../../api/region/getHotRegions';
 
 const DEFAULT_IMAGE = '/images/default_place.jpg';
 
-const HotPlaceSection = ({ navigateTo = '/board/hot', limit = 10 }) => {
+const LocationSection = ({ navigateTo = '/board/hot', limit = 10 }) => {
   const navigate = useNavigate();
   const [places, setPlaces] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,43 +12,54 @@ const HotPlaceSection = ({ navigateTo = '/board/hot', limit = 10 }) => {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
+      
       const res = await getHotRegions(limit);
       if (res.success) {
-        // LocationSection/현재 UI에 맞게 가공
+        
         const dedup = [];
         const seen = new Set();
         for (const item of res.data) {
           const name = item.regionName ?? '';
           if (name && !seen.has(name)) {
             seen.add(name);
-            dedup.push({
+            const processedItem = {
               city: name,
               image: item.regionImage || DEFAULT_IMAGE,
               summary: item.description || '',
               regionId: item.regionId,
               regionCode: item.regionCode,
               ldongRegnCd: item.ldongRegnCd,
-              ldongSgguCd: item.ldongSgguCd,
-            });
+              ldongSignguCd: item.ldongSignguCd, 
+            };
+            
+            dedup.push(processedItem);
           }
         }
         setPlaces(dedup);
       } else {
-        setPlaces([]); // 실패 시 빈 배열
+        setPlaces([]); 
       }
       setLoading(false);
     };
     load();
   }, [limit]);
 
-  const handleClick = (city) => {
-    navigate(`/region/detail/${encodeURIComponent(city)}`);
+  const handleClick = (city, ldongRegnCd, ldongSignguCd) => {
+
+    
+    navigate(`/region/detail/${encodeURIComponent(city)}`, {
+      state: { 
+        ldongRegnCd, 
+        ldongSignguCd,
+        from: 'hotplace' 
+      },
+    });
   };
 
   return (
     <section className="mb-5">
       <div className="flex justify-between items-center px-2">
-        <h3 className="font-jalnongothic">요즘 핫플</h3>
+        <h2 className="font-jalnongothic">요즘 핫플</h2>
         <button
           className="font-pretendard text-sm text-blue-500 border rounded-full px-2 py-0.5"
           onClick={() => navigate(navigateTo)}
@@ -73,7 +84,11 @@ const HotPlaceSection = ({ navigateTo = '/board/hot', limit = 10 }) => {
             <div
               key={idx}
               className="flex-shrink-0 w-20 text-center cursor-pointer"
-              onClick={() => handleClick(item.city)}
+              onClick={() => handleClick(
+                item.city, 
+                item.ldongRegnCd, 
+                item.ldongSignguCd,  
+              )}
             >
               <img
                 src={item.image || DEFAULT_IMAGE}
@@ -93,8 +108,10 @@ const HotPlaceSection = ({ navigateTo = '/board/hot', limit = 10 }) => {
           )}
         </div>
       )}
+      
+    
     </section>
   );
 };
 
-export default HotPlaceSection;
+export default LocationSection;

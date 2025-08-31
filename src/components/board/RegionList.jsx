@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const RegionList = ({ imageUrl, city, Province, summary, locations = [] }) => {
+const RegionList = ({ imageUrl, city, summary, locations = [] }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -25,9 +25,9 @@ const RegionList = ({ imageUrl, city, Province, summary, locations = [] }) => {
 
       {/* 오른쪽 콘텐츠 */}
       <div className="flex flex-col justify-between flex-1">
-        {/* 시 · 도 표기 */}
+        {/* 시  표기 */}
         <p className="text-base font-semibold text-gray-900">
-          {city} <span className="text-sm text-gray-500">· {Province}</span>
+          {city}
         </p>
         {/* 30자 후 ... 표시 */}
         <p className="text-sm text-gray-500">{truncateText(summary, 30)}</p>

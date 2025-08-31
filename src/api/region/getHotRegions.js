@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 
-export const getHotRegions = async (limit = 10) => {
+export const getHotRegions = async (limit = 100) => {
   try {
     const res = await axios.get(`${API_BASE_URL}/regions/hot/${limit}`);
     return { success: true, data: res.data?.hotRegions ?? [] };
