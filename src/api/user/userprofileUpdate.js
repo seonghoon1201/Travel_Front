@@ -1,9 +1,8 @@
-// src/api/user/userprofileUpdate.js
 import axios from 'axios';
 import { getItem, setItem } from '../../utils/localStorage';
 import { API_BASE_URL } from '../config';
 
-export const userprofileUpdate = async ({ userNickname, userProfileImage }) => {
+export const userProfileUpdate = async ({ userNickname, userProfileImage }) => {
   const accessToken = getItem('accessToken');
 
   try {
@@ -18,7 +17,6 @@ export const userprofileUpdate = async ({ userNickname, userProfileImage }) => {
       }
     );
 
-    // 로컬스토리지 갱신
     if (userNickname) setItem('nickname', userNickname);
     if (userProfileImage) setItem('profileImageUrl', userProfileImage);
 
