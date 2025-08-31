@@ -12,16 +12,19 @@ import AmountInputModal from '../../components/modal/AmountInputModal';
 import { HelpCircle } from 'lucide-react';
 import usePlanStore from '../../store/planStore';
 import { loadKakaoMap } from '../../utils/kakaoMapLoader';
-import { getPlacesByRegionTheme, getRegions } from '../../api';
+import { getPlacesByRegionTheme, getRegions } from '../../api'; // ← getPlacesByRegionTheme 재사용(내부는 contentTypeId)
 import useCartStore from '../../store/cartStore';
 
-const THEMES = ['관광', '맛집', '숙소', '힐링', '레저'];
-const THEME_PARAM_MAP = {
-  관광: '관광지',
-  맛집: '맛집',
-  숙소: '숙소',
-  힐링: '힐링',
-  레저: '레저',
+// ✅ 카테고리 5개 고정 (순서: 관광, 숙소, 맛집, 축제, 레저)
+const CATEGORIES = ['관광', '숙소', '맛집', '축제', '레저'];
+
+// ✅ 스웨거 매핑 (int)
+const CATEGORY_TO_CONTENTTYPEID = {
+  관광: 12, // 관광지
+  숙소: 32, // 숙박
+  맛집: 39, // 음식점
+  축제: 15, // 축제공연행사
+  레저: 28, // 레포츠
 };
 
 const FALLBACK_IMG = '/assets/dummy.jpg';
@@ -33,7 +36,6 @@ const PlanCartPage = () => {
     locationCodes,
     setLocationCodes,
     budget,
-    favorites,
     toggleFavorite,
     isFavorite,
   } = usePlanStore();
@@ -42,10 +44,8 @@ const PlanCartPage = () => {
   const {
     items: cartItems,
     addToCart,
-    setCartItems,
     removeByContentId,
     clear: clearCart,
-    loadFromServer,
     isInCart,
   } = useCartStore();
 
@@ -86,14 +86,6 @@ const PlanCartPage = () => {
   const isValidPair = (p) =>
     Boolean((p?.ldongRegnCd || '').trim()) &&
     Boolean((p?.ldongSignguCd || '').trim());
-
-  // 장바구니 불러오기
-  useEffect(() => {
-    loadFromServer().catch(() => {
-      message.error('장바구니 조회에 실패했습니다.');
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // 예산 계산
   useEffect(() => {
@@ -162,29 +154,40 @@ const PlanCartPage = () => {
     })();
   }, [locationCodes, locationIds, setLocationCodes]);
 
-  // 테마/페이지에 따른 목록 로드
+  // 카테고리/페이지에 따른 목록 로드
   const fetchList = async (reset = false) => {
     // 코드가 유효하지 않으면 호출 금지
     if (!codePair?.ldongRegnCd || !codePair?.ldongSignguCd || codeInvalid)
       return;
-    const themeParam = '관광지';
+
+    const contentTypeId = CATEGORY_TO_CONTENTTYPEID[activeCategory]; // ✅ int
+    if (!contentTypeId) {
+      console.warn(
+        '[Cart] 유효하지 않은 카테고리 → contentTypeId 매핑 없음:',
+        activeCategory
+      );
+      return;
+    } // ✅ int
     const nextPage = reset ? 0 : page;
+
     try {
       setLoadingList(true);
       console.log('[Cart] GET /places/region/theme', {
         ldongRegnCd: codePair.ldongRegnCd,
         ldongSignguCd: codePair.ldongSignguCd,
-        theme: themeParam,
+        contentTypeId,
         page: nextPage,
         size: 20,
       });
+
       const data = await getPlacesByRegionTheme({
         ldongRegnCd: codePair.ldongRegnCd,
         ldongSignguCd: codePair.ldongSignguCd,
-        theme: themeParam,
+        contentTypeId, // ✅ 숫자 전달
         page: nextPage,
         size: 20,
       });
+
       const content = Array.isArray(data?.content) ? data.content : [];
       console.log('[Cart] fetchList response meta', {
         totalElements: data?.totalElements,
@@ -195,8 +198,9 @@ const PlanCartPage = () => {
         last: data?.last,
         sample: content.slice(0, 3),
       });
+
       const mapped = content.map((item) => ({
-        contentId: item.contentId,
+        contentId: String(item.contentId),
         name: item.title,
         address: `${item.address ?? ''} ${item.address2 ?? ''}`.trim(),
         price: Math.floor(Math.random() * 10000) + 1000, // 임시가격
@@ -223,7 +227,7 @@ const PlanCartPage = () => {
     }
   };
 
-  // 지역코드/테마 바뀌면 초기화 후 첫 페이지 로드
+  // 지역코드/카테고리 바뀌면 초기화 후 첫 페이지 로드
   useEffect(() => {
     if (!codePair?.ldongRegnCd || !codePair?.ldongSignguCd || codeInvalid)
       return;
@@ -415,10 +419,10 @@ const PlanCartPage = () => {
             </Flex>
           </div>
 
-          {/* 테마 탭 */}
+          {/* 카테고리 탭 */}
           <div className="relative mt-6">
             <div className="flex flex-wrap gap-2 justify-center">
-              {THEMES.map((category) => (
+              {CATEGORIES.map((category) => (
                 <CategoryButton
                   key={category}
                   label={category}
@@ -450,7 +454,7 @@ const PlanCartPage = () => {
           {/* 목록 */}
           <div className="mt-4 space-y-4">
             {itemsToShow.map((item) => {
-              const isAdded = isInCart(item.contentId);
+              const isAdded = isInCart(String(item.contentId));
               const hasGeo =
                 !!item?.location &&
                 typeof item.location.lat === 'number' &&
@@ -471,8 +475,10 @@ const PlanCartPage = () => {
                         onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
                       />
                       <FavoriteButton
-                        isActive={isFavorite(item.contentId)}
-                        toggleFavorite={() => toggleFavorite(item.contentId)}
+                        isActive={isFavorite(String(item.contentId))}
+                        toggleFavorite={() =>
+                          toggleFavorite(String(item.contentId))
+                        }
                       />
                     </div>
                     <div>
@@ -496,7 +502,10 @@ const PlanCartPage = () => {
                     isAdded={isAdded}
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleCartClick(item);
+                      handleCartClick({
+                        ...item,
+                        contentId: String(item.contentId),
+                      });
                     }}
                   />
                 </div>
@@ -557,7 +566,7 @@ const PlanCartPage = () => {
           <div className="space-y-3">
             {cartItems.map((it) => (
               <div
-                key={it.contentId}
+                key={String(it.contentId)}
                 className="flex items-center justify-between p-2 border rounded-lg"
               >
                 <div className="flex items-center gap-3">
@@ -578,7 +587,7 @@ const PlanCartPage = () => {
                 <button
                   className="text-xs text-red-500"
                   onClick={async () => {
-                    await removeByContentId(it.contentId);
+                    await removeByContentId(String(it.contentId));
                   }}
                 >
                   제거

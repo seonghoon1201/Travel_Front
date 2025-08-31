@@ -1,6 +1,6 @@
 // src/store/cartStore.js
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import CartAPI from '../api/cart/cart';
 import { message } from 'antd';
 
@@ -138,6 +138,23 @@ const useCartStore = create(
         }
       },
 
+      // ✅ 새 일정 시작 시 카트만 초기화(서버/스토어 동시 정리)
+      resetForNewPlan: async () => {
+        try {
+          await CartAPI.clearAll().catch(() => {});
+        } finally {
+          set({ items: [], index: {} });
+        }
+      },
+
+      // ✅ 영구 저장(세션 저장소)까지 완전히 삭제 — 로그아웃 등에서 호출
+      clearPersisted: () => {
+        set({ items: [], index: {}, loading: false });
+        try {
+          sessionStorage.removeItem('cart'); // ← persist name
+        } catch {}
+      },
+
       // 유틸
       isInCart: (contentId) =>
         get().items.some((it) => String(it.contentId) === String(contentId)),
@@ -147,7 +164,12 @@ const useCartStore = create(
           0
         ),
     }),
-    { name: 'cart' }
+    {
+      name: 'cart',
+      // ✅ 같은 탭의 새로고침에만 유지되도록 sessionStorage 사용
+      storage: createJSONStorage(() => sessionStorage),
+      // cart는 그대로 전부 저장(간단)
+    }
   )
 );
 

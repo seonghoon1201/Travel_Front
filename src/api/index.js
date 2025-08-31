@@ -20,7 +20,7 @@ export { searchTours as searchTour } from './tour/searchTour';
 // 유저
 export { fetchMyDiaries, fetchMyTravel } from './user/userContentApi';
 
-export { userprofileUpdate as userProfileUpdate } from './user/userProfileUpdate';
+export { userProfileUpdate } from './user/userProfileUpdate';
 
 
 // 날씨

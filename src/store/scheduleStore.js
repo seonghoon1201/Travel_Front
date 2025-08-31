@@ -1,3 +1,4 @@
+// src/store/scheduleStore.js
 import { create } from 'zustand';
 
 const useScheduleStore = create((set, get) => ({
@@ -8,6 +9,9 @@ const useScheduleStore = create((set, get) => ({
 
   setDetail: (detail) => set({ detail }),
   setPlaceIndex: (index) => set({ placeIndex: index }),
+
+  // ✅ 필요 시 결과 화면을 벗어날 때 초기화하고 싶다면:
+  clear: () => set({ detail: null, placeIndex: {} }),
 
   // days 구조로 변환하여 UI에서 바로 쓰게 제공
   getDays: () => {
@@ -24,35 +28,40 @@ const useScheduleStore = create((set, get) => ({
 
     const sortByTime = (a, b) => {
       // 'HH:mm:ss' 기준
-      const toNum = (s='00:00:00')=>{
-        const [hh='00',mm='00',ss='00'] = String(s).split(':');
-        return (+hh)*3600 + (+mm)*60 + (+ss);
+      const toNum = (s = '00:00:00') => {
+        const [hh = '00', mm = '00', ss = '00'] = String(s).split(':');
+        return +hh * 3600 + +mm * 60 + +ss;
       };
       return toNum(a.startTime) - toNum(b.startTime);
     };
 
-    const days = [...byDay.keys()].sort((a,b)=>a-b).map((dNum) => {
-      const plans = byDay.get(dNum).sort(sortByTime).map((it) => {
-        const enrich = placeIndex[String(it.placeId)] || {};
+    const days = [...byDay.keys()]
+      .sort((a, b) => a - b)
+      .map((dNum) => {
+        const plans = byDay
+          .get(dNum)
+          .sort(sortByTime)
+          .map((it) => {
+            const enrich = placeIndex[String(it.placeId)] || {};
+            return {
+              id: it.scheduleItemId || `${it.placeId}-${it.startTime}`,
+              name: enrich.name || enrich.title || String(it.placeId),
+              memo: it.memo || '',
+              cost: it.cost ?? 0,
+              startTime: it.startTime,
+              endTime: it.endTime,
+              lat: enrich.lat,
+              lng: enrich.lng,
+              address: enrich.address,
+              imageUrl: enrich.imageUrl,
+              placeId: it.placeId,
+            };
+          });
         return {
-          id: it.scheduleItemId || `${it.placeId}-${it.startTime}`,
-          name: enrich.name || enrich.title || String(it.placeId),
-          memo: it.memo || '',
-          cost: it.cost ?? 0,
-          startTime: it.startTime,
-          endTime: it.endTime,
-          lat: enrich.lat,
-          lng: enrich.lng,
-          address: enrich.address,
-          imageUrl: enrich.imageUrl,
-          placeId: it.placeId,
+          date: `Day ${dNum}`,
+          plans,
         };
       });
-      return {
-        date: `Day ${dNum}`,
-        plans,
-      };
-    });
 
     return days;
   },
