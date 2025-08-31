@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { CalendarPlus } from 'lucide-react';
 
@@ -8,7 +8,7 @@ import PlaceList from '../../components/board/PlaceList';
 import RegionSummary from '../../components/board/RegionSummary';
 import PrimaryButton from '../../components/common/PrimaryButton';
 
-import { getWeather } from '../../api';
+import { getWeather } from '../../api/weather/getWeather';
 import { getPlacesByRegion } from '../../api/place/getPlacesByRegion';
 
 const RegionDetailPage = () => {
@@ -17,7 +17,7 @@ const RegionDetailPage = () => {
 
   const locationHook = useLocation();
   const state = locationHook.state || {};
-  // ✅ state 우선, 없으면 쿼리스트링(lDong/ldong 모두 수용)에서 폴백
+
   const searchParams = new URLSearchParams(locationHook.search);
   const ldongRegnCd =
     state.ldongRegnCd ??
@@ -33,89 +33,137 @@ const RegionDetailPage = () => {
     '';
 
   const [weather, setWeather] = useState(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
   const [places, setPlaces] = useState([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        console.log('=== RegionDetailPage 데이터 로딩 시작 ===');
-        console.log('도시명:', decodedCity);
-        console.log('받은 state:', state);
-        console.log('ldongRegnCd:', ldongRegnCd);
-        console.log('ldongSignguCd:', ldongSignguCd);
+  // ===== 페이지네이션 상태 =====
+  const [page, setPage] = useState(0);     // 현재 페이지
+  const size = 20;                         // 고정: 20개씩
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true); // 다음 페이지 존재 여부 추정
+  const idSetRef = useRef(new Set());      // 중복 방지
 
-        // 날씨 API 호출
-        // const weatherRes = await getWeather(decodedCity);
-        // if (weatherRes.success) {
-        //   setWeather(weatherRes.data);
-        //   console.log('날씨 데이터 로드 성공');
-        // } else {
-        //   console.warn('날씨 데이터 없음:', weatherRes.error);
-        // }
+  const fetchWeather = useCallback(async () => {
+    if (!decodedCity) return;
 
-        // 지역별 장소 API 호출
-        if (ldongRegnCd && ldongSignguCd) {
-          console.log('=== getPlacesByRegion API 호출 ===');
-          const apiParams = {
-            // 내부 변수명은 소문자 유지, 래퍼에서 lDong*로 변환해 전송
-            ldongRegnCd: String(ldongRegnCd),
-            ldongSignguCd: String(ldongSignguCd),
-            page: 0,
-            size: 20,
-          };
-          console.log('API 호출 파라미터:', apiParams);
-
-          const placesRes = await getPlacesByRegion(apiParams);
-
-          if (placesRes.success && Array.isArray(placesRes.data?.content)) {
-            const processed = placesRes.data.content.map((item, index) => {
-              const processedItem = {
-                contentId: item.contentId,
-                destination: item.title,
-                category:
-                  item.lclsSystm3 ||
-                  item.lclsSystm2 ||
-                  item.lclsSystm1 ||
-                  item.cat3 ||
-                  item.cat2 ||
-                  item.cat1 ||
-                  '기타',
-                location: item.address || '',
-                opentime: item.openTime || '-',
-                closetime: item.closeTime || '-',
-                tel: item.tel || '-',
-                imageUrl: item.firstImage || '/images/default_place.jpg',
-              };
-
-              console.log(`처리된 아이템 ${index + 1}:`, processedItem);
-              return processedItem;
-            });
-
-            setPlaces(processed);
-            console.log(`총 ${processed.length}개 장소 설정 완료`);
-          } else {
-            console.warn('장소 데이터 처리 실패');
-            setPlaces([]);
-          }
-        } else {
-          console.warn('=== 법정동 코드 누락 ===');
-          console.warn('ldongRegnCd:', ldongRegnCd, typeof ldongRegnCd);
-          console.warn('ldongSignguCd:', ldongSignguCd, typeof ldongSignguCd);
-          setPlaces([]);
-        }
-      } catch (err) {
-        setPlaces([]);
+    try {
+      setWeatherLoading(true);
+      console.log('=== 날씨 API 호출 ===', decodedCity);
+      
+      // 직접 "시/군/구" 제거한 도시명으로 시도
+      const cleanCityName = decodedCity.replace(/(시|군|구)$/, '');
+      console.log('정제된 도시명:', cleanCityName);
+      
+      const response = await getWeather(cleanCityName);
+      console.log('날씨 API 응답:', response);
+      
+      if (response.success && response.data) {
+        setWeather(response.data);
+      } else {
+        setWeather(null);
       }
-    };
-
-    if (decodedCity) {
-      fetchData();
-    } else {
-      console.warn('decodedCity가 없음:', city);
+    } catch (error) {
+      setWeather(null);
+    } finally {
+      setWeatherLoading(false);
     }
-    // search(쿼리 변경)로 들어오는 값도 반영되도록 locationHook.search는 의존성에 넣지 않아도
-    // ldongRegnCd/ldongSignguCd가 이미 이를 반영하므로 아래 배열로 충분합니다.
+  }, [decodedCity]);
+
+  useEffect(() => {
+    if (decodedCity) {
+      fetchWeather();
+    }
+  }, [decodedCity, fetchWeather]);
+
+  useEffect(() => {
+    setPlaces([]);
+    setPage(0);
+    setHasMore(true);
+    idSetRef.current.clear();
   }, [decodedCity, ldongRegnCd, ldongSignguCd]);
+
+  const fetchPage = useCallback(
+    async (pageToLoad) => {
+      if (!ldongRegnCd || !ldongSignguCd) return;
+      if (loading) return;
+
+      try {
+        setLoading(true);
+
+        console.log('=== getPlacesByRegion API 호출 ===');
+        const apiParams = {
+          ldongRegnCd: String(ldongRegnCd),
+          ldongSignguCd: String(ldongSignguCd),
+          page: pageToLoad,
+          size, // 20개씩
+        };
+        console.log('API 호출 파라미터:', apiParams);
+
+        const res = await getPlacesByRegion(apiParams);
+
+        if (res.success && Array.isArray(res.data?.content)) {
+          const batch = res.data.content;
+
+          // 맵핑 + 중복 제거
+          const next = [];
+          for (const item of batch) {
+            const id = item.contentId ?? item.id;
+            if (!id || idSetRef.current.has(id)) continue;
+            idSetRef.current.add(id);
+
+            next.push({
+              contentId: id,
+              destination: item.title,
+              category:
+                item.lclsSystm3 ||
+                item.lclsSystm2 ||
+                item.lclsSystm1 ||
+                item.cat3 ||
+                item.cat2 ||
+                item.cat1 ||
+                '기타',
+              location: item.address || '',
+              opentime: item.openTime || '-',
+              closetime: item.closeTime || '-',
+              tel: item.tel || '-',
+              imageUrl: item.firstImage || '/images/default_place.jpg',
+            });
+          }
+
+          setPlaces((prev) => [...prev, ...next]);
+          setHasMore(batch.length === size);
+          setPage(pageToLoad);
+          console.log(`페이지 ${pageToLoad} 로드: ${next.length}개 추가`);
+        } else {
+          setHasMore(false);
+        }
+      } catch (e) {
+        console.warn('장소 데이터 로드 실패:', e?.message || e);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [ldongRegnCd, ldongSignguCd, size]
+  );
+
+  // 초기 1페이지 로드
+  useEffect(() => {
+    if (decodedCity && ldongRegnCd && ldongSignguCd) {
+      fetchPage(0);
+    } else if (decodedCity) {
+      console.warn('=== 법정동 코드 누락 ===');
+      console.warn('ldongRegnCd:', ldongRegnCd, typeof ldongRegnCd);
+      console.warn('ldongSignguCd:', ldongSignguCd, typeof ldongSignguCd);
+      setPlaces([]);
+    }
+  }, [decodedCity, ldongRegnCd, ldongSignguCd, fetchPage]);
+
+  // "더 보기" 클릭 → page+1 로드
+  const handleLoadMore = () => {
+    if (!loading && hasMore) {
+      fetchPage(page + 1);
+    }
+  };
 
   return (
     <DefaultLayout>
@@ -128,9 +176,26 @@ const RegionDetailPage = () => {
           </div>
 
           {/* 날씨 */}
-          {/* <div className="px-4 pt-4">
+          <div className="px-4 pt-4">
             <h3 className="text-base font-semibold text-gray-800 mb-2">날씨</h3>
-            {weather ? (
+            
+            {/* 디버깅 정보 */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mb-2 p-2 bg-yellow-100 rounded text-xs">
+                <p>날씨 디버그: city = "{decodedCity}"</p>
+                <p>날씨 디버그: weatherLoading = {String(weatherLoading)}</p>
+                <p>날씨 디버그: weather = {weather ? 'API 응답 있음' : '없음'}</p>
+                {weather && (
+                  <p>날씨 디버그: weather.main = {weather.main ? '있음' : '없음'}</p>
+                )}
+              </div>
+            )}
+
+            {weatherLoading ? (
+              <div className="flex items-center justify-center px-4 py-3 bg-white rounded-lg shadow">
+                <p className="text-sm text-gray-500">날씨 정보를 불러오는 중...</p>
+              </div>
+            ) : weather ? (
               <div className="flex items-center justify-between px-4 py-3 bg-white rounded-lg shadow">
                 <div className="flex items-center gap-3">
                   <img
@@ -159,9 +224,17 @@ const RegionDetailPage = () => {
                 </a>
               </div>
             ) : (
-              <p className="text-sm text-gray-400">날씨 정보를 불러올 수 없습니다.</p>
+              <div className="flex items-center justify-between px-4 py-3 bg-white rounded-lg shadow">
+                <p className="text-sm text-gray-400">날씨 정보를 불러올 수 없습니다.</p>
+                <button
+                  onClick={fetchWeather}
+                  className="text-blue-500 text-sm hover:underline"
+                >
+                  다시 시도
+                </button>
+              </div>
             )}
-          </div> */}
+          </div> 
 
           {/* 즐길거리 */}
           <div className="px-4 pt-4">
@@ -173,24 +246,42 @@ const RegionDetailPage = () => {
                 <p>디버그: ldongRegnCd = {String(ldongRegnCd)}</p>
                 <p>디버그: ldongSignguCd = {String(ldongSignguCd)}</p>
                 <p>디버그: places 길이 = {places.length}</p>
+                <p>디버그: page = {page}, hasMore = {String(hasMore)}, loading = {String(loading)}</p>
               </div>
             )}
 
             <div className="space-y-3">
               {places.length > 0 ? (
-                places.map((p) => (
-                  <PlaceList
-                    key={p.contentId}
-                    contentId={p.contentId}
-                    destination={p.destination}
-                    category={p.category}
-                    location={p.location}
-                    opentime={p.opentime}
-                    closetime={p.closetime}
-                    tel={p.tel}
-                    imageUrl={p.imageUrl}
-                  />
-                ))
+                <>
+                  {places.map((p) => (
+                    <PlaceList
+                      key={p.contentId}
+                      contentId={p.contentId}
+                      destination={p.destination}
+                      category={p.category}
+                      location={p.location}
+                      opentime={p.opentime}
+                      closetime={p.closetime}
+                      tel={p.tel}
+                      imageUrl={p.imageUrl}
+                    />
+                  ))}
+
+                  {/* 더 보기 버튼 */}
+                  <div className="pt-2 pb-16 text-center">
+                    {hasMore ? (
+                      <button
+                        onClick={handleLoadMore}
+                        disabled={loading}
+                        className="px-3 py-2 text-sm rounded-lg bg-white shadow border hover:bg-gray-50 disabled:opacity-60"
+                      >
+                        {loading ? '불러오는 중…' : '더 보기'}
+                      </button>
+                    ) : (
+                      <span className="text-xs text-gray-400">마지막입니다.</span>
+                    )}
+                  </div>
+                </>
               ) : (
                 <div className="text-center py-8">
                   <p className="text-sm text-gray-400 mb-2">즐길거리가 없습니다.</p>
