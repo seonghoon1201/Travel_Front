@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 
 import BackHeader from '../../components/header/BackHeader';
@@ -6,52 +6,55 @@ import SearchBar from '../../components/common/SearchBar';
 import RegionList from '../../components/board/RegionList';
 import DefaultLayout from '../../layouts/DefaultLayout';
 
-import { fetchWikipediaData } from '../../utils/wikiApi';
+import { getHotRegions } from '../../api/region/getHotRegions';
 
-// 🔹 hotCities 리스트
-const hotCities = [
-  '성남시',
-  '서울특별시',
-  '부산광역시',
-  '광주광역시',
-  '대전광역시',
-  '제주특별자치도',
-  '울산광역시',
-];
+const DEFAULT_IMAGE = '/images/default_place.jpg';
+const LIMIT = 20; // 필요 개수로 조절
 
 const HotBoard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [regionData, setRegionData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // 🔹 위키데이터 불러오기
+  // 🔹 백엔드 핫플 불러오기
   useEffect(() => {
-    const loadWikipediaData = async () => {
-      try {
-        const results = await Promise.all(
-          hotCities.map(async (city) => {
-            const data = await fetchWikipediaData(city);
-            return {
-              imageUrl: data.imageUrl,
-              city: data.title,
-              Province: '', // 필요하면 city에서 도 추출
-              summary: data.extract,
-              locations: [], // 필요시 다른 API 연결
-            };
-          })
-        );
-        setRegionData(results);
-      } catch (err) {
-        console.error('핫플 데이터 로드 실패:', err);
+    const load = async () => {
+      setLoading(true);
+      const res = await getHotRegions(LIMIT);
+      if (res.success) {
+        // 중복 제거 + RegionList에 맞게 가공
+        const seen = new Set();
+        const mapped = [];
+        for (const r of res.data) {
+          const name = r.regionName?.trim();
+          if (!name || seen.has(name)) continue;
+          seen.add(name);
+          mapped.push({
+            imageUrl: r.regionImage || DEFAULT_IMAGE,
+            city: name,               // 도시/지역명
+            Province: r.regionCode || '', // 시/도 코드(있으면)
+            summary: r.description || '',
+            locations: [],            // 필요 시 추후 연동
+          });
+        }
+        setRegionData(mapped);
+      } else {
+        setRegionData([]);
       }
+      setLoading(false);
     };
-
-    loadWikipediaData();
+    load();
   }, []);
 
-  // 🔹 검색 필터
-  const filteredRegionData = regionData.filter((item) =>
-    item.city.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // 🔹 검색 필터(대소문자/공백 안전)
+  const filteredRegionData = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    if (!q) return regionData;
+    return regionData.filter((item) =>
+      (item.city || '').toLowerCase().includes(q)
+      || (item.Province || '').toLowerCase().includes(q)
+    );
+  }, [regionData, searchTerm]);
 
   return (
     <DefaultLayout>
@@ -85,13 +88,18 @@ const HotBoard = () => {
             </div>
           </div>
 
-          {/* 핫플 리스트 */}
+          {/* 리스트 */}
           <div className="space-y-4 mt-4 px-2">
-            {filteredRegionData.length > 0 ? (
+            {loading ? (
+              // 스켈레톤
+              Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="h-20 rounded-xl bg-gray-100 animate-pulse" />
+              ))
+            ) : filteredRegionData.length > 0 ? (
               filteredRegionData.map((item, index) => (
                 <RegionList
                   key={index}
-                  imageUrl={item.imageUrl}
+                  imageUrl={item.imageUrl || DEFAULT_IMAGE}
                   city={item.city}
                   Province={item.Province}
                   summary={item.summary}
