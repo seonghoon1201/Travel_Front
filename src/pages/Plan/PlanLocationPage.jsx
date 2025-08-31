@@ -37,7 +37,7 @@ const normalizeImageUrl = (raw) => {
 
 const PlanLocationPage = () => {
   const navigate = useNavigate();
-  const { setLocationIds } = usePlanStore();
+  const { setLocationIds, setLocationCodes } = usePlanStore();
 
   const [searchText, setSearchText] = useState('');
   const [locations, setLocations] = useState([]);
@@ -51,8 +51,23 @@ const PlanLocationPage = () => {
         const mapped = regions.map((r) => ({
           id: r.regionId,
           name: r.regionName,
-          description: r.description || r.regionCode || '',
+          description: r.description || '',
           imageUrl: normalizeImageUrl(r.regionImage || r.imageUrl),
+          // 여러 케이스를 모두 수용해 ldong* 로 정규화해 저장
+          ldongRegnCd: String(
+            r.ldongRegnCd ??
+              r.ldongRegnCd ??
+              r.lDongRegnCd ??
+              r.ldongRegnCd ??
+              ''
+          ),
+          ldongSignguCd: String(
+            r.ldongSignguCd ??
+              r.ldongSignguCd ??
+              r.lDongSignguCd ??
+              r.ldongSignguCd ??
+              ''
+          ),
           selected: false,
         }));
         setLocations(mapped);
@@ -67,18 +82,55 @@ const PlanLocationPage = () => {
   }, []);
 
   const handleSelect = (id) => {
-    setLocations((prev) =>
-      prev.map((loc) =>
+    setLocations((prev) => {
+      const next = prev.map((loc) =>
         loc.id === id ? { ...loc, selected: !loc.selected } : loc
-      )
-    );
+      );
+      // 최신 상태로 로그
+      const target = next.find((l) => l.id === id);
+      if (target) {
+        console.log('[Location] 선택 토글', {
+          regionId: target.id,
+          ldongRegnCd: target.ldongRegnCd,
+          ldongSignguCd: target.ldongSignguCd,
+          name: target.name,
+          selected: target.selected,
+        });
+      }
+      return next;
+    });
   };
 
   const handleNext = () => {
-    const selectedIds = locations.filter((l) => l.selected).map((l) => l.id);
-    if (!selectedIds.length)
+    const selected = locations.filter((l) => l.selected);
+    if (!selected.length)
       return alert('최소 한 곳 이상의 여행지를 선택해 주세요.');
-    setLocationIds(selectedIds);
+    // 코드 유효성(빈 문자열만 차단 — 서버가 짧은 코드도 허용하므로)
+    const missing = selected.find(
+      (l) =>
+        !String(l.ldongRegnCd || '').trim() ||
+        !String(l.ldongSignguCd || '').trim()
+    );
+    if (missing) {
+      message.error(
+        '선택한 지역의 코드가 비어 있어요. 다른 지역을 선택해 주세요.'
+      );
+      return;
+    }
+    setLocationIds(selected.map((l) => l.id));
+    const canon = (o) => ({
+      ldongRegnCd: String(
+        o.ldongRegnCd ?? o.ldongRegnCd ?? o.lDongRegnCd ?? o.ldongRegnCd ?? ''
+      ),
+      ldongSignguCd: String(
+        o.ldongSignguCd ??
+          o.ldongSignguCd ??
+          o.lDongSignguCd ??
+          o.ldongSignguCd ??
+          ''
+      ),
+    });
+    setLocationCodes(selected.map(canon));
     navigate('/plan/date');
   };
 

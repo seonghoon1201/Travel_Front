@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+// src/pages/Plan/PlanBudgetPage.jsx
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
@@ -8,7 +9,6 @@ import usePlanStore from '../../store/planStore';
 const PlanBudgetPage = () => {
   const navigate = useNavigate();
 
-  // ✅ selector로 필요한 값/액션만 구독 (불필요 리렌더 감소)
   const locationIds = usePlanStore((s) => s.locationIds);
   const storePeople = usePlanStore((s) => s.people);
   const storeBudget = usePlanStore((s) => s.budget);
@@ -18,7 +18,6 @@ const PlanBudgetPage = () => {
   const [people, setPeople] = useState(1);
   const [budget, setBudget] = useState(0);
 
-  // ✅ 페이지 재방문 시 스토어 값 복원
   useEffect(() => {
     if (storePeople && Number(storePeople) > 0) setPeople(storePeople);
     if (Number.isFinite(storeBudget) && storeBudget >= 0)
@@ -28,27 +27,20 @@ const PlanBudgetPage = () => {
   const minBudget = 0;
   const maxBudget = 10_000_000;
 
-  const handlePeopleChange = (delta) => {
-    setPeople((prev) => Math.max(1, prev + delta));
-  };
-
+  const handlePeopleChange = (d) => setPeople((p) => Math.max(1, p + d));
   const handleBudgetChange = (e) => {
     const v = Number(e.target.value);
-    // 숫자 아닌 입력 방어
     setBudget(Number.isFinite(v) ? v : 0);
   };
 
   const handleSubmit = () => {
-    // ✅ 클램프 후 저장
     const clampedPeople = Math.max(1, Number(people) || 1);
     const clampedBudget = Math.min(
       maxBudget,
       Math.max(minBudget, Number(budget) || 0)
     );
-
     savePeople(clampedPeople);
     saveBudget(clampedBudget);
-
     navigate('/plan/cart');
   };
 
@@ -62,11 +54,10 @@ const PlanBudgetPage = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto">
-        <BackHeader title={`${locationIds[0] || '어딘가로'} 여행`} />
+      <div className="w-full max-w-sm mx-auto pb-28">
+        <BackHeader title={`${locationIds?.[0] || '어딘가로'} 여행`} />
         <div className="px-4">
           <div className="mt-6 space-y-6">
-            {/* 인원 수 */}
             <div>
               <p className="text-sm font-semibold text-gray-800 mb-2">
                 여행 인원
@@ -90,7 +81,6 @@ const PlanBudgetPage = () => {
               </div>
             </div>
 
-            {/* 예산 설정 */}
             <div>
               <p className="text-sm font-semibold text-gray-800 mb-2">
                 예산 설정
@@ -116,20 +106,24 @@ const PlanBudgetPage = () => {
               </p>
             </div>
 
-            {/* 인당 예산 안내 */}
             <p className="text-xs text-gray-500 text-center">
-              위처럼 설정하실 경우 1인 당 예산은 <br />약{' '}
+              위처럼 설정하실 경우 1인 당 예산은 <br />
               <span className="text-blue-600 font-semibold text-sm">
                 {perPerson.toLocaleString()}원
               </span>
               입니다.
             </p>
           </div>
+        </div>
+      </div>
 
+      {/* 하단 고정 버튼 */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
+        <div className="mx-auto max-w-sm px-4 py-3">
           <PrimaryButton
             onClick={handleSubmit}
             disabled={submitDisabled}
-            className="mt-10 w-full disabled:opacity-50"
+            className="w-full disabled:opacity-50"
           >
             예산 설정 완료
           </PrimaryButton>

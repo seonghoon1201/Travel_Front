@@ -1,63 +1,53 @@
 // src/api/group.js
 import http from '../../utils/authAxios';
 
-/**
- * 그룹/초대 관련 API 래퍼
- * - 모든 함수는 예외 발생 시 throw 하므로, 호출 측에서 try/catch로 처리하세요.
- */
 const GroupAPI = {
-  /**
-   * 그룹 생성
-   * @param {string} groupName
-   * @returns {Promise<{groupId: string}>}
-   */
   async create(groupName) {
     const { data } = await http.post('/group/create', { groupName });
-    // 응답이 { groupId: '...' } 형태라고 가정
-    return data;
+    // { groupId } 또는 문자열로 올 수도 있으니 방어
+    const groupId =
+      data?.groupId ?? (typeof data === 'string' ? data : undefined);
+    return { groupId };
   },
 
-  /**
-   * 내 그룹 목록
-   * @returns {Promise<Array<{groupId: string, groupName: string, users: Array<{userId:string, username:string}>}>>}
-   */
   async list() {
     const { data } = await http.get('/group/list');
-    return Array.isArray(data) ? data : [];
+    const arr = Array.isArray(data) ? data : [];
+    // users[].userName → username 로 노멀라이즈
+    return arr.map((g) => ({
+      ...g,
+      users: (g.users || []).map((u) => ({
+        userId: u.userId,
+        username: u.userName ?? u.username ?? '',
+      })),
+    }));
   },
 
-  /**
-   * 특정 그룹 정보(목록에서 검색)
-   * @param {string} groupId
-   */
   async getById(groupId) {
     const list = await this.list();
     return list.find((g) => g.groupId === groupId) || null;
   },
 
-  /**
-   * 특정 그룹 멤버 목록만 추출
-   * @param {string} groupId
-   * @returns {Promise<Array<{userId:string, username:string}>>}
-   */
   async members(groupId) {
     const g = await this.getById(groupId);
     return g?.users || [];
   },
 
-  /**
-   * 멤버 추가 (서버 라우트 오타 대비: /member → 실패 시 /meber 재시도)
-   * @param {string} groupId
-   * @param {string} userId
-   * @returns {Promise<void>}
-   */
   async addMember(groupId, userId) {
-    try {
-      await http.put(`/group/${groupId}/member/${userId}`);
-    } catch (e) {
-      // 서버가 오타로 열려 있는 경우 폴백
-      await http.put(`/group/${groupId}/meber/${userId}`);
-    }
+    await http.put(`/group/${groupId}/member/${userId}`);
+  },
+
+  async removeMember(groupId, userId) {
+    await http.delete(`/group/${groupId}/member/${userId}`);
+  },
+
+  async count(groupId) {
+    const { data } = await http.get(`/group/count/${groupId}`);
+    return data?.memberCount ?? 0;
+  },
+
+  async delete(groupId) {
+    await http.delete(`/group/${groupId}`);
   },
 };
 
