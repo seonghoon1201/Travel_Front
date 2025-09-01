@@ -14,9 +14,9 @@ const PlaceDetail = () => {
   const [isSaved, setIsSaved] = useState(false);
 
   const extractHref = (html) => {
-    const match = html.match(/href="([^"]+)"/);
-    return match ? match[1] : null;
-  };
+  const match = html.match(/href="([^"]+)"/);
+  return match ? match[1] : null;
+};
 
   useEffect(() => {
     const fetchPlaceDetail = async () => {
@@ -170,15 +170,9 @@ const PlaceDetail = () => {
 
           {/* 추가 정보들 */}
           <div className="border-t pt-4 space-y-4">
+
             <div>
               <h3 className="font-medium text-sm mb-1">카테고리</h3>
-              <p className="text-sm text-gray-600">
-                {place.contentTypeId === '39' ? '음식점' : '관광지'}
-              </p>
-            </div>
-            
-            <div>
-              <h3 className="font-medium text-sm mb-1">테마</h3>
               <p className="text-sm text-gray-600">{place.theme || '정보 없음'}</p>
             </div>
           </div>

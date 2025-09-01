@@ -97,8 +97,8 @@ const RegionDetailPage = () => {
 
         if (res.success && Array.isArray(res.data?.content)) {
           const batch = res.data.content;
-
           const next = [];
+          
           for (const item of batch) {
             const id = item.contentId ?? item.id;
             if (!id || idSetRef.current.has(id)) continue;
