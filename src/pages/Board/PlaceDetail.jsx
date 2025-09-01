@@ -13,6 +13,11 @@ const PlaceDetail = () => {
   const [error, setError] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
 
+  const extractHref = (html) => {
+    const match = html.match(/href="([^"]+)"/);
+    return match ? match[1] : null;
+  };
+
   useEffect(() => {
     const fetchPlaceDetail = async () => {
       
@@ -140,7 +145,7 @@ const PlaceDetail = () => {
               <p>
                 <strong>홈페이지:</strong>{' '}
                 <a
-                  href={place.homepage}
+                  href={extractHref(place.homepage)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 underline break-all"
