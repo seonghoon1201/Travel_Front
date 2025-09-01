@@ -62,8 +62,9 @@ const HomePage = () => {
                 showMore={true}
                 navigateTo="/board/hot"
               />
-
-              <TravelDiaryList title="여행 일기" showMore={true} />
+              <div className="pb-[2rem]">
+                <TravelDiaryList title="여행 일기" showMore={true} />
+              </div>
             </main>
           </div>
         </div>

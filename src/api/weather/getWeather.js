@@ -22,7 +22,6 @@ export const getWeather = async (city) => {
 
   for (const cityVariant of uniqueCityVariants) {
     try {
-      console.log(`날씨 API 호출 시도: "${cityVariant}"`);
       
       const res = await axios.get(`${API_BASE_URL}/weather/current`, {
         params: { city: cityVariant },

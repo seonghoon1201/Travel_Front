@@ -48,14 +48,10 @@ const RegionDetailPage = () => {
 
     try {
       setWeatherLoading(true);
-      console.log('=== 날씨 API 호출 ===', decodedCity);
       
       // 직접 "시/군/구" 제거한 도시명으로 시도
-      const cleanCityName = decodedCity.replace(/(시|군|구)$/, '');
-      console.log('정제된 도시명:', cleanCityName);
-      
+      const cleanCityName = decodedCity.replace(/(시|군|구)$/, '');      
       const response = await getWeather(cleanCityName);
-      console.log('날씨 API 응답:', response);
       
       if (response.success && response.data) {
         setWeather(response.data);
@@ -90,21 +86,18 @@ const RegionDetailPage = () => {
       try {
         setLoading(true);
 
-        console.log('=== getPlacesByRegion API 호출 ===');
         const apiParams = {
           ldongRegnCd: String(ldongRegnCd),
           ldongSignguCd: String(ldongSignguCd),
           page: pageToLoad,
-          size, // 20개씩
+          size, 
         };
-        console.log('API 호출 파라미터:', apiParams);
 
         const res = await getPlacesByRegion(apiParams);
 
         if (res.success && Array.isArray(res.data?.content)) {
           const batch = res.data.content;
 
-          // 맵핑 + 중복 제거
           const next = [];
           for (const item of batch) {
             const id = item.contentId ?? item.id;
@@ -133,7 +126,6 @@ const RegionDetailPage = () => {
           setPlaces((prev) => [...prev, ...next]);
           setHasMore(batch.length === size);
           setPage(pageToLoad);
-          console.log(`페이지 ${pageToLoad} 로드: ${next.length}개 추가`);
         } else {
           setHasMore(false);
         }
@@ -151,14 +143,10 @@ const RegionDetailPage = () => {
     if (decodedCity && ldongRegnCd && ldongSignguCd) {
       fetchPage(0);
     } else if (decodedCity) {
-      console.warn('=== 법정동 코드 누락 ===');
-      console.warn('ldongRegnCd:', ldongRegnCd, typeof ldongRegnCd);
-      console.warn('ldongSignguCd:', ldongSignguCd, typeof ldongSignguCd);
       setPlaces([]);
     }
   }, [decodedCity, ldongRegnCd, ldongSignguCd, fetchPage]);
 
-  // "더 보기" 클릭 → page+1 로드
   const handleLoadMore = () => {
     if (!loading && hasMore) {
       fetchPage(page + 1);
@@ -231,16 +219,6 @@ const RegionDetailPage = () => {
           <div className="px-4 pt-4">
             <h3 className="text-base font-semibold text-gray-800 mb-2">즐길거리</h3>
 
-            {/* 디버깅 정보 표시 */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="mb-4 p-3 bg-gray-100 rounded text-xs">
-                <p>디버그: ldongRegnCd = {String(ldongRegnCd)}</p>
-                <p>디버그: ldongSignguCd = {String(ldongSignguCd)}</p>
-                <p>디버그: places 길이 = {places.length}</p>
-                <p>디버그: page = {page}, hasMore = {String(hasMore)}, loading = {String(loading)}</p>
-              </div>
-            )}
-
             <div className="space-y-3">
               {places.length > 0 ? (
                 <>
@@ -259,7 +237,7 @@ const RegionDetailPage = () => {
                   ))}
 
                   {/* 더 보기 버튼 */}
-                  <div className="pt-2 pb-16 text-center">
+                  <div className="pt-2 pb-[5rem] text-center">
                     {hasMore ? (
                       <button
                         onClick={handleLoadMore}
@@ -288,12 +266,15 @@ const RegionDetailPage = () => {
         </div>
 
         {/* 일정 만들기 버튼 */}
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 z-50">
-          <PrimaryButton className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm shadow">
-            <CalendarPlus className="w-4 h-4" />
-            이 지역으로 일정 만들기
-          </PrimaryButton>
+        <div className="fixed bottom-0 left-0 w-full px-4 py-3 bg-white shadow-lg z-50">
+          <div className="max-w-sm mx-auto">
+            <PrimaryButton className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm shadow">
+              <CalendarPlus className="w-4 h-4" />
+              이 지역으로 일정 만들기
+            </PrimaryButton>
+          </div>
         </div>
+
       </div>
     </DefaultLayout>
   );
