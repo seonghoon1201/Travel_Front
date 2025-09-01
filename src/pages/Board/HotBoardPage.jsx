@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { SlidersHorizontal } from 'lucide-react';
 
 import BackHeader from '../../components/header/BackHeader';
 import SearchBar from '../../components/common/SearchBar';

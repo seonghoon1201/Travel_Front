@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/HomePage.css';
 
-import kakaoIcon from '../assets/kakao_icon.png';
-
 import DefaultLayout from '../layouts/DefaultLayout';
 import MainHeader from '../components/header/MainHeader';
 import SideMenu from '../components/modal/SideMenu';
