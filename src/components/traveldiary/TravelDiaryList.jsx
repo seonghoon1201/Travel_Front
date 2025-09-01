@@ -120,7 +120,7 @@ const TravelDiaryList = ({ title, showMore }) => {
                   {diary.tags.map((t, idx) => (
                     <span
                       key={`${diary.id}-tag-${idx}`}
-                      className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-600 font-medium"
+                      className="px-2 py-1 text-xs rounded-full text-blue-600 font-medium"
                     >
                       #{t}
                     </span>
