@@ -80,7 +80,7 @@ const LocationSection = ({ navigateTo = '/board/hot', limit = 10 }) => {
         </div>
       ) : (
         <div className="flex gap-3 overflow-x-auto px-3 mt-2 scrollbar-hide">
-          {places.slice(0, 7).map((item, idx) => (
+          {places.slice(0, 10).map((item, idx) => (
             <div
               key={idx}
               className="flex-shrink-0 w-20 text-center cursor-pointer"

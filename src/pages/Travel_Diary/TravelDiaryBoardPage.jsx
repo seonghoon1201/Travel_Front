@@ -18,14 +18,24 @@ const TravelDiaryBoardPage = () => {
     const fetchDiaries = async () => {
       const res = await getDiary(0, 20);
       if (res.success) {
-        const formatted = res.data.map((item) => ({
-          id: item.boardId,
-          title: item.title,
-          userNickname: item.userNickname,
-          userProfileImage: item.userProfileImage,
-          tags: item.tag ? item.tag.split(',') : [], 
-          imageUrl: item.imageUrl || '',
-        }));
+        const formatted = res.data.map((item) => {
+          // imageUrls 배열에서 첫 번째 이미지를 imageUrl로 사용
+          let imageUrl = '';
+          if (Array.isArray(item.imageUrls) && item.imageUrls.length > 0) {
+            imageUrl = item.imageUrls[0];
+          } else if (typeof item.imageUrl === 'string' && item.imageUrl.trim() !== '') {
+            imageUrl = item.imageUrl.trim();
+          }
+
+          return {
+            id: item.boardId,
+            title: item.title,
+            userNickname: item.userNickname,
+            userProfileImage: item.userProfileImage,
+            tags: item.tag ? item.tag.split(',') : [], 
+            imageUrl,
+          };
+        });
         setDiaries(formatted);
       }
       setLoading(false);
@@ -77,7 +87,7 @@ const TravelDiaryBoardPage = () => {
                 id={diary.id}
                 title={diary.title}
                 userNickname={diary.userNickname}
-                 userProfileImage={diary.userProfileImage}
+                userProfileImage={diary.userProfileImage}
                 period={diary.period}
                 tags={diary.tags}
                 imageUrl={diary.imageUrl}
