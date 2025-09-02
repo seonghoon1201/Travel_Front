@@ -17,7 +17,6 @@ export async function getPlacesByRegionTheme({
   size = 20,
 }) {
   const params = {
-    // 스웨거와 정확히 같은 키(대문자 I + D)
     lDongRegnCd: String(ldongRegnCd ?? ''),
     lDongSignguCd: String(ldongSignguCd ?? ''),
 
