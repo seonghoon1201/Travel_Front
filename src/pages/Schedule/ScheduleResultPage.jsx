@@ -24,6 +24,9 @@ const ScheduleResultPage = () => {
         return;
       try {
         const res = await getSchedule(scheduleId);
+        // 콘솔에 리스폰스 출력
+        console.log('[ScheduleResultPage] getSchedule response →', res);
+        
         scheduleStore.setDetail(res);
       } catch (e) {
         console.error('[ScheduleResult] reload fail', e?.response?.data || e);
