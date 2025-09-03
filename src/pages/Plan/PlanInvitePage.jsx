@@ -175,7 +175,7 @@ const PlanInvitePage = () => {
   return (
     <DefaultLayout>
       <div className="w-full max-w-sm mx-auto pb-28">
-        <BackHeader title={`${locationIds?.[0] || groupName || '여행'} 초대`} />
+        <BackHeader title={'친구 초대'} />
         <div className="px-4">
           <div className="mt-6">
             <p className="font-semibold text-md text-gray-900">

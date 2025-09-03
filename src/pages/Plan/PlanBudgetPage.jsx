@@ -55,7 +55,7 @@ const PlanBudgetPage = () => {
   return (
     <DefaultLayout>
       <div className="w-full max-w-sm mx-auto pb-28">
-        <BackHeader title={`${locationIds?.[0] || '어딘가로'} 여행`} />
+        <BackHeader title={'예산 설정'} />
         <div className="px-4">
           <div className="mt-6 space-y-6">
             <div>

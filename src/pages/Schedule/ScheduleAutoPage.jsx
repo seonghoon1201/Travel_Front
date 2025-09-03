@@ -7,7 +7,70 @@ import useUserStore from '../../store/userStore';
 import usePlanStore from '../../store/planStore';
 import useCartStore from '../../store/cartStore';
 import useScheduleStore from '../../store/scheduleStore';
-import { createSchedule, optimizeSchedule, getSchedule } from '../../api';
+import {
+  createSchedule,
+  optimizeSchedule,
+  getSchedule,
+  getRegions,
+} from '../../api';
+
+// 지역 표시 이름 찾기: 1) regions API, 2) 주소에서 추출(시/군/구), 3) fallback
+async function resolveRegionLabel(locationIds, cartItems) {
+  // 1) regions 에서 id로 이름 찾기
+  try {
+    const regions = await getRegions();
+    const pickedId = String(locationIds?.[0] ?? '');
+    const match = Array.isArray(regions)
+      ? regions.find((r) => String(r.regionId) === pickedId)
+      : null;
+    if (match) {
+      const candidateKeys = [
+        'regionName',
+        'name',
+        'sigunguName',
+        'sigungu',
+        'sigunguname',
+        'sggNm',
+        'signguNm',
+        'addrName',
+        'title',
+      ];
+      for (const k of candidateKeys) {
+        const v = match?.[k];
+        if (v && String(v).trim()) return String(v).trim();
+      }
+    }
+  } catch (_) {}
+
+  // 2) 카트 아이템 주소에서 "○○시/군/구" 추출
+  const counts = new Map();
+  const re = /([가-힣]+(?:시|군|구))/;
+  (cartItems || []).forEach((it) => {
+    const txt = String(it?.address || '').trim();
+    const m = txt.match(re);
+    if (m && m[1]) {
+      const key = m[1];
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+  });
+  if (counts.size) {
+    // 최빈값
+    let best = '';
+    let max = -1;
+    for (const [k, v] of counts.entries()) {
+      if (v > max) {
+        best = k;
+        max = v;
+      }
+    }
+    if (best) return best;
+  }
+
+  // 3) fallback
+  const firstId = String(locationIds?.[0] ?? '').trim();
+  if (firstId && isNaN(Number(firstId))) return firstId; // 숫자가 아니면 그대로 사용
+  return '여행';
+}
 
 async function waitUntilOptimized(id, { tries = 20, interval = 1200 } = {}) {
   for (let i = 0; i < tries; i++) {
@@ -138,9 +201,11 @@ const ScheduleAutoPage = () => {
           return;
         }
 
+        // 지역명으로 여행 제목 만들기
+        const regionLabel = await resolveRegionLabel(locationIds, cartItems);
         const scheduleName =
           (base.scheduleName && String(base.scheduleName).trim()) ||
-          makeTripTitle(locationIds);
+          `${regionLabel} 여행`;
 
         const meId = String(myUserId || '');
         const othersCount = Array.isArray(invitees)
@@ -202,8 +267,7 @@ const ScheduleAutoPage = () => {
         await optimizeSchedule(scheduleId);
         // ✅ 최적화 완료까지 짧게 폴링 (백엔드가 즉시 OK를 주므로)
         const detail = await waitUntilOptimized(scheduleId);
-        
-        
+
         // 콘솔에 리스폰스 출력
         console.groupCollapsed(
           '%c[schedule/result] Optimized detail',
@@ -212,8 +276,6 @@ const ScheduleAutoPage = () => {
         console.log('scheduleId →', scheduleId);
         console.log('response detail →', detail);
         console.groupEnd();
-
-
 
         scheduleStore.setDetail(detail);
         navigate(`/plan/schedule/result/${scheduleId}`, { replace: true });
