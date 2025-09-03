@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import PlanCard from './PlanCard';
 import EditPlanCard from './EditPlanCard';
@@ -8,6 +8,12 @@ const DayScheduleSection = ({ day, dayIndex }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [checkedMap, setCheckedMap] = useState({});
   const [plans, setPlans] = useState(day.plans); // ✅ 드래그용 상태
+
+  // ✅ 일차 전환/서버 응답 갱신 시, 최신 day.plans로 동기화
+  useEffect(() => {
+    setPlans(day.plans);
+    setCheckedMap({}); // 체크박스도 리셋(선택)
+  }, [dayIndex, day.plans]);
 
   const toggleCheck = (planId) => {
     setCheckedMap((prev) => ({
@@ -41,35 +47,57 @@ const DayScheduleSection = ({ day, dayIndex }) => {
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId={`day-${dayIndex}`}>
           {(provided) => (
-            <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
-              {plans.map((plan, idx) => (
-                <Draggable key={plan.id} draggableId={String(plan.id)} index={idx}>
-                  {(provided) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      className="flex items-center gap-2"
-                    >
-                      {isEditing ? (
-                        <EditPlanCard
-                          plan={plan}
-                          checked={!!checkedMap[plan.id]}
-                          onCheck={() => toggleCheck(plan.id)}
-                          dragHandleProps={provided.dragHandleProps}
-                        />
-                      ) : (
-                        <div {...provided.dragHandleProps} className="w-full">
-                          <PlanCard
-                            plan={plan}
-                            index={idx}
-                            isLast={idx === plans.length - 1}
+            <div
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+              className="space-y-3"
+            >
+              {plans.map((plan, idx) => {
+                // ✅ 새 응답 필드 사용: tema/regionName → category/region 으로 정규화
+                const normalizedPlan = {
+                  ...plan,
+                  category: (plan?.tema ?? plan?.category ?? '').toString(),
+                  region: (plan?.regionName ?? plan?.region ?? '').toString(),
+                  // 카드에서 바로 출력하고 싶으면 사용
+                  metaLabel: [plan?.tema, plan?.regionName]
+                    .map((v) => (v ?? '').toString().trim())
+                    .filter(Boolean)
+                    .join(' | '),
+                };
+
+                return (
+                  <Draggable
+                    key={normalizedPlan.id}
+                    draggableId={String(normalizedPlan.id)}
+                    index={idx}
+                  >
+                    {(provided) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        className="flex items-center gap-2"
+                      >
+                        {isEditing ? (
+                          <EditPlanCard
+                            plan={normalizedPlan}
+                            checked={!!checkedMap[normalizedPlan.id]}
+                            onCheck={() => toggleCheck(normalizedPlan.id)}
+                            dragHandleProps={provided.dragHandleProps}
                           />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </Draggable>
-              ))}
+                        ) : (
+                          <div {...provided.dragHandleProps} className="w-full">
+                            <PlanCard
+                              plan={normalizedPlan}
+                              index={idx}
+                              isLast={idx === plans.length - 1}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </Draggable>
+                );
+              })}
               {provided.placeholder}
             </div>
           )}
