@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PencilLine } from 'lucide-react';
 
-import BackHeader from '../../components/header/BackHeader';
+import HomeHeader from '../../components/header/HomeHeader';
 import SearchBar from '../../components/common/SearchBar';
 import TravelDiary from '../../components/traveldiary/TravelDiary';
 import DefaultLayout from '../../layouts/DefaultLayout';
@@ -74,7 +74,7 @@ const TravelDiaryBoardPage = () => {
   return (
     <DefaultLayout>
       <div className="w-full max-w-sm mx-auto">
-        <BackHeader />
+        <HomeHeader />
 
         {/* 검색창 */}
         <div className="w-full mb-4 px-4">

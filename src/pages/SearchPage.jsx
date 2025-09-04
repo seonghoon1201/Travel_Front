@@ -88,7 +88,7 @@ const SearchPage = () => {
           </div>
 
           {/* 리스트 */}
-          <div className="space-y-4 mt-4 px-2 pb-8">
+          <div className="space-y-4 px-2 pb-8">
             {loading ? (
               // 로딩 스켈레톤
               Array.from({ length: 6 }).map((_, i) => (

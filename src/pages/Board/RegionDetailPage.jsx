@@ -10,6 +10,7 @@ import PrimaryButton from '../../components/common/PrimaryButton';
 
 import { getWeather } from '../../api/weather/getWeather';
 import { getPlacesByRegion } from '../../api/place/getPlacesByRegion';
+import { getHotRegions } from '../../api/region/getHotRegions'; // ✅ 추가
 
 const RegionDetailPage = () => {
   const { city } = useParams();
@@ -32,27 +33,49 @@ const RegionDetailPage = () => {
     searchParams.get('lDongSignguCd') ??
     '';
 
+  // ✅ 지역 정보 상태
+  const [regionInfo, setRegionInfo] = useState(null);
+
   const [weather, setWeather] = useState(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [places, setPlaces] = useState([]);
 
   // ===== 페이지네이션 상태 =====
-  const [page, setPage] = useState(0);     // 현재 페이지
-  const size = 20;                         // 고정: 20개씩
+  const [page, setPage] = useState(0);
+  const size = 20;
   const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true); // 다음 페이지 존재 여부 추정
-  const idSetRef = useRef(new Set());      // 중복 방지
+  const [hasMore, setHasMore] = useState(true);
+  const idSetRef = useRef(new Set());
 
+  // ✅ 지역 요약 데이터 불러오기
+  useEffect(() => {
+    const loadRegionInfo = async () => {
+      try {
+        const res = await getHotRegions(100);
+        if (res.success && Array.isArray(res.data)) {
+          const found = res.data.find((r) => r.regionName === decodedCity);
+          if (found) setRegionInfo(found);
+        }
+      } catch (e) {
+        console.error('지역 요약 불러오기 실패:', e);
+      }
+    };
+
+    if (decodedCity) {
+      loadRegionInfo();
+    }
+  }, [decodedCity]);
+
+  // ===== 날씨 불러오기 =====
   const fetchWeather = useCallback(async () => {
     if (!decodedCity) return;
 
     try {
       setWeatherLoading(true);
-      
-      // 직접 "시/군/구" 제거한 도시명으로 시도
-      const cleanCityName = decodedCity.replace(/(시|군|구)$/, '');      
+
+      const cleanCityName = decodedCity.replace(/(시|군|구)$/, '');
       const response = await getWeather(cleanCityName);
-      
+
       if (response.success && response.data) {
         setWeather(response.data);
       } else {
@@ -71,6 +94,7 @@ const RegionDetailPage = () => {
     }
   }, [decodedCity, fetchWeather]);
 
+  // ===== 장소 데이터 초기화 =====
   useEffect(() => {
     setPlaces([]);
     setPage(0);
@@ -78,6 +102,7 @@ const RegionDetailPage = () => {
     idSetRef.current.clear();
   }, [decodedCity, ldongRegnCd, ldongSignguCd]);
 
+  // ===== 장소 불러오기 =====
   const fetchPage = useCallback(
     async (pageToLoad) => {
       if (!ldongRegnCd || !ldongSignguCd) return;
@@ -90,7 +115,7 @@ const RegionDetailPage = () => {
           ldongRegnCd: String(ldongRegnCd),
           ldongSignguCd: String(ldongSignguCd),
           page: pageToLoad,
-          size, 
+          size,
         };
 
         const res = await getPlacesByRegion(apiParams);
@@ -98,7 +123,7 @@ const RegionDetailPage = () => {
         if (res.success && Array.isArray(res.data?.content)) {
           const batch = res.data.content;
           const next = [];
-          
+
           for (const item of batch) {
             const id = item.contentId ?? item.id;
             if (!id || idSetRef.current.has(id)) continue;
@@ -135,10 +160,9 @@ const RegionDetailPage = () => {
         setLoading(false);
       }
     },
-    [ldongRegnCd, ldongSignguCd, size]
+    [ldongRegnCd, ldongSignguCd, size, loading]
   );
 
-  // 초기 1페이지 로드
   useEffect(() => {
     if (decodedCity && ldongRegnCd && ldongSignguCd) {
       fetchPage(0);
@@ -160,13 +184,16 @@ const RegionDetailPage = () => {
         <div className="w-full min-h-screen bg-[#F8FBFF]">
           {/* 요약 */}
           <div className="pr-3 pl-3">
-            <RegionSummary title={decodedCity} />
+            <RegionSummary
+              title={decodedCity}
+              description={regionInfo?.description}
+              regionImage={regionInfo?.regionImage}
+            />
           </div>
 
           {/* 날씨 */}
           <div className="px-4 pt-4">
             <h3 className="text-base font-semibold text-gray-800 mb-2">날씨</h3>
-        
             {weatherLoading ? (
               <div className="flex items-center justify-center px-4 py-3 bg-white rounded-lg shadow">
                 <p className="text-sm text-gray-500">날씨 정보를 불러오는 중...</p>
@@ -181,13 +208,11 @@ const RegionDetailPage = () => {
                   />
                   <div className="text-sm text-gray-700">
                     <p className="font-medium">
-                      최저 {weather?.main?.temp_min ?? '-'}°C 
-                      <br /> 
+                      최저 {weather?.main?.temp_min ?? '-'}°C <br />
                       최고 {weather?.main?.temp_max ?? '-'}°C
                     </p>
                     <p className="text-gray-500">
-                      현재상태 : 
-                      {weather?.weather?.[0]?.description ?? ''}
+                      현재상태 : {weather?.weather?.[0]?.description ?? ''}
                     </p>
                   </div>
                 </div>
@@ -213,12 +238,11 @@ const RegionDetailPage = () => {
                 </button>
               </div>
             )}
-          </div> 
+          </div>
 
           {/* 즐길거리 */}
           <div className="px-4 pt-4">
             <h3 className="text-base font-semibold text-gray-800 mb-2">즐길거리</h3>
-
             <div className="space-y-3">
               {places.length > 0 ? (
                 <>
@@ -235,8 +259,6 @@ const RegionDetailPage = () => {
                       imageUrl={p.imageUrl}
                     />
                   ))}
-
-                  {/* 더 보기 버튼 */}
                   <div className="pt-2 pb-[5rem] text-center">
                     {hasMore ? (
                       <button
@@ -255,9 +277,7 @@ const RegionDetailPage = () => {
                 <div className="text-center py-8">
                   <p className="text-sm text-gray-400 mb-2">즐길거리가 없습니다.</p>
                   {(!ldongRegnCd || !ldongSignguCd) && (
-                    <p className="text-xs text-red-400">
-                      법정동 코드가 누락되었습니다.
-                    </p>
+                    <p className="text-xs text-red-400">법정동 코드가 누락되었습니다.</p>
                   )}
                 </div>
               )}
@@ -274,7 +294,6 @@ const RegionDetailPage = () => {
             </PrimaryButton>
           </div>
         </div>
-
       </div>
     </DefaultLayout>
   );

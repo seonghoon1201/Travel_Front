@@ -2,12 +2,12 @@ import React from 'react';
 
 const DEFAULT_IMAGE = '/images/default_place.jpg';
 
-const RegionSummary = ({ title, description = '', imageUrl = '' }) => {
+const RegionSummary = ({ title, description = '', regionImage = '' }) => {
   return (
     <div className="bg-white px-4 pt-6 pb-4 rounded-xl shadow">
       {/* 대표 이미지 (없으면 기본 이미지) */}
       <img
-        src={imageUrl || DEFAULT_IMAGE}
+        src={regionImage || DEFAULT_IMAGE}
         alt={`${title} 대표 이미지`}
         className="w-full h-48 object-cover rounded-lg mb-4"
         onError={(e) => {
