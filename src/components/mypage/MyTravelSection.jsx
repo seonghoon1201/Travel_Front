@@ -10,7 +10,7 @@ const MyTravelSection = () => {
   const [upcomingTrips, setUpcomingTrips] = useState([]);
   const [pastTrips, setPastTrips] = useState([]);
   const accessToken = useUserStore((state) => state.accessToken);
-  const navigate = useNavigate(); // ✅ 추가
+  const navigate = useNavigate(); 
 
   useEffect(() => {
     const loadData = async () => {
@@ -60,7 +60,7 @@ const MyTravelSection = () => {
               dateRange={`${trip.startDate} ~ ${trip.endDate}`}
               companionCount={trip.groupName ? 1 : 0}
               imageUrl={trip.imageUrl || '/default-travel.jpg'}
-              onClick={() => handleClickTrip(trip.scheduleId)} // ✅ 추가
+              onClick={() => handleClickTrip(trip.scheduleId)}
             />
           ))
         )}
@@ -78,7 +78,7 @@ const MyTravelSection = () => {
               dateRange={`${trip.startDate} ~ ${trip.endDate}`}
               companionCount={trip.groupName ? 1 : 0}
               imageUrl={trip.imageUrl || '/default-travel.jpg'}
-              onClick={() => handleClickTrip(trip.scheduleId)} // ✅ 추가
+              onClick={() => handleClickTrip(trip.scheduleId)} 
             />
           ))
         )}

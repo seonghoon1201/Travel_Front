@@ -10,7 +10,7 @@ import PrimaryButton from '../../components/common/PrimaryButton';
 
 import { getWeather } from '../../api/weather/getWeather';
 import { getPlacesByRegion } from '../../api/place/getPlacesByRegion';
-import { getHotRegions } from '../../api/region/getHotRegions'; // ✅ 추가
+import { getHotRegions } from '../../api/region/getHotRegions';
 
 const RegionDetailPage = () => {
   const { city } = useParams();
@@ -33,21 +33,18 @@ const RegionDetailPage = () => {
     searchParams.get('lDongSignguCd') ??
     '';
 
-  // ✅ 지역 정보 상태
   const [regionInfo, setRegionInfo] = useState(null);
 
   const [weather, setWeather] = useState(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [places, setPlaces] = useState([]);
 
-  // ===== 페이지네이션 상태 =====
   const [page, setPage] = useState(0);
   const size = 20;
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const idSetRef = useRef(new Set());
 
-  // ✅ 지역 요약 데이터 불러오기
   useEffect(() => {
     const loadRegionInfo = async () => {
       try {
@@ -66,7 +63,6 @@ const RegionDetailPage = () => {
     }
   }, [decodedCity]);
 
-  // ===== 날씨 불러오기 =====
   const fetchWeather = useCallback(async () => {
     if (!decodedCity) return;
 
@@ -94,7 +90,6 @@ const RegionDetailPage = () => {
     }
   }, [decodedCity, fetchWeather]);
 
-  // ===== 장소 데이터 초기화 =====
   useEffect(() => {
     setPlaces([]);
     setPage(0);
