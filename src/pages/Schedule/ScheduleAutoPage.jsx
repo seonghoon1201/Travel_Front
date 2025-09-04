@@ -1,5 +1,4 @@
-// src/pages/Plan/ScheduleAutoPage.jsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
@@ -8,21 +7,102 @@ import useUserStore from '../../store/userStore';
 import usePlanStore from '../../store/planStore';
 import useCartStore from '../../store/cartStore';
 import useScheduleStore from '../../store/scheduleStore';
-import { createSchedule, optimizeSchedule, getSchedule } from '../../api';
+import {
+  createSchedule,
+  optimizeSchedule,
+  getSchedule,
+  getRegions,
+} from '../../api';
 
-// ---- helpers --------------------------------------------------------------
-// 'HH:mm' 로 강제
-const toHHmm = (v) => {
+// 지역 표시 이름 찾기: 1) regions API, 2) 주소에서 추출(시/군/구), 3) fallback
+async function resolveRegionLabel(locationIds, cartItems) {
+  // 1) regions 에서 id로 이름 찾기
+  try {
+    const regions = await getRegions();
+    const pickedId = String(locationIds?.[0] ?? '');
+    const match = Array.isArray(regions)
+      ? regions.find((r) => String(r.regionId) === pickedId)
+      : null;
+    if (match) {
+      const candidateKeys = [
+        'regionName',
+        'name',
+        'sigunguName',
+        'sigungu',
+        'sigunguname',
+        'sggNm',
+        'signguNm',
+        'addrName',
+        'title',
+      ];
+      for (const k of candidateKeys) {
+        const v = match?.[k];
+        if (v && String(v).trim()) return String(v).trim();
+      }
+    }
+  } catch (_) {}
+
+  // 2) 카트 아이템 주소에서 "○○시/군/구" 추출
+  const counts = new Map();
+  const re = /([가-힣]+(?:시|군|구))/;
+  (cartItems || []).forEach((it) => {
+    const txt = String(it?.address || '').trim();
+    const m = txt.match(re);
+    if (m && m[1]) {
+      const key = m[1];
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+  });
+  if (counts.size) {
+    // 최빈값
+    let best = '';
+    let max = -1;
+    for (const [k, v] of counts.entries()) {
+      if (v > max) {
+        best = k;
+        max = v;
+      }
+    }
+    if (best) return best;
+  }
+
+  // 3) fallback
+  const firstId = String(locationIds?.[0] ?? '').trim();
+  if (firstId && isNaN(Number(firstId))) return firstId; // 숫자가 아니면 그대로 사용
+  return '여행';
+}
+
+async function waitUntilOptimized(id, { tries = 20, interval = 1200 } = {}) {
+  for (let i = 0; i < tries; i++) {
+    const detail = await getSchedule(id);
+    const items = Array.isArray(detail?.scheduleItems)
+      ? detail.scheduleItems
+      : [];
+    const optimized = items.some(
+      (it) => Number(it?.dayNumber) > 0 && it?.startTime && it?.endTime
+    );
+    if (optimized) return detail;
+    await new Promise((r) => setTimeout(r, interval));
+  }
+  // 타임아웃 시 fallback
+  return await getSchedule(id);
+}
+
+const toHHmmss = (v) => {
   const s = String(v || '').trim();
-  if (!s) return '09:00';
+  if (!s) return '09:00:00';
   const m = s.match(/^(\d{1,2}):?(\d{2})/);
-  if (!m) return '09:00';
+  if (!m) return '09:00:00';
   const hh = String(Math.min(23, Number(m[1] || 9))).padStart(2, '0');
   const mm = String(Math.min(59, Number(m[2] || 0))).padStart(2, '0');
-  return `${hh}:${mm}`;
+  return `${hh}:${mm}:00`;
 };
 
-// 빈 값(undefined/null/'')은 키 자체를 제거
+const isUuid = (s) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    String(s || '')
+  );
+
 const clean = (obj) =>
   JSON.parse(
     JSON.stringify(obj, (_k, v) =>
@@ -30,19 +110,17 @@ const clean = (obj) =>
     )
   );
 
-// contentId 기준 중복 제거 + 문자열 강제
 const toScheduleItems = (items = []) => {
   const seen = new Set();
   const result = [];
   for (const it of items) {
     const raw =
       it?.contentId ?? it?.id ?? it?.contentID ?? it?.content_id ?? '';
-    const contentId = String(raw).trim(); // ✅ 숫자여도 문자열로 강제
+    const contentId = String(raw).trim();
     if (!contentId || seen.has(contentId)) continue;
-
     seen.add(contentId);
     const cost = Math.max(0, Math.round(Number(it?.price ?? it?.cost ?? 0)));
-    result.push({ contentId, cost }); // ✅ 그대로 string contentId 전송
+    result.push({ contentId, cost });
   }
   return result;
 };
@@ -54,6 +132,7 @@ function makeTripTitle(locationIds) {
 }
 
 const ScheduleAutoPage = () => {
+  const ranRef = useRef(false);
   const navigate = useNavigate();
   const scheduleStore = useScheduleStore();
 
@@ -63,21 +142,39 @@ const ScheduleAutoPage = () => {
   const invitees = usePlanStore((s) => s.invitees);
 
   useEffect(() => {
+    if (ranRef.current) return;
+    ranRef.current = true;
+
     (async () => {
-      // 0) 서버 카트 재조회 (최신 상태 동기화)
+      // 0) 서버 카트 동기화
       try {
         await useCartStore.getState().loadFromServer();
-      } catch (_) {
-        // 실패해도 이후 가드가 안내함
+      } catch (e) {
+        if (e?.code === 'NO_CART') {
+          message.error(
+            '장바구니가 준비되지 않았어요. 지역을 먼저 선택해 주세요.'
+          );
+          navigate(-1);
+          return;
+        }
       }
       const cartItems = useCartStore.getState().items;
+      const cartId = useCartStore.getState().cartId;
+
+      if (!cartId) {
+        message.error(
+          '카트 정보(cartId)를 찾을 수 없어요. 지역을 다시 선택해 주세요.'
+        );
+        navigate(-1);
+        return;
+      }
       if (!cartItems.length) {
         message.warning('장바구니가 비어있어요.');
         navigate(-1);
         return;
       }
 
-      // 결과 페이지 보강용 placeIndex
+      // 결과용 placeIndex
       const idx = {};
       cartItems.forEach((it) => {
         const pid = String(it.contentId ?? '').trim();
@@ -94,10 +191,8 @@ const ScheduleAutoPage = () => {
       scheduleStore.setPlaceIndex(idx);
 
       try {
-        // 1) 스토어 → 기본값 꺼내기
         const base = getSchedulePayload();
 
-        // 2) 필수값 검증
         if (!base?.startDate || !base?.endDate) {
           message.error(
             '여행 날짜가 설정되지 않았어요. 날짜를 먼저 선택해 주세요.'
@@ -106,95 +201,84 @@ const ScheduleAutoPage = () => {
           return;
         }
 
-        // 3) 스웨거 스키마에 맞춰 재구성
+        // 지역명으로 여행 제목 만들기
+        const regionLabel = await resolveRegionLabel(locationIds, cartItems);
         const scheduleName =
           (base.scheduleName && String(base.scheduleName).trim()) ||
-          makeTripTitle(locationIds);
+          `${regionLabel} 여행`;
 
-        const hasGroupId = Boolean(base.groupId && String(base.groupId).trim());
-        // ✅ 나를 제외한 실제 동행자 수
+        const meId = String(myUserId || '');
         const othersCount = Array.isArray(invitees)
-          ? invitees.filter((u) => String(u.userId) !== String(myUserId)).length
+          ? invitees.filter((u) => String(u?.userId || '') !== meId).length
           : 0;
-        const isGroupTrip = hasGroupId && othersCount > 0;
+        const rawGroupId = String(base.groupId || '').trim();
+        const safeGroupId = isUuid(rawGroupId) ? rawGroupId : undefined;
+        const isGroupTrip = Boolean(safeGroupId) && othersCount > 0;
         const scheduleType = isGroupTrip ? 'GROUP' : 'PERSONAL';
 
-        // 스타일(사용자 선택값) 없으면 안전한 기본값
         const style = String(
           base.scheduleStyle ||
             (Array.isArray(base.styles) ? base.styles[0] : '') ||
             '쇼핑'
         ).trim();
 
-        // 출발지/시간 기본값 보정
         const startPlace = String(
           base.startPlace || base.departurePlace || '서울역'
         );
-        const startTime = toHHmm(
+        const startTime = toHHmmss(
           base.startTime || base.departureTime || '09:00'
         );
 
-        // 카트 → scheduleItem (중복제거)
-        const scheduleItem = toScheduleItems(useCartStore.getState().items);
+        const { items: latestCartItems } = useCartStore.getState();
+        const scheduleItem = toScheduleItems(latestCartItems);
         if (!scheduleItem.length) {
           message.error(
-            '일정에 담을 장소가 없어요. 장소를 장바구니에 추가해 주세요.'
+            '장바구니 동기화에 실패했어요. 잠시 후 다시 시도해주세요.'
           );
           navigate(-1);
           return;
         }
 
-        // 4) 최종 페이로드 (그룹 아니면 groupId 완전 제거)
         const payload = clean({
           scheduleName,
           startDate: String(base.startDate),
           endDate: String(base.endDate),
           budget: Math.max(0, Math.round(Number(base.budget ?? 0))),
-          groupId: isGroupTrip ? String(base.groupId) : undefined,
-          scheduleType, // 'GROUP' | 'PERSONAL'
-          scheduleStyle: style, // 예: '쇼핑', '힐링' 등
+          groupId: isGroupTrip ? safeGroupId : undefined,
+          scheduleType, // GROUP | PERSONAL
+          scheduleStyle: style,
           startPlace,
-          startTime, // 'HH:mm'
-          scheduleItem, // [{ contentId: string, cost: number }]
+          startTime, // 'HH:mm:ss'
+          cartId,
+          scheduleItem,
         });
 
-        // 🔎 콘솔에 "백엔드에 보낼 바디"와 근거 로그 출력
         console.groupCollapsed(
           '%c[schedule/create] Request payload',
           'color:#1677ff'
         );
-        console.log('store raw →', {
-          scheduleName: base.scheduleName,
-          startDate: base.startDate,
-          endDate: base.endDate,
-          budget: base.budget,
-          groupId: base.groupId,
-          scheduleStyle: base.scheduleStyle,
-          styles: base.styles,
-          startPlace: base.startPlace || base.departurePlace,
-          startTime: base.startTime || base.departureTime,
-          inviteesCount: Array.isArray(invitees) ? invitees.length : 0,
-        });
-        console.log('computed flags →', {
-          hasGroupId,
-          othersCount,
-          isGroupTrip,
-          scheduleType,
-        });
-        console.log('scheduleItem count:', scheduleItem.length);
         console.log('payload →', payload);
         console.groupEnd();
 
-        // 5) 생성 → 최적화 → 상세
         const created = await createSchedule(payload);
         const scheduleId = created?.scheduleId || created?.id;
         if (!scheduleId) throw new Error('scheduleId가 응답에 없습니다.');
 
         await optimizeSchedule(scheduleId);
-        const detail = await getSchedule(scheduleId);
-        scheduleStore.setDetail(detail);
+        // ✅ 최적화 완료까지 짧게 폴링 (백엔드가 즉시 OK를 주므로)
+        const detail = await waitUntilOptimized(scheduleId);
 
-        navigate(`/schedule/result/${scheduleId}`, { replace: true });
+        // 콘솔에 리스폰스 출력
+        console.groupCollapsed(
+          '%c[schedule/result] Optimized detail',
+          'color:#52c41a;font-weight:bold;'
+        );
+        console.log('scheduleId →', scheduleId);
+        console.log('response detail →', detail);
+        console.groupEnd();
+
+        scheduleStore.setDetail(detail);
+        navigate(`/plan/schedule/result/${scheduleId}`, { replace: true });
       } catch (e) {
         console.error('[ScheduleAutoPage] error', e?.response?.data || e);
         message.error(
@@ -203,8 +287,14 @@ const ScheduleAutoPage = () => {
         navigate(-1);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [
+    getSchedulePayload,
+    invitees,
+    locationIds,
+    myUserId,
+    navigate,
+    scheduleStore,
+  ]);
 
   return (
     <DefaultLayout>

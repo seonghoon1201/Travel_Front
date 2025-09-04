@@ -230,6 +230,22 @@ const usePlanStore = create(
           cost: Number(it?.cost ?? it?.price ?? 0),
         }));
 
+        // ✅ 여행 일수 × 5개 한도 적용 (안전장치)
+        const calcDays = (start, end) => {
+          if (!start || !end) return null;
+          const sd = new Date(String(start));
+          const ed = new Date(String(end));
+          if (Number.isNaN(sd.getTime()) || Number.isNaN(ed.getTime()))
+            return null;
+          const diff = Math.floor((ed - sd) / 86400000) + 1; // inclusive
+          return diff > 0 ? diff : null;
+        };
+        const days = calcDays(s.startDate, s.endDate);
+        const maxItems = days ? days * 5 : null;
+        const scheduleItemCapped = maxItems
+          ? scheduleItem.slice(0, maxItems)
+          : scheduleItem;
+
         return {
           scheduleName: s.scheduleName,
           startDate: s.startDate,
@@ -242,7 +258,7 @@ const usePlanStore = create(
             s.scheduleStyle || (Array.isArray(s.styles) ? s.styles[0] : ''),
           startPlace: s.departurePlace,
           startTime: s.departureTime, // 'HH:mm'
-          scheduleItem,
+          scheduleItem: scheduleItemCapped,
         };
       },
 

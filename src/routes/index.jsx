@@ -1,9 +1,4 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Outlet,
-} from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from '../pages/HomePage';
 import SearchPage from '../pages/SearchPage';
 import Splash from '../pages/Splash';
@@ -83,7 +78,10 @@ const AppRoutes = () => (
         <Route path="budget" element={<PlanBudgetPage />} />
         <Route path="cart" element={<PlanCartPage />} />
         <Route path="auto" element={<ScheduleAutoPage />} />
-        <Route path="schedule" element={<ScheduleResultPage />} />
+        <Route
+          path="schedule/result/:scheduleId"
+          element={<ScheduleResultPage />}
+        />
         <Route path="add" element={<AddPlace />} />
       </Route>
 

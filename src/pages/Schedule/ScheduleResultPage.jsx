@@ -7,6 +7,7 @@ import DayScheduleSection from '../../components/schedule/DayScheduleSection';
 import EditModal from '../../components/schedule/EditModal';
 import KakaoMap from '../../components/map/KakaoMap';
 import useScheduleStore from '../../store/scheduleStore';
+import useCartStore from '../../store/cartStore';
 import { getSchedule } from '../../api';
 import { message } from 'antd';
 
@@ -24,6 +25,9 @@ const ScheduleResultPage = () => {
         return;
       try {
         const res = await getSchedule(scheduleId);
+        // 콘솔에 리스폰스 출력
+        console.log('[ScheduleResultPage] getSchedule response →', res);
+
         scheduleStore.setDetail(res);
       } catch (e) {
         console.error('[ScheduleResult] reload fail', e?.response?.data || e);
@@ -32,9 +36,49 @@ const ScheduleResultPage = () => {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scheduleId]);
+  // ✅ 새로고침 등으로 placeIndex가 비었으면, 카트/서버 응답으로 보강
+  useEffect(() => {
+    if (!detail || !Array.isArray(detail?.scheduleItems)) return;
+    const currentIndex = scheduleStore.placeIndex || {};
+    if (Object.keys(currentIndex).length > 0) return; // 이미 있음
+
+    // 1) 카트에서 보강
+    const { items: cartItems = [] } = useCartStore.getState();
+    const idxFromCart = {};
+    cartItems.forEach((it) => {
+      const key = String(it.contentId ?? '');
+      if (!key) return;
+      idxFromCart[key] = {
+        name: it.name,
+        title: it.name,
+        imageUrl: it.imageUrl,
+        lat: it?.location?.lat,
+        lng: it?.location?.lng,
+        address: it.address,
+      };
+    });
+
+    // 2) 서버 응답으로 최소 이름 보강 (좌표 없으면 이름만)
+    const idxMerged = { ...idxFromCart };
+    detail.scheduleItems.forEach((it) => {
+      const key = String(it.contentId ?? '');
+      if (!key) return;
+      if (!idxMerged[key]) {
+        idxMerged[key] = { name: it.title || key, title: it.title || key };
+      }
+    });
+
+    scheduleStore.setPlaceIndex(idxMerged);
+  }, [detail, scheduleStore]);
 
   // days 변환
   const days = scheduleStore.getDays();
+
+  // ✅ days 길이 변화에 따른 인덱스 가드
+  useEffect(() => {
+    if (selectedDayIndex >= days.length) setSelectedDayIndex(0);
+  }, [days.length, selectedDayIndex]);
+
   const selectedMarkers = useMemo(() => {
     if (!days[selectedDayIndex]) return [];
     return days[selectedDayIndex].plans
@@ -100,6 +144,7 @@ const ScheduleResultPage = () => {
         {/* 선택한 날짜 일정 */}
         {days[selectedDayIndex] && (
           <DayScheduleSection
+            key={selectedDayIndex}
             day={days[selectedDayIndex]}
             dayIndex={selectedDayIndex}
           />
