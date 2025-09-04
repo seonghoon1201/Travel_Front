@@ -1,36 +1,57 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { CalendarDays } from 'lucide-react';
 import ImageCarousel from '../../components/common/ImageCarousel';
 import CommentList from '../../components/comment/CommentList';
 import profileDefault from '../../assets/profile_default.png';
-import BackHeader from '../../components/header/BackHeader';
+import DiaryHeader from '../../components/header/DiaryHeader';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import PostActionModal from '../../components/modal/PostActionModal';
 import KakaoMap from '../../components/map/KakaoMap';
-import useUserStore from '../../store/userStore'; // 경로 수정
+import useUserStore from '../../store/userStore';
 import { getDiaryDetail } from '../../api';
+import { fetchMyTravel } from '../../api/user/userContentApi';
 
 const TravelDiaryDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [diary, setDiary] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const [scheduleInfo, setScheduleInfo] = useState(null); 
 
   const token = useUserStore((state) => state.accessToken);
 
   useEffect(() => {
     let cancelled = false;
+const fetchDiaryDetail = async () => {
+  try {
+    const res = await getDiaryDetail(id, token);
+    console.log(" getDiaryDetail 응답:", res); 
+    if (!cancelled) {
+      if (res.success) {
+        setDiary(res.data);
 
-    const fetchDiaryDetail = async () => {
-      try {
-        const res = await getDiaryDetail(id, token);
-        if (!cancelled) {
-          setDiary(res.success ? res.data : null);
+        if (res.data.scheduleId) {
+          try {
+            const trips = await fetchMyTravel(token);
+            console.log("fetchMyTravel 응답:", trips); 
+            const found = Array.isArray(trips)
+              ? trips.find((t) => t.scheduleId === res.data.scheduleId)
+              : null;
+            if (found) setScheduleInfo(found);
+          } catch (e) {
+          }
         }
-      } finally {
-        if (!cancelled) setLoading(false);
+      } else {
+        setDiary(null);
       }
-    };
+    }
+  } finally {
+    if (!cancelled) setLoading(false);
+  }
+};
+
 
     if (id) {
       setLoading(true);
@@ -51,7 +72,7 @@ const TravelDiaryDetail = () => {
       </DefaultLayout>
     );
   }
-  
+
   if (!diary) {
     return (
       <DefaultLayout>
@@ -61,7 +82,6 @@ const TravelDiaryDetail = () => {
       </DefaultLayout>
     );
   }
-
 
   // 태그: 문자열/배열 모두 지원
   const tags =
@@ -84,7 +104,7 @@ const TravelDiaryDetail = () => {
   return (
     <DefaultLayout>
       <div className="w-full max-w-sm mx-auto">
-        <BackHeader />
+        <DiaryHeader />
 
         <div className="bg-white rounded-xl shadow-md p-6 w-full ">
           {/* 프로필 */}
@@ -107,17 +127,18 @@ const TravelDiaryDetail = () => {
               />
             </div>
           </div>
-           {/* 이미지 업로드 */}
+
+          {/* 이미지 업로드 */}
           {images.length > 0 && (
             <div className="space-y-3">
-
-              <ImageCarousel 
-                images={images} 
-                altPrefix="여행일기 이미지" 
+              <ImageCarousel
+                images={images}
+                altPrefix="여행일기 이미지"
                 className="rounded-lg"
               />
             </div>
           )}
+
           {/* 본문 */}
           <div className="pb-6 border-b-2">
             <p className="text-gray-700 whitespace-pre-line leading-relaxed">
@@ -130,9 +151,9 @@ const TravelDiaryDetail = () => {
             <div className="pt-2">
               <div className="flex flex-wrap gap-2 text-sm">
                 {tags.map((tag, i) => (
-                  <span 
+                  <span
                     key={`${tag}-${i}`}
-                    className=" text-blue-600 px-3 py-1 rounded-full"
+                    className="text-blue-600 px-3 py-1 rounded-full"
                   >
                     #{tag}
                   </span>
@@ -141,15 +162,30 @@ const TravelDiaryDetail = () => {
             </div>
           )}
 
-         
+          {/* 연결된 일정 */}
+          {scheduleInfo && (
+            <div className="mt-4 p-3 border rounded-lg bg-gray-50">
+              <p className="text-sm text-gray-600 font-semibold mb-1">
+                연결된 일정
+              </p>
+              <p className="text-sm text-gray-800">{scheduleInfo.scheduleName}</p>
+              <p className="text-xs text-gray-500">
+                {scheduleInfo.startDate} ~ {scheduleInfo.endDate}
+              </p>
 
-          {/* 일정 버튼 */}
-          <div className="flex justify-end items-center pt-4">
-            <button className="flex items-center gap-2 text-sm text-white bg-sky-300 hover:bg-sky-400 px-4 py-2 rounded-full whitespace-nowrap transition-colors">
-              <CalendarDays className="w-4 h-4" />
-              일정 보기
-            </button>
-          </div>
+              <div className="flex justify-end items-center mt-2">
+                <button
+                  onClick={() =>
+                    navigate(`/plan/schedule/result/${scheduleInfo.scheduleId}`)
+                  }
+                  className="flex items-center gap-2 text-sm text-white bg-sky-300 hover:bg-sky-400 px-4 py-2 rounded-full transition-colors"
+                >
+                  <CalendarDays className="w-4 h-4" />
+                  일정 보기
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 지도 */}
@@ -159,8 +195,8 @@ const TravelDiaryDetail = () => {
               <h3 className="text-sm font-medium text-gray-700">여행 위치</h3>
             </div>
             <div className="h-64">
-              <KakaoMap 
-                lat={diary.latitude} 
+              <KakaoMap
+                lat={diary.latitude}
                 lng={diary.longitude}
                 title={diary.title}
               />

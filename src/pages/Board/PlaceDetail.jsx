@@ -4,123 +4,179 @@ import { useParams } from 'react-router-dom';
 import KakaoMap from '../../components/map/KakaoMap';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
-
-const dummyPlaceData = {
-  contentId: '137706',
-  title: '아쿠아플라넷 제주',
-  address: '제주특별자치도 서귀포시 성산읍 섭지코지로 95',
-  tel: '1833-7001',
-  website: 'https://www.aquaplanet.co.kr/jeju/index.do',
-  imageUrl: '',
-  mapX: '126.925710',
-  mapY: '33.488980',
-  openTime: '9:30',
-  closeTime: '18:00',
-  lastEntry: '17:30',
-  tips: '유모차 대여 가능, 신용카드 가능',
-  region: '제주',
-};
+import { getTourDetail } from '../../api/tour/getTourDetail';
 
 const PlaceDetail = () => {
   const { contentId } = useParams();
-  const place = dummyPlaceData;
+  const [place, setPlace] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
 
+  const extractHref = (html) => {
+  const match = html.match(/href="([^"]+)"/);
+  return match ? match[1] : null;
+};
+
+  useEffect(() => {
+    const fetchPlaceDetail = async () => {
+      
+      if (!contentId) {
+        setError('잘못된 접근입니다.');
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      const result = await getTourDetail(contentId);
+      
+      if (result.success) {
+        setPlace(result.data);
+        setError(null);
+      } else {
+        setError(result.error || '데이터를 불러올 수 없습니다.');
+        setPlace(null);
+      }
+      setLoading(false);
+    };
+
+    fetchPlaceDetail();
+  }, [contentId]);
+
   const toggleSave = () => setIsSaved((prev) => !prev);
-  const handleAddToCart = () => {
-    if (window.confirm('여행 일정 짜러 갈까요?')) {
-      window.location.href = '/plan/location';
+
+
+  const handleFindRoute = () => {
+    if (place && place.latitude && place.longitude) {
+      const kakaoUrl = `https://map.kakao.com/link/to/${place.title},${place.latitude},${place.longitude}`;
+      window.open(kakaoUrl, '_blank');
     }
   };
 
-  const handleFindRoute = () => {
-    const kakaoUrl = `https://map.kakao.com/link/to/${place.title},${place.mapY},${place.mapX}`;
-    window.open(kakaoUrl, '_blank');
-  };
+  if (loading) {
+    return (
+      <DefaultLayout>
+        <div className="w-full max-w-sm mx-auto">
+          <BackHeader />
+          <div className="flex justify-center items-center h-64">
+            <div className="text-gray-500">로딩 중...</div>
+          </div>
+        </div>
+      </DefaultLayout>
+    );
+  }
+
+  if (error || !place) {
+    return (
+      <DefaultLayout>
+          <BackHeader />
+          <div className="flex justify-center items-center h-64">
+            <div className="text-red-500">{error || '데이터를 찾을 수 없습니다.'}</div>
+          </div>
+      </DefaultLayout>
+    );
+  }
 
   return (
     <DefaultLayout>
       <div className="w-full max-w-sm mx-auto">
         <BackHeader />
-        {/* 제목 & 좋아요 */}
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-xl font-bold">{place.title}</h1>
-          <div className="flex items-center text-gray-500">
-            <span className="ml-2 text-xs">📍 {place.region}</span>
-          </div>
-        </div>
 
-        {/* 대표 이미지 */}
-        <img
-          src={place.imageUrl}
-          alt={place.title}
-          className="w-full h-52 object-cover rounded-xl mb-4"
-        />
+        <div className="pr-4 pl-4">
+          {/* 제목 & 지역 */}
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-xl font-bold">{place.title || '제목 없음'}</h1>
+            <div className="flex items-center text-gray-500">
+              <span className="ml-2 text-medium">📍 {place.region || ''}</span>
+            </div>
+          </div>
 
-        {/* 버튼들 */}
-        <div className="flex justify-around text-gray-600 text-xs mb-6">
-          <div
-            onClick={toggleSave}
-            className="flex flex-col items-center gap-1 transition"
-          >
-            <span>{isSaved ? '❤️' : '🤍'}</span>
-            <span>{isSaved ? '저장취소' : '저장하기'}</span>
-          </div>
-          <div
-            onClick={handleAddToCart}
-            className="flex flex-col items-center gap-1 "
-          >
-            <span>🛒</span>
-            <span>장바구니 추가</span>
-          </div>
-          <div
-            onClick={handleFindRoute}
-            className="flex flex-col items-center gap-1 cursor-pointer hover:text-blue-500 transition"
-          >
-            <span>🗺️</span>
-            <span>길찾기</span>
-          </div>
-        </div>
+          {/* 대표 이미지 */}
+          {place.image && (
+            <img
+              src={place.image}
+              alt={place.title}
+              className="w-full h-52 object-cover rounded-xl mb-4"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+          )}
 
-        {/* 기본 정보 */}
-        <h2 className="font-semibold text-base mb-2">기본 정보</h2>
-        <KakaoMap
-          latitude={parseFloat(place.mapY)}
-          longitude={parseFloat(place.mapX)}
-        />
-        <div className="space-y-1 mb-6 text-sm">
-          <p>
-            <strong>주소</strong> {place.address}
-          </p>
-          <p>
-            <strong>전화</strong> {place.tel}
-          </p>
-          <p>
-            <strong>홈페이지</strong>{' '}
-            <a
-              href={place.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 underline"
+          {/* 버튼들 */}
+          <div className="flex justify-around text-gray-600 text-medium mt-[1rem] mb-[2rem]">
+            <div
+              onClick={toggleSave}
+              className="flex flex-col items-center gap-1 cursor-pointer transition"
             >
-              {place.website}
-            </a>
-          </p>
+              <span>{place.favorite ? '❤️' : (isSaved ? '❤️' : '🤍')}</span>
+              <span>{place.favorite || isSaved ? '즐겨찾기 ' : '즐겨찾기'}</span>
+            </div>
+
+            <div
+              onClick={handleFindRoute}
+              className="flex flex-col items-center gap-1 cursor-pointer hover:text-blue-500 transition"
+            >
+              <span>🗺️</span>
+              <span>길찾기</span>
+            </div>
+          </div>
+
+          {/* 기본 정보 & 지도 */}
+          <h2 className="font-semibold text-base mb-2">기본 정보</h2>
+          
+          {place.latitude && place.longitude && (
+            <div className="mb-4">
+              <KakaoMap
+                latitude={parseFloat(place.latitude)}
+                longitude={parseFloat(place.longitude)}
+              />
+            </div>
+          )}
+          
+          <div className="space-y-2 mb-6 text-sm">
+            {place.address && (
+              <p><strong>주소:</strong> {place.address}</p>
+            )}
+            {place.tel && (
+              <p><strong>전화:</strong> {place.tel}</p>
+            )}
+            {place.homepage && (
+              <p>
+                <strong>홈페이지:</strong>{' '}
+                <a
+                  href={extractHref(place.homepage)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline break-all"
+                >
+                  홈페이지 바로가기
+                </a>
+              </p>
+            )}
+          </div>
+
+          {/* 개요 */}
+          {place.overview && (
+            <>
+              <h2 className="font-semibold text-base mb-2 border-t pt-4">
+                소개
+              </h2>
+              <p className="text-sm leading-relaxed mb-6 whitespace-pre-line">
+                {place.overview}
+              </p>
+            </>
+          )}
+
+          {/* 추가 정보들 */}
+          <div className="border-t pt-4 space-y-4">
+
+            <div>
+              <h3 className="font-medium text-sm mb-1">카테고리</h3>
+              <p className="text-sm text-gray-600">{place.theme || '정보 없음'}</p>
+            </div>
+          </div>
         </div>
-
-        {/* 이용 시간 */}
-        <h2 className="font-semibold text-base mb-2 border-t pt-4">
-          이용 가능 시간 및 공휴일
-        </h2>
-        <p className="text-blue-500">
-          오늘 {place.openTime}~{place.closeTime} (입장 마감 {place.lastEntry})
-        </p>
-
-        {/* 이용팁 */}
-        <h2 className="font-semibold text-base mb-2 border-t pt-4">
-          이곳의 이용팁
-        </h2>
-        <p>{place.tips}</p>
       </div>
     </DefaultLayout>
   );
