@@ -8,18 +8,26 @@ import TravelDiary from '../../components/traveldiary/TravelDiary';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import { getDiary } from '../../api';
 
+import useUserStore from '../../store/userStore';
+import { fetchMyTravel } from '../../api/user/userContentApi';
+import ScheduleSelectModal from '../../components/modal/ScheduleSelectModal';
+
 const TravelDiaryBoardPage = () => {
   const navigate = useNavigate();
+  const accessToken = useUserStore((s) => s.accessToken);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [diaries, setDiaries] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [selectOpen, setSelectOpen] = useState(false);
+  const [trips, setTrips] = useState([]);
 
   useEffect(() => {
     const fetchDiaries = async () => {
       const res = await getDiary(0, 20);
       if (res.success) {
         const formatted = res.data.map((item) => {
-          // imageUrls 배열에서 첫 번째 이미지를 imageUrl로 사용
           let imageUrl = '';
           if (Array.isArray(item.imageUrls) && item.imageUrls.length > 0) {
             imageUrl = item.imageUrls[0];
@@ -43,10 +51,25 @@ const TravelDiaryBoardPage = () => {
     fetchDiaries();
   }, []);
 
-  // 검색 필터링
   const filteredDiaries = diaries.filter((diary) =>
     diary.title.includes(searchTerm)
   );
+
+   const openScheduleModal = async () => {
+    try {
+      const data = await fetchMyTravel(accessToken);
+      setTrips(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error('내 일정 불러오기 실패:', e);
+      setTrips([]);
+    }
+    setSelectOpen(true);
+  };
+
+  const handleConfirmSchedule = (scheduleId) => {
+    if (!scheduleId) return;
+    navigate(`/write/travel/diary?scheduleId=${scheduleId}`);
+  };
 
   return (
     <DefaultLayout>
@@ -67,7 +90,7 @@ const TravelDiaryBoardPage = () => {
           <div className="text-medium font-semibold">국내 실시간 여행일기</div>
           <button
             className="text-sm text-gray-500 flex items-center gap-1"
-            onClick={() => navigate('/write/travel/diary')}
+            onClick={openScheduleModal}
           >
             <PencilLine className="w-3 h-3" />
             여행 일기 쓰러가기
@@ -96,6 +119,15 @@ const TravelDiaryBoardPage = () => {
           )}
         </div>
       </div>
+
+        <ScheduleSelectModal
+        open={selectOpen}
+        onClose={() => setSelectOpen(false)}
+        trips={trips}
+        selectedId={null}
+        onConfirm={handleConfirmSchedule}
+      />
+
     </DefaultLayout>
   );
 };
