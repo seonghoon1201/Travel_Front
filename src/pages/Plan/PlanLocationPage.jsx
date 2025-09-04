@@ -83,41 +83,45 @@ const PlanLocationPage = () => {
 
   const handleSelect = (id) => {
     setLocations((prev) => {
-      const next = prev.map((loc) =>
-        loc.id === id ? { ...loc, selected: !loc.selected } : loc
-      );
-      // 최신 상태로 로그
+      const clicked = prev.find((l) => l.id === id);
+      const willSelect = !clicked?.selected; // 이미 선택된 걸 다시 누르면 해제 허용
+
+      const next = prev.map((loc) => {
+        if (loc.id === id) return { ...loc, selected: willSelect };
+        return { ...loc, selected: false }; // 나머지는 전부 해제
+      });
+
+      // 로그
       const target = next.find((l) => l.id === id);
-      if (target) {
-        console.log('[Location] 선택 토글', {
-          regionId: target.id,
-          ldongRegnCd: target.ldongRegnCd,
-          ldongSignguCd: target.ldongSignguCd,
-          name: target.name,
-          selected: target.selected,
-        });
-      }
+      console.log('[Location] 단일 선택 토글', {
+        regionId: target?.id,
+        name: target?.name,
+        selected: target?.selected,
+      });
+
       return next;
     });
   };
 
   const handleNext = () => {
-    const selected = locations.filter((l) => l.selected);
-    if (!selected.length)
-      return alert('최소 한 곳 이상의 여행지를 선택해 주세요.');
-    // 코드 유효성(빈 문자열만 차단 — 서버가 짧은 코드도 허용하므로)
-    const missing = selected.find(
-      (l) =>
-        !String(l.ldongRegnCd || '').trim() ||
-        !String(l.ldongSignguCd || '').trim()
-    );
-    if (missing) {
+    const selected = locations.find((l) => l.selected);
+    if (!selected) {
+      return alert('여행지를 하나 선택해 주세요.');
+    }
+
+    // 코드 유효성 체크
+    if (
+      !String(selected.ldongRegnCd || '').trim() ||
+      !String(selected.ldongSignguCd || '').trim()
+    ) {
       message.error(
         '선택한 지역의 코드가 비어 있어요. 다른 지역을 선택해 주세요.'
       );
       return;
     }
-    setLocationIds(selected.map((l) => l.id));
+
+    // 단일 선택만 세팅
+    setLocationIds([selected.id]);
     const canon = (o) => ({
       ldongRegnCd: String(
         o.ldongRegnCd ?? o.ldongRegnCd ?? o.lDongRegnCd ?? o.ldongRegnCd ?? ''
@@ -130,7 +134,7 @@ const PlanLocationPage = () => {
           ''
       ),
     });
-    setLocationCodes(selected.map(canon));
+    setLocationCodes([canon(selected)]);
     navigate('/plan/date');
   };
 
