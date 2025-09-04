@@ -110,7 +110,7 @@ const PlaceDetail = () => {
               className="flex flex-col items-center gap-1 cursor-pointer transition"
             >
               <span>{place.favorite ? '❤️' : (isSaved ? '❤️' : '🤍')}</span>
-              <span>{place.favorite || isSaved ? '즐겨찾기 ' : '즐겨찾기 취소'}</span>
+              <span>{place.favorite || isSaved ? '즐겨찾기 ' : '즐겨찾기'}</span>
             </div>
 
             <div

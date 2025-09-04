@@ -38,7 +38,6 @@ const SearchPage = () => {
               Province: r.regionCode || '',
               summary: r.description || '',
               locations: [],
-              // ✅ 법정동 코드 포함
               ldongRegnCd: r.ldongRegnCd || '',
               ldongSignguCd: r.ldongSignguCd || '',
             });
