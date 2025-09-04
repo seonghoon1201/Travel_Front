@@ -41,6 +41,9 @@ const PlanCartPage = () => {
     isFavorite,
   } = usePlanStore();
 
+  const startDate = usePlanStore((s) => s.startDate);
+  const endDate = usePlanStore((s) => s.endDate);
+
   const {
     items: cartItems,
     addToCart,
@@ -59,6 +62,14 @@ const PlanCartPage = () => {
   const [codePair, setCodePair] = useState(null);
   const [codeInvalid, setCodeInvalid] = useState(false);
   const [apiItems, setApiItems] = useState([]);
+  const [brokenImages, setBrokenImages] = useState(() => new Set());
+  const markBroken = (id) =>
+    setBrokenImages((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingList, setLoadingList] = useState(false);
@@ -87,6 +98,19 @@ const PlanCartPage = () => {
       Boolean((p?.ldongSignguCd || '').trim()),
     []
   );
+
+  // ✅ 여행 일수(포함) 계산 → 한도(일×5)
+  const tripDays = useMemo(() => {
+    if (!startDate || !endDate) return null;
+    const s = new Date(String(startDate));
+    const e = new Date(String(endDate));
+    if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return null;
+    const diff = Math.floor((e - s) / 86400000) + 1; // inclusive
+    return diff > 0 ? diff : null;
+  }, [startDate, endDate]);
+  const cartLimit = useMemo(() => (tripDays ? tripDays * 5 : null), [tripDays]);
+  const isLimitReached = cartLimit != null && cartItems.length >= cartLimit;
+  const overBy = cartLimit != null ? cartItems.length - cartLimit : 0;
 
   // 예산 계산
   useEffect(() => {
@@ -161,15 +185,59 @@ const PlanCartPage = () => {
           size: 20,
         });
         const content = Array.isArray(data?.content) ? data.content : [];
-        const mapped = content.map((item) => ({
-          contentId: String(item.contentId),
-          name: item.title,
-          address: `${item.address ?? ''} ${item.address2 ?? ''}`.trim(),
-          price: Math.floor(Math.random() * 10000) + 1000,
-          imageUrl: item.firstImage || FALLBACK_IMG,
-          phone: item.tel,
-          location: { lat: Number(item.mapY), lng: Number(item.mapX) },
+        // 이미지  url 콘솔에 찍기 시작
+        // 주소에서 지역명 추출
+        const pickRegion = (item) => {
+          const direct =
+            item?.sigungu || item?.sigunguName || item?.region || '';
+          if (direct) return String(direct);
+          const addr = `${item?.address ?? ''} ${item?.address2 ?? ''}`.trim();
+          if (!addr) return '';
+          const tokens = addr.split(/\s+/);
+          if (tokens.length >= 2) return tokens[1];
+          if (tokens.length >= 1) return tokens[0];
+          return '';
+        };
+
+        // 관광공사 필드가 소문자/대문자 혼용될 수 있어 전부 체크
+        const pickImage = (c) =>
+          c?.firstImage ||
+          c?.firstimage ||
+          c?.firstImage2 ||
+          c?.firstimage2 ||
+          '';
+
+        const rowsAll = content.map((c) => ({
+          region: pickRegion(c),
+          title: c?.title || '',
+          imageUrl: pickImage(c),
+          hasImage: !!pickImage(c),
         }));
+
+        console.groupCollapsed('[places/region/theme] 전체 항목(이미지 유/무)');
+        console.table(rowsAll);
+        console.groupEnd();
+
+        const missing = rowsAll.filter((r) => !r.hasImage);
+        if (missing.length) {
+          console.warn(
+            `이미지 없는 항목 ${missing.length}건:`,
+            missing.map((m) => m.title)
+          );
+        }
+        const mapped = content.map((item) => {
+          const imageUrl = item.firstImage || item.firstimage || '';
+          return {
+            contentId: String(item.contentId),
+            name: item.title,
+            address: `${item.address ?? ''} ${item.address2 ?? ''}`.trim(),
+            price: undefined,
+            imageUrl, // ← 기본 이미지만 (없으면 빈 문자열)
+            hasRemoteImage: !!imageUrl, // ← 원격 이미지 존재 여부
+            phone: item.tel,
+            location: { lat: Number(item.mapY), lng: Number(item.mapX) },
+          };
+        });
 
         setApiItems((prev) => (reset ? mapped : [...prev, ...mapped]));
         // Spring Page 기준: last=true면 마지막 페이지
@@ -335,20 +403,38 @@ const PlanCartPage = () => {
       if (exists) {
         await removeByContentId(place.contentId);
       } else {
+        // ✅ 카트 추가 전 한도 검사
+        if (cartLimit != null && cartItems.length >= cartLimit) {
+          message.warning(
+            `이번 여행은 총 ${tripDays}일이라 카트는 최대 ${cartLimit}개(일×5)까지 담을 수 있어요.`
+          );
+          return;
+        }
         setSelectedPlace(place);
         setIsModalOpen(true);
       }
     },
-    [isInCart, removeByContentId]
+    [isInCart, removeByContentId, cartItems.length, cartLimit, tripDays]
   );
 
   const handleAddToCart = useCallback(
     async (placeWithPrice) => {
+      // ✅ 모달 제출 시에도 레이스 가드
+      if (
+        cartLimit != null &&
+        useCartStore.getState().items.length >= cartLimit
+      ) {
+        message.warning(
+          `카트 한도(${cartLimit}개)를 초과할 수 없어요. 담긴 항목을 일부 제거해 주세요.`
+        );
+        setIsModalOpen(false);
+        return;
+      }
       const price = Number(placeWithPrice.price ?? placeWithPrice.cost ?? 0);
       await addToCart({ ...placeWithPrice, price, cost: price });
       setIsModalOpen(false);
     },
-    [addToCart]
+    [addToCart, cartLimit]
   );
 
   const percentUsed =
@@ -358,6 +444,14 @@ const PlanCartPage = () => {
     if (!cartItems.length) {
       message.warning('장바구니가 비어있어요.');
       return;
+    } // ✅ 한도 초과 시 자동 일정 차단
+    if (cartLimit != null && cartItems.length > cartLimit) {
+      message.warning(
+        `카트가 제한(${cartLimit}개)을 ${
+          cartItems.length - cartLimit
+        }개 초과했어요. 일부 항목을 제거해 주세요.`
+      );
+      return;
     }
     try {
       setSyncing(true);
@@ -366,12 +460,27 @@ const PlanCartPage = () => {
       setSyncing(false);
     }
     navigate('/plan/auto');
-  }, [cartItems.length, loadFromServer, navigate]);
+  }, [cartItems.length, cartLimit, loadFromServer, navigate]);
+
+  const [titleRegion, setTitleRegion] = useState(null);
+  useEffect(() => {
+    (async () => {
+      try {
+        const regions = await getRegions();
+        const pickedId = String(locationIds?.[0] ?? '');
+        const match = Array.isArray(regions)
+          ? regions.find((r) => String(r.regionId) === pickedId)
+          : null;
+        const name = match?.regionName || match?.name || null;
+        setTitleRegion(name);
+      } catch {}
+    })();
+  }, [locationIds]);
 
   return (
     <DefaultLayout>
       <div className="w-full max-w-sm mx-auto pb-32">
-        <BackHeader title={`${locationIds?.[0] || '여행지'} 여행`} />
+        <BackHeader title={`${titleRegion || '여행지'} 여행`} />
         <div className="px-4">
           {/* 지도 */}
           <div className="w-full h-64 rounded-lg bg-gray-200 overflow-hidden">
@@ -437,6 +546,37 @@ const PlanCartPage = () => {
             </Tooltip>
           </div>
 
+          {/* ✅ 카트 한도 안내 박스 */}
+          <div className="mt-3">
+            {cartLimit == null ? (
+              <div className="text-[12px] text-gray-500">
+                여행 날짜를 선택하면 카트 개수 제한(일 × 5)이 적용됩니다.
+              </div>
+            ) : (
+              <div
+                className={`text-[12px] rounded-lg border p-2 ${
+                  isLimitReached
+                    ? 'bg-red-50 border-red-200 text-red-600'
+                    : 'bg-gray-50 border-gray-200 text-gray-700'
+                }`}
+              >
+                이번 여행은 <b>{tripDays}일</b> 일정이에요. 카트는
+                <b> {cartLimit}개 (일×5)</b>까지 담을 수 있어요.
+                <br />
+                현재{' '}
+                <b>
+                  {cartItems.length}/{cartLimit}
+                </b>
+                개.
+                {overBy > 0 && (
+                  <span className="ml-1">
+                    (초과: <b>{overBy}</b>개)
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* 목록 */}
           <div className="mt-4 space-y-4">
             {apiItems.map((item) => {
@@ -454,12 +594,20 @@ const PlanCartPage = () => {
                 >
                   <div className="flex items-center gap-3">
                     <div className="relative">
-                      <img
-                        src={item.imageUrl || FALLBACK_IMG}
-                        alt={item.name}
-                        className="w-14 h-14 rounded-md object-cover"
-                        onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
-                      />
+                      {item.hasRemoteImage &&
+                      !brokenImages.has(String(item.contentId)) ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className="w-14 h-14 rounded-md object-cover"
+                          loading="lazy"
+                          onError={() => markBroken(String(item.contentId))} // 실패 시 No Image로 전환
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-md bg-gray-200 flex items-center justify-center text-[10px] text-gray-500">
+                          No Image
+                        </div>
+                      )}
                       <FavoriteButton
                         isActive={isFavorite(String(item.contentId))}
                         toggleFavorite={() =>
@@ -475,7 +623,9 @@ const PlanCartPage = () => {
                         {item.address}
                       </div>
                       <div className="text-xs text-gray-500">
-                        ₩{item.price.toLocaleString()}
+                        {typeof item.price === 'number'
+                          ? `₩${item.price.toLocaleString()}`
+                          : '가격 입력 필요'}
                       </div>
                       {!hasGeo && (
                         <div className="text-[10px] text-gray-400">
@@ -529,7 +679,8 @@ const PlanCartPage = () => {
             onClick={() => setDrawerOpen(true)}
             className="flex-1 rounded-xl border border-gray-300 py-2 text-sm"
           >
-            카트 보기 ({cartItems.length})
+            카트 보기 ({cartItems.length}
+            {cartLimit != null ? `/${cartLimit}` : ''})
           </button>
           <PrimaryButton onClick={syncCartThenGo} className="flex-1">
             자동 일정 짜기
@@ -539,7 +690,9 @@ const PlanCartPage = () => {
 
       {/* 카트 Drawer */}
       <Drawer
-        title={`장바구니 (${cartItems.length})`}
+        title={`장바구니 (${cartItems.length}${
+          cartLimit != null ? `/${cartLimit}` : ''
+        })`}
         placement="bottom"
         height="70%"
         open={drawerOpen}

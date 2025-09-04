@@ -10,12 +10,7 @@ import { GroupAPI } from '../../api';
 import { loadKakao } from '../../utils/kakao';
 import useUserStore from '../../store/userStore';
 
-const APP_ORIGIN =
-  (typeof import.meta !== 'undefined' &&
-    import.meta.env &&
-    import.meta.env.VITE_APP_ORIGIN) ||
-  process.env.REACT_APP_APP_ORIGIN ||
-  window.location.origin;
+const APP_ORIGIN = process.env.REACT_APP_APP_ORIGIN || window.location.origin; // 없으면 현재 Origin 사용
 
 const PlanInvitePage = () => {
   const navigate = useNavigate();
@@ -53,10 +48,10 @@ const PlanInvitePage = () => {
   // 초대 링크 생성기 (gid 인자로 받아 사용)
   const makeInviteUrl = (gid, gname) => {
     const params = new URLSearchParams({
-      groupId: gid || '',
-      groupName: gname || '',
+      groupId: String(gid),
+      groupName: String(gname || ''), // 이제 빈 값 안 나옴
     });
-    return `${APP_ORIGIN}/invite?${params.toString()}`;
+    return `${window.location.origin}/invite?${params.toString()}`;
   };
 
   async function fetchMembers(gid) {
@@ -76,24 +71,46 @@ const PlanInvitePage = () => {
   // 그룹 보장 유틸: 없으면 만들고 반환
   const ensureGroupReady = async () => {
     let gid = groupId;
-    if (gid) return gid;
+    let gname = groupName;
 
-    const bodyName = groupName || `${username || '나'}의 여행 그룹`;
-    const created = await GroupAPI.create(bodyName);
-    gid = created?.groupId || created?.id;
-
-    // 생성 응답에 id가 없다면 목록에서 fallback
     if (!gid) {
-      const list = await GroupAPI.list();
-      gid =
-        list.find((g) => g.groupName === bodyName)?.groupId ||
-        list.find((g) => g.groupName === bodyName)?.id;
-    }
-    if (!gid) throw new Error('그룹 생성 실패');
+      const bodyName = gname || `${username || '나'}의 여행 그룹`;
+      const created = await GroupAPI.create(bodyName);
 
-    setGroupId(gid);
-    if (!groupName) setGroupName(bodyName);
-    return gid;
+      // 응답에서 최대한 id 뽑기
+      gid = String(
+        created?.groupId ??
+          created?.id ??
+          created?.data?.groupId ??
+          created?.data?.id ??
+          ''
+      );
+      gname = bodyName;
+
+      // ⚠️ 폴백: 생성 응답에 id가 없으면 목록에서 이름으로 찾기
+      if (!gid) {
+        try {
+          const list = await GroupAPI.list();
+          const hit = list.find((g) => g.groupName === bodyName);
+          gid = String(hit?.groupId ?? hit?.id ?? '');
+        } catch (e) {
+          console.debug('[ensureGroupReady] fallback list() failed', e);
+        }
+      }
+
+      if (!gid) {
+        console.error(
+          '[ensureGroupReady] create failed or missing id',
+          created
+        );
+        throw new Error('그룹 생성 실패');
+      }
+
+      setGroupId(gid);
+      setGroupName(gname);
+    }
+
+    return { gid: String(gid), gname: String(gname || '') };
   };
 
   // 초기: 유저 정보가 있으면 그룹을 미리 만들고(실패해도 무시), 폴링은 gid 있을 때만
@@ -126,8 +143,8 @@ const PlanInvitePage = () => {
   const handleCopyLink = async () => {
     try {
       setBusy(true);
-      const gid = await ensureGroupReady();
-      const url = makeInviteUrl(gid, groupName);
+      const { gid, gname } = await ensureGroupReady(); // ← 구조분해!
+      const url = makeInviteUrl(gid, gname);
       await navigator.clipboard.writeText(url);
       message.success('초대 링크가 복사되었습니다!');
     } catch (e) {
@@ -141,14 +158,14 @@ const PlanInvitePage = () => {
   const handleKakaoInvite = async () => {
     try {
       setBusy(true);
-      const gid = await ensureGroupReady();
-      const url = makeInviteUrl(gid, groupName);
+      const { gid, gname } = await ensureGroupReady(); // ← 구조분해!
+      const url = makeInviteUrl(gid, gname);
 
       const Kakao = await loadKakao();
       Kakao.Share.sendDefault({
         objectType: 'text',
         text: `[${
-          groupName || '여행 그룹'
+          gname || '여행 그룹'
         }] 여행 일정에 함께할래요? 아래 버튼으로 참여해주세요!`,
         link: { mobileWebUrl: url, webUrl: url },
         buttons: [
@@ -175,7 +192,7 @@ const PlanInvitePage = () => {
   return (
     <DefaultLayout>
       <div className="w-full max-w-sm mx-auto pb-28">
-        <BackHeader title={`${locationIds?.[0] || groupName || '여행'} 초대`} />
+        <BackHeader title={'친구 초대'} />
         <div className="px-4">
           <div className="mt-6">
             <p className="font-semibold text-md text-gray-900">
