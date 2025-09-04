@@ -4,10 +4,13 @@ import http from '../../utils/authAxios';
 const GroupAPI = {
   async create(groupName) {
     const { data } = await http.post('/group/create', { groupName });
-    // { groupId } 또는 문자열로 올 수도 있으니 방어
+    // 가능한 키들 전부 시도
     const groupId =
-      data?.groupId ?? (typeof data === 'string' ? data : undefined);
-    return { groupId };
+      data?.groupId ??
+      data?.id ??
+      data?.data?.groupId ??
+      (typeof data === 'string' ? data : undefined);
+    return { groupId, data }; // raw도 같이 반환하면 디버깅 편함
   },
 
   async list() {

@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import DefaultLayout from '../../layouts/DefaultLayout';
-import BackHeader from '../../components/header/BackHeader';
+import HomeHeader from '../../components/header/HomeHeader';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import DayScheduleSection from '../../components/schedule/DayScheduleSection';
 import EditModal from '../../components/schedule/EditModal';
@@ -83,8 +83,18 @@ const ScheduleResultPage = () => {
     if (!days[selectedDayIndex]) return [];
     return days[selectedDayIndex].plans
       .filter((p) => typeof p.lat === 'number' && typeof p.lng === 'number')
-      .map((p) => ({ lat: p.lat, lng: p.lng, dayIndex: selectedDayIndex }));
+      .map((p, i) => ({
+        lat: p.lat,
+        lng: p.lng,
+        order: i + 1,
+        title: p.title || `#${i + 1}`,
+      }));
   }, [days, selectedDayIndex]);
+
+  // 폴리라인 경로 (LatLng 배열)
+  const path = useMemo(() => {
+    return selectedMarkers.map((m) => ({ lat: m.lat, lng: m.lng }));
+  }, [selectedMarkers]);
 
   const title = detail?.scheduleName || '여행 일정';
   const dateRange =
@@ -95,7 +105,7 @@ const ScheduleResultPage = () => {
   return (
     <DefaultLayout>
       <div className="w-full max-w-sm mx-auto px-4">
-        <BackHeader />
+        <HomeHeader />
 
         {/* Header */}
         <div className="flex justify-between items-center mb-1">
@@ -138,7 +148,14 @@ const ScheduleResultPage = () => {
 
         {/* 지도 */}
         <div className="w-full h-48 rounded-lg mb-6 overflow-hidden">
-          <KakaoMap markers={selectedMarkers} useCustomOverlay={true} />
+          <KakaoMap
+            markers={selectedMarkers}
+            useCustomOverlay={true}
+            drawPath={true} // ← 숫자 순서대로 선 그리기
+            path={path} // ← 폴리라인 경로
+            fitToMarkers={true} // ← 모든 포인트 보이도록 자동 줌/이동
+            fitPadding={60} // ← bounds 여백(px)
+          />
         </div>
 
         {/* 선택한 날짜 일정 */}
