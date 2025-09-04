@@ -1,4 +1,3 @@
-// src/pages/PlanDatePage.jsx
 import React, { useState } from 'react';
 import { DatePicker, Input, Select, message } from 'antd';
 import 'antd/dist/reset.css';
@@ -13,6 +12,15 @@ const { RangePicker } = DatePicker;
 
 const PlanDatePage = () => {
   const [dates, setDates] = useState(null);
+
+  // 패널 표시 월 (왼쪽/오른쪽)
+  const [pickerValue, setPickerValue] = useState([
+    dayjs().startOf('month'),
+    dayjs().add(1, 'month').startOf('month'),
+  ]);
+  // 열림 상태 관리: 열릴 때마다 현재 달로 리셋
+  const [open, setOpen] = useState(false);
+
   const [departurePlace, setDeparturePlace] = useState('');
   const [hour, setHour] = useState('');
   const [minute, setMinute] = useState('');
@@ -59,8 +67,66 @@ const PlanDatePage = () => {
           <RangePicker
             className="w-full"
             format="YYYY-MM-DD"
-            onChange={(value) => setDates(value)}
             value={dates}
+            onChange={setDates}
+            /* antd v5: 팝업 클래스 */
+            classNames={{ popup: 'one-month-range' }}
+            /* 패널 표시 월 제어 (항상 왼쪽 패널 기준으로 본문/라벨 맞춤) */
+            pickerValue={pickerValue}
+            onPickerValueChange={(next) => {
+              if (Array.isArray(next) && next[0]) setPickerValue(next);
+            }}
+            /* 열릴 때마다 현재 달로 강제 리셋 */
+            open={open}
+            onOpenChange={(isOpen) => {
+              setOpen(isOpen);
+              if (isOpen) {
+                const now = dayjs();
+                setPickerValue([
+                  now.startOf('month'),
+                  now.add(1, 'month').startOf('month'),
+                ]);
+              }
+            }}
+            /* 커스텀 헤더: 라벨은 '왼쪽 패널(=보이는 달)' 기준 */
+            panelRender={(panelNode) => (
+              <div>
+                <div className="flex items-center justify-between px-3 py-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPickerValue(([l, r]) => [
+                        l.subtract(1, 'month'),
+                        r.subtract(1, 'month'),
+                      ])
+                    }
+                    className="text-sm text-gray-600 hover:text-gray-900"
+                  >
+                    ← 이전달
+                  </button>
+
+                  <div className="text-sm font-medium">
+                    {pickerValue?.[0]?.format?.('YYYY MMM')}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPickerValue(([l, r]) => [
+                        l.add(1, 'month'),
+                        r.add(1, 'month'),
+                      ])
+                    }
+                    className="text-sm text-gray-600 hover:text-gray-900"
+                  >
+                    다음달 →
+                  </button>
+                </div>
+                {panelNode}
+              </div>
+            )}
+            /* 팝업 위치 안정화(선택) */
+            getPopupContainer={(trigger) => trigger.parentNode}
           />
 
           <Input

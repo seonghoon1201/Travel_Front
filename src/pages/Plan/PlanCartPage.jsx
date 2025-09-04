@@ -62,6 +62,14 @@ const PlanCartPage = () => {
   const [codePair, setCodePair] = useState(null);
   const [codeInvalid, setCodeInvalid] = useState(false);
   const [apiItems, setApiItems] = useState([]);
+  const [brokenImages, setBrokenImages] = useState(() => new Set());
+  const markBroken = (id) =>
+    setBrokenImages((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingList, setLoadingList] = useState(false);
@@ -217,16 +225,19 @@ const PlanCartPage = () => {
             missing.map((m) => m.title)
           );
         }
-        // 여기까지
-        const mapped = content.map((item) => ({
-          contentId: String(item.contentId),
-          name: item.title,
-          address: `${item.address ?? ''} ${item.address2 ?? ''}`.trim(),
-          price: undefined, // 목록엔 가격 미표시
-          imageUrl: item.firstImage || FALLBACK_IMG,
-          phone: item.tel,
-          location: { lat: Number(item.mapY), lng: Number(item.mapX) },
-        }));
+        const mapped = content.map((item) => {
+          const imageUrl = item.firstImage || item.firstimage || '';
+          return {
+            contentId: String(item.contentId),
+            name: item.title,
+            address: `${item.address ?? ''} ${item.address2 ?? ''}`.trim(),
+            price: undefined,
+            imageUrl, // ← 기본 이미지만 (없으면 빈 문자열)
+            hasRemoteImage: !!imageUrl, // ← 원격 이미지 존재 여부
+            phone: item.tel,
+            location: { lat: Number(item.mapY), lng: Number(item.mapX) },
+          };
+        });
 
         setApiItems((prev) => (reset ? mapped : [...prev, ...mapped]));
         // Spring Page 기준: last=true면 마지막 페이지
@@ -550,7 +561,9 @@ const PlanCartPage = () => {
                 }`}
               >
                 이번 여행은 <b>{tripDays}일</b> 일정이에요. 카트는
-                <b> {cartLimit}개 (일×5)</b>까지 담을 수 있어요. 현재{' '}
+                <b> {cartLimit}개 (일×5)</b>까지 담을 수 있어요.
+                <br />
+                현재{' '}
                 <b>
                   {cartItems.length}/{cartLimit}
                 </b>
@@ -581,12 +594,20 @@ const PlanCartPage = () => {
                 >
                   <div className="flex items-center gap-3">
                     <div className="relative">
-                      <img
-                        src={item.imageUrl || FALLBACK_IMG}
-                        alt={item.name}
-                        className="w-14 h-14 rounded-md object-cover"
-                        onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
-                      />
+                      {item.hasRemoteImage &&
+                      !brokenImages.has(String(item.contentId)) ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className="w-14 h-14 rounded-md object-cover"
+                          loading="lazy"
+                          onError={() => markBroken(String(item.contentId))} // 실패 시 No Image로 전환
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-md bg-gray-200 flex items-center justify-center text-[10px] text-gray-500">
+                          No Image
+                        </div>
+                      )}
                       <FavoriteButton
                         isActive={isFavorite(String(item.contentId))}
                         toggleFavorite={() =>
@@ -669,7 +690,9 @@ const PlanCartPage = () => {
 
       {/* 카트 Drawer */}
       <Drawer
-        title={`장바구니 (${cartItems.length}${cartLimit != null ? `/${cartLimit}` : ''})`}
+        title={`장바구니 (${cartItems.length}${
+          cartLimit != null ? `/${cartLimit}` : ''
+        })`}
         placement="bottom"
         height="70%"
         open={drawerOpen}
