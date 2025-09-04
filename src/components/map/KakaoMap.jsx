@@ -35,13 +35,15 @@ const KakaoMap = ({
       const path = [];
 
       if (markers.length > 0) {
-        markers.forEach(({ lat, lng }, index) => {
+        markers.forEach(({ lat, lng, order }, index) => {
           const position = new window.kakao.maps.LatLng(lat, lng);
           bounds.extend(position);
           path.push(position);
 
           if (useCustomOverlay) {
             const color = colorList[index % colorList.length];
+            const label =
+              Number.isFinite(order) && order > 0 ? order : index + 1;
 
             new window.kakao.maps.CustomOverlay({
               map,
@@ -58,7 +60,7 @@ const KakaoMap = ({
                   font-size: 12px;
                   font-weight: bold;
                 ">
-                  ${index + 1}
+                  ${label}
                 </div>
               `,
               yAnchor: 1,
@@ -72,7 +74,7 @@ const KakaoMap = ({
           const polyline = new window.kakao.maps.Polyline({
             map,
             path,
-            strokeWeight: 2, 
+            strokeWeight: 2,
             strokeColor: '#3B82F6',
             strokeOpacity: 0.9,
             strokeStyle: 'solid',
