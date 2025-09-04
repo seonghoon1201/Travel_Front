@@ -58,7 +58,6 @@ const HotBoard = () => {
       <div className="w-full max-w-sm mx-auto ">
         <BackHeader />
         <div className="pl-[1rem] pr-[1rem]">
-          {/* 검색창 */}
           <div className="w-full mb-4">
             <SearchBar
               value={searchTerm}
@@ -66,7 +65,6 @@ const HotBoard = () => {
             />
           </div>
 
-          {/* 상단 설명 영역 */}
           <div className="flex items-start justify-between px-2 pt-4 py-2">
             <div>
               <p className="text-lg font-semibold text-[#222]">📍핫플 여행지</p>
@@ -78,7 +76,7 @@ const HotBoard = () => {
           </div>
 
           {/* 리스트 */}
-          <div className="space-y-4 mt-4 px-2">
+          <div className="space-y-4 px-2 mb-[1rem]">
             {loading ? (
 
               Array.from({ length: 6 }).map((_, i) => (

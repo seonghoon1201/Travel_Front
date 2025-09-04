@@ -97,7 +97,6 @@ const RegionDetailPage = () => {
     idSetRef.current.clear();
   }, [decodedCity, ldongRegnCd, ldongSignguCd]);
 
-  // ===== 장소 불러오기 =====
   const fetchPage = useCallback(
     async (pageToLoad) => {
       if (!ldongRegnCd || !ldongSignguCd) return;
@@ -177,7 +176,6 @@ const RegionDetailPage = () => {
       <div className="w-full max-w-sm mx-auto">
         <BackHeader />
         <div className="w-full min-h-screen bg-[#F8FBFF]">
-          {/* 요약 */}
           <div className="pr-3 pl-3">
             <RegionSummary
               title={decodedCity}
@@ -186,7 +184,6 @@ const RegionDetailPage = () => {
             />
           </div>
 
-          {/* 날씨 */}
           <div className="px-4 pt-4">
             <h3 className="text-base font-semibold text-gray-800 mb-2">날씨</h3>
             {weatherLoading ? (
@@ -235,7 +232,6 @@ const RegionDetailPage = () => {
             )}
           </div>
 
-          {/* 즐길거리 */}
           <div className="px-4 pt-4">
             <h3 className="text-base font-semibold text-gray-800 mb-2">즐길거리</h3>
             <div className="space-y-3">
@@ -280,7 +276,6 @@ const RegionDetailPage = () => {
           </div>
         </div>
 
-        {/* 일정 만들기 버튼 */}
         <div className="fixed bottom-0 left-0 w-full px-4 py-3 bg-white shadow-lg z-50">
           <div className="max-w-sm mx-auto">
             <PrimaryButton className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm shadow">
