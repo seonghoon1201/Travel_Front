@@ -8,8 +8,9 @@ import EditModal from '../../components/schedule/EditModal';
 import KakaoMap from '../../components/map/KakaoMap';
 import useScheduleStore from '../../store/scheduleStore';
 import useCartStore from '../../store/cartStore';
+import usePlanStore from '../../store/planStore';
 import { getSchedule } from '../../api';
-import { message } from 'antd';
+import { message, Progress, Flex } from 'antd';
 
 const ScheduleResultPage = () => {
   const { scheduleId } = useParams();
@@ -18,6 +19,9 @@ const ScheduleResultPage = () => {
   const scheduleStore = useScheduleStore();
   const detail = scheduleStore.detail;
 
+  // ✅ 예산 (PlanStore에서 사용하던 값 그대로 활용)
+  const budget = usePlanStore((s) => s.budget ?? 0);
+
   // 새로고침으로 store 비었을 때를 대비해 서버에서 다시 로드
   useEffect(() => {
     (async () => {
@@ -25,9 +29,7 @@ const ScheduleResultPage = () => {
         return;
       try {
         const res = await getSchedule(scheduleId);
-        // 콘솔에 리스폰스 출력
         console.log('[ScheduleResultPage] getSchedule response →', res);
-
         scheduleStore.setDetail(res);
       } catch (e) {
         console.error('[ScheduleResult] reload fail', e?.response?.data || e);
@@ -36,6 +38,7 @@ const ScheduleResultPage = () => {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scheduleId]);
+
   // ✅ 새로고침 등으로 placeIndex가 비었으면, 카트/서버 응답으로 보강
   useEffect(() => {
     if (!detail || !Array.isArray(detail?.scheduleItems)) return;
@@ -79,6 +82,28 @@ const ScheduleResultPage = () => {
     if (selectedDayIndex >= days.length) setSelectedDayIndex(0);
   }, [days.length, selectedDayIndex]);
 
+  // ✅ 스케줄 전체 비용 합계 (cost 또는 price 대응)
+  const totalCost = useMemo(() => {
+    const getCost = (p) => Number(p?.cost ?? p?.price ?? p?.amount ?? 0) || 0;
+    try {
+      return (days || []).reduce(
+        (sum, d) => sum + (d?.plans || []).reduce((s, p) => s + getCost(p), 0),
+        0
+      );
+    } catch {
+      return 0;
+    }
+  }, [days]);
+
+  const remaining = useMemo(
+    () => (budget || 0) - (totalCost || 0),
+    [budget, totalCost]
+  );
+  const percentUsed = useMemo(() => {
+    if (!budget || budget <= 0) return 0;
+    return Math.min(100, (totalCost / budget) * 100);
+  }, [budget, totalCost]);
+
   const selectedMarkers = useMemo(() => {
     if (!days[selectedDayIndex]) return [];
     return days[selectedDayIndex].plans
@@ -119,7 +144,36 @@ const ScheduleResultPage = () => {
         </div>
         <p className="text-sm text-gray-500 mt-1">{dateRange}</p>
 
-        <div className="flex items-center gap-2 mb-4">
+        {/* ✅ 예산 진행률 (카트 페이지 스타일과 유사) */}
+        <div className="mt-3">
+          <p className="text-sm text-center flex justify-center items-center gap-1">
+            전체 예산 대비{' '}
+            <span
+              className={
+                remaining < 0
+                  ? 'text-red-500 font-bold'
+                  : 'text-blue-500 font-bold'
+              }
+            >
+              {Math.abs(remaining).toLocaleString()}원{' '}
+              {remaining < 0 ? '초과' : '여유'}
+            </span>
+            입니다.
+          </p>
+          <Flex gap="small" vertical className="mt-2">
+            <Progress
+              percent={percentUsed}
+              status={remaining < 0 ? 'exception' : 'active'}
+              format={() =>
+                `₩${totalCost.toLocaleString()} / ₩${(
+                  budget || 0
+                ).toLocaleString()}`
+              }
+            />
+          </Flex>
+        </div>
+
+        <div className="flex items-center gap-2 mb-4 mt-3">
           <div className="flex-shrink-0">
             <PrimaryButton className="px-3 py-1 text-sm whitespace-nowrap">
               함께하는 일행
@@ -151,10 +205,10 @@ const ScheduleResultPage = () => {
           <KakaoMap
             markers={selectedMarkers}
             useCustomOverlay={true}
-            drawPath={true} // ← 숫자 순서대로 선 그리기
-            path={path} // ← 폴리라인 경로
-            fitToMarkers={true} // ← 모든 포인트 보이도록 자동 줌/이동
-            fitPadding={60} // ← bounds 여백(px)
+            drawPath={true}
+            path={path}
+            fitToMarkers={true}
+            fitPadding={60}
           />
         </div>
 

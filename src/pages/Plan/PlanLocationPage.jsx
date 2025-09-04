@@ -51,7 +51,7 @@ const PlanLocationPage = () => {
         const mapped = regions.map((r) => ({
           id: r.regionId,
           name: r.regionName,
-          description: r.description || '',
+          // 설명은 너무 길어 UI에서 사용 안 함 (필드 자체도 저장하지 않음)
           imageUrl: normalizeImageUrl(r.regionImage || r.imageUrl),
           // 여러 케이스를 모두 수용해 ldong* 로 정규화해 저장
           ldongRegnCd: String(
@@ -84,14 +84,13 @@ const PlanLocationPage = () => {
   const handleSelect = (id) => {
     setLocations((prev) => {
       const clicked = prev.find((l) => l.id === id);
-      const willSelect = !clicked?.selected; // 이미 선택된 걸 다시 누르면 해제 허용
+      const willSelect = !clicked?.selected;
 
       const next = prev.map((loc) => {
         if (loc.id === id) return { ...loc, selected: willSelect };
-        return { ...loc, selected: false }; // 나머지는 전부 해제
+        return { ...loc, selected: false };
       });
 
-      // 로그
       const target = next.find((l) => l.id === id);
       console.log('[Location] 단일 선택 토글', {
         regionId: target?.id,
@@ -109,7 +108,6 @@ const PlanLocationPage = () => {
       return alert('여행지를 하나 선택해 주세요.');
     }
 
-    // 코드 유효성 체크
     if (
       !String(selected.ldongRegnCd || '').trim() ||
       !String(selected.ldongSignguCd || '').trim()
@@ -120,7 +118,6 @@ const PlanLocationPage = () => {
       return;
     }
 
-    // 단일 선택만 세팅
     setLocationIds([selected.id]);
     const canon = (o) => ({
       ldongRegnCd: String(
@@ -138,14 +135,11 @@ const PlanLocationPage = () => {
     navigate('/plan/date');
   };
 
+  // 🔍 검색은 이름만 대상으로 (설명 제거와 일관성)
   const filtered = useMemo(() => {
     const q = searchText.trim().toLowerCase();
     if (!q) return locations;
-    return locations.filter(
-      (l) =>
-        (l.name || '').toLowerCase().includes(q) ||
-        (l.description || '').toLowerCase().includes(q)
-    );
+    return locations.filter((l) => (l.name || '').toLowerCase().includes(q));
   }, [locations, searchText]);
 
   const shown = filtered.slice(0, visibleCount);
@@ -155,7 +149,6 @@ const PlanLocationPage = () => {
   return (
     <DefaultLayout>
       <div className="w-full max-w-sm mx-auto pb-28">
-        {' '}
         {/* 고정 버튼 자리 확보 */}
         <BackHeader title="여행지 선택" />
         <div className="px-4">
@@ -190,9 +183,7 @@ const PlanLocationPage = () => {
                         <div className="font-bold text-gray-800 text-sm">
                           {loc.name}
                         </div>
-                        <div className="text-xs text-gray-500">
-                          {loc.description}
-                        </div>
+                        {/* 설명 제거 (요청사항) */}
                       </div>
                     </div>
                     <CategoryButton
