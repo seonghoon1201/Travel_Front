@@ -1,41 +1,83 @@
 import React, { useState } from 'react';
 import { Ellipsis, Trash2, CalendarSync } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const MyTravelItem = ({
+  scheduleId,
   title,
   dateRange,
   companionCount,
-  imageUrl, //이건 여행 일정 중 첫번째 장소 사진 받아와야할듯!
+  imageUrl, // 여행 일정 중 첫번째 장소 사진이 이상적
   onEdit,
   onDelete,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
-  const handleToggle = () => {
+  const handleToggle = (e) => {
+    e.stopPropagation(); // 카드 클릭 이벤트 막기
     setIsOpen((prev) => !prev);
   };
 
+  const handleEdit = (e) => {
+    e.stopPropagation();
+    setIsOpen(false);
+    onEdit?.(scheduleId);
+  };
+
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    setIsOpen(false);
+    onDelete?.(scheduleId);
+  };
+
+  const handleCardClick = () => {
+    navigate(`/plan/schedule/result/${scheduleId}`);
+  };
+
   return (
-    <div className="flex items-start pl-2 gap-2 py-2 relative">
-      <img src={imageUrl} alt="trip" className="w-14 h-14 rounded-md" />
-      <div className="flex-1">
-        <p className="font-bold">{title} 여행</p>
-        <p className="text-sm text-gray-500">
+    <div
+      onClick={handleCardClick}
+      className="flex items-start pl-2 gap-2 py-2 relative cursor-pointer hover:bg-gray-50 rounded-md"
+    >
+      <img
+        src={imageUrl}
+        alt="trip"
+        className="w-14 h-14 rounded-md object-cover flex-shrink-0"
+      />
+      <div className="flex-1 min-w-0">
+        <p className="font-bold truncate">{title} 여행</p>
+        <p className="text-sm text-gray-500 truncate">
           {dateRange}, {companionCount}명과 함께
         </p>
       </div>
 
-      <button className="text-lg" onClick={handleToggle}>
+      {/* 메뉴 버튼 */}
+      <button
+        className="text-lg p-1 rounded hover:bg-gray-100"
+        onClick={handleToggle}
+      >
         <Ellipsis />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-12 flex gap-2 bg-white shadow-md rounded px-2 py-1 border z-10">
-          <button onClick={onEdit}>
-            <CalendarSync className="text-gray-600" />
+        <div
+          className="absolute right-2 top-10 flex gap-3 bg-white shadow-md rounded px-3 py-2 border z-10"
+          onClick={(e) => e.stopPropagation()} // 메뉴 클릭 시 상세 이동 막기
+        >
+          <button
+            onClick={handleEdit}
+            className="p-1 hover:bg-gray-100 rounded"
+            title="일정 수정"
+          >
+            <CalendarSync className="text-gray-600 w-5 h-5" />
           </button>
-          <button onClick={onDelete}>
-            <Trash2 className="text-red-500" />
+          <button
+            onClick={handleDelete}
+            className="p-1 hover:bg-gray-100 rounded"
+            title="일정 삭제"
+          >
+            <Trash2 className="text-red-500 w-5 h-5" />
           </button>
         </div>
       )}
