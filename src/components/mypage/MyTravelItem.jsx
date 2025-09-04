@@ -31,7 +31,6 @@ const MyTravelItem = ({
     onDelete?.(scheduleId);
   };
 
-  // ✅ 카드 클릭 → 상세 페이지로 이동
   const handleCardClick = () => {
     navigate(`/plan/schedule/result/${scheduleId}`);
   };

@@ -102,7 +102,6 @@ const ScheduleSelectModal = ({
                 onClick={() => {
                   const selected = trips.find((t) => t.scheduleId === tempSelected);
                   if (selected) {
-                    // ✅ 쿼리스트링 방식으로 이동
                     navigate(`/write/travel/diary?scheduleId=${selected.scheduleId}`);
                   }
                 }}

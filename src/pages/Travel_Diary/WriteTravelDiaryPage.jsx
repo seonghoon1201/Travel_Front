@@ -74,8 +74,6 @@ const WriteTravelDiary = () => {
   };
   const removeTag = (t) => setTags(tags.filter((x) => x !== t));
 
-  // ✅ 너가 준 심플 핸들러 그대로 적용
-  // 이미지 선택
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;

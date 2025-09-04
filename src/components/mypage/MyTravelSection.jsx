@@ -40,7 +40,6 @@ const MyTravelSection = () => {
     loadData();
   }, [accessToken]);
 
-  // ✅ 클릭 핸들러
   const handleClickTrip = (scheduleId) => {
     navigate(`/plan/schedule/result/${scheduleId}`);
   };
