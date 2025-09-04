@@ -9,10 +9,18 @@ import dayjs from 'dayjs';
 import usePlanStore from '../../store/planStore';
 
 const { RangePicker } = DatePicker;
-const { Option } = Select;
 
 const PlanDatePage = () => {
   const [dates, setDates] = useState(null);
+
+  // 패널 표시 월 (왼쪽/오른쪽)
+  const [pickerValue, setPickerValue] = useState([
+    dayjs().startOf('month'),
+    dayjs().add(1, 'month').startOf('month'),
+  ]);
+  // 열림 상태 관리: 열릴 때마다 현재 달로 리셋
+  const [open, setOpen] = useState(false);
+
   const [departurePlace, setDeparturePlace] = useState('');
   const [hour, setHour] = useState('');
   const [minute, setMinute] = useState('');
@@ -28,22 +36,14 @@ const PlanDatePage = () => {
   );
 
   const handleNext = () => {
-    // 유효성 검사 보강
-    if (!dates || dates.length !== 2) {
+    if (!dates || dates.length !== 2)
       return message.warning('여행 시작일과 종료일을 모두 선택해 주세요.');
-    }
     const [start, end] = dates;
-    if (end.isBefore(start, 'day')) {
+    if (end.isBefore(start, 'day'))
       return message.warning('종료일은 시작일 이후로 선택해 주세요.');
-    }
-    if (!departurePlace) {
-      return message.warning('출발 장소를 입력해 주세요.');
-    }
-    if (!hour || !minute) {
-      return message.warning('출발 시각을 선택해 주세요.');
-    }
+    if (!departurePlace) return message.warning('출발 장소를 입력해 주세요.');
+    if (!hour || !minute) return message.warning('출발 시각을 선택해 주세요.');
 
-    // 시간 변환: AM/PM → 24시간
     let h = parseInt(hour, 10);
     if (ampm === 'PM' && h !== 12) h += 12;
     if (ampm === 'AM' && h === 12) h = 0;
@@ -61,14 +61,72 @@ const PlanDatePage = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto">
+      <div className="w-full max-w-sm mx-auto pb-28">
         <BackHeader title="여행 기간 선택" />
         <div className="px-4">
           <RangePicker
             className="w-full"
             format="YYYY-MM-DD"
-            onChange={(value) => setDates(value)}
             value={dates}
+            onChange={setDates}
+            /* antd v5: 팝업 클래스 */
+            classNames={{ popup: 'one-month-range' }}
+            /* 패널 표시 월 제어 (항상 왼쪽 패널 기준으로 본문/라벨 맞춤) */
+            pickerValue={pickerValue}
+            onPickerValueChange={(next) => {
+              if (Array.isArray(next) && next[0]) setPickerValue(next);
+            }}
+            /* 열릴 때마다 현재 달로 강제 리셋 */
+            open={open}
+            onOpenChange={(isOpen) => {
+              setOpen(isOpen);
+              if (isOpen) {
+                const now = dayjs();
+                setPickerValue([
+                  now.startOf('month'),
+                  now.add(1, 'month').startOf('month'),
+                ]);
+              }
+            }}
+            /* 커스텀 헤더: 라벨은 '왼쪽 패널(=보이는 달)' 기준 */
+            panelRender={(panelNode) => (
+              <div>
+                <div className="flex items-center justify-between px-3 py-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPickerValue(([l, r]) => [
+                        l.subtract(1, 'month'),
+                        r.subtract(1, 'month'),
+                      ])
+                    }
+                    className="text-sm text-gray-600 hover:text-gray-900"
+                  >
+                    ← 이전달
+                  </button>
+
+                  <div className="text-sm font-medium">
+                    {pickerValue?.[0]?.format?.('YYYY MMM')}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPickerValue(([l, r]) => [
+                        l.add(1, 'month'),
+                        r.add(1, 'month'),
+                      ])
+                    }
+                    className="text-sm text-gray-600 hover:text-gray-900"
+                  >
+                    다음달 →
+                  </button>
+                </div>
+                {panelNode}
+              </div>
+            )}
+            /* 팝업 위치 안정화(선택) */
+            getPopupContainer={(trigger) => trigger.parentNode}
           />
 
           <Input
@@ -109,8 +167,13 @@ const PlanDatePage = () => {
               }))}
             />
           </div>
+        </div>
+      </div>
 
-          <PrimaryButton onClick={handleNext} className="mt-6 w-full">
+      {/* 하단 고정 버튼 바 */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
+        <div className="mx-auto max-w-sm px-4 py-3">
+          <PrimaryButton onClick={handleNext} className="w-full">
             {dates?.length === 2
               ? `${dayjs(dates[0]).format('YYYY.MM.DD')} ~ ${dayjs(
                   dates[1]

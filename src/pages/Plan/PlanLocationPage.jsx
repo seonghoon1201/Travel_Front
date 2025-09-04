@@ -37,7 +37,7 @@ const normalizeImageUrl = (raw) => {
 
 const PlanLocationPage = () => {
   const navigate = useNavigate();
-  const { setLocationIds } = usePlanStore();
+  const { setLocationIds, setLocationCodes } = usePlanStore();
 
   const [searchText, setSearchText] = useState('');
   const [locations, setLocations] = useState([]);
@@ -51,8 +51,23 @@ const PlanLocationPage = () => {
         const mapped = regions.map((r) => ({
           id: r.regionId,
           name: r.regionName,
-          description: r.description || r.regionCode || '',
+          description: r.description || '',
           imageUrl: normalizeImageUrl(r.regionImage || r.imageUrl),
+          // 여러 케이스를 모두 수용해 ldong* 로 정규화해 저장
+          ldongRegnCd: String(
+            r.ldongRegnCd ??
+              r.ldongRegnCd ??
+              r.lDongRegnCd ??
+              r.ldongRegnCd ??
+              ''
+          ),
+          ldongSignguCd: String(
+            r.ldongSignguCd ??
+              r.ldongSignguCd ??
+              r.lDongSignguCd ??
+              r.ldongSignguCd ??
+              ''
+          ),
           selected: false,
         }));
         setLocations(mapped);
@@ -67,18 +82,59 @@ const PlanLocationPage = () => {
   }, []);
 
   const handleSelect = (id) => {
-    setLocations((prev) =>
-      prev.map((loc) =>
-        loc.id === id ? { ...loc, selected: !loc.selected } : loc
-      )
-    );
+    setLocations((prev) => {
+      const clicked = prev.find((l) => l.id === id);
+      const willSelect = !clicked?.selected; // 이미 선택된 걸 다시 누르면 해제 허용
+
+      const next = prev.map((loc) => {
+        if (loc.id === id) return { ...loc, selected: willSelect };
+        return { ...loc, selected: false }; // 나머지는 전부 해제
+      });
+
+      // 로그
+      const target = next.find((l) => l.id === id);
+      console.log('[Location] 단일 선택 토글', {
+        regionId: target?.id,
+        name: target?.name,
+        selected: target?.selected,
+      });
+
+      return next;
+    });
   };
 
   const handleNext = () => {
-    const selectedIds = locations.filter((l) => l.selected).map((l) => l.id);
-    if (!selectedIds.length)
-      return alert('최소 한 곳 이상의 여행지를 선택해 주세요.');
-    setLocationIds(selectedIds);
+    const selected = locations.find((l) => l.selected);
+    if (!selected) {
+      return alert('여행지를 하나 선택해 주세요.');
+    }
+
+    // 코드 유효성 체크
+    if (
+      !String(selected.ldongRegnCd || '').trim() ||
+      !String(selected.ldongSignguCd || '').trim()
+    ) {
+      message.error(
+        '선택한 지역의 코드가 비어 있어요. 다른 지역을 선택해 주세요.'
+      );
+      return;
+    }
+
+    // 단일 선택만 세팅
+    setLocationIds([selected.id]);
+    const canon = (o) => ({
+      ldongRegnCd: String(
+        o.ldongRegnCd ?? o.ldongRegnCd ?? o.lDongRegnCd ?? o.ldongRegnCd ?? ''
+      ),
+      ldongSignguCd: String(
+        o.ldongSignguCd ??
+          o.ldongSignguCd ??
+          o.lDongSignguCd ??
+          o.ldongSignguCd ??
+          ''
+      ),
+    });
+    setLocationCodes([canon(selected)]);
     navigate('/plan/date');
   };
 

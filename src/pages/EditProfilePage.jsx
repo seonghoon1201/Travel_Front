@@ -11,37 +11,36 @@ import { userProfileUpdate } from '../api/user/userProfileUpdate';
 const EditProfile = () => {
   const navigate = useNavigate();
 
-  // Zustand 전역 상태: 서버에서 받은 URL만 저장
-  const nickname = useUserStore((state) => state.nickname);
-  const setNickname = useUserStore((state) => state.setNickname);
-  const profileImageUrl = useUserStore((state) => state.profileImageUrl);
-  const setProfileImageUrl = useUserStore((state) => state.setProfileImageUrl);
+  const storeNickname = useUserStore((s) => s.nickname);
+  const storeProfileImageUrl = useUserStore((s) => s.profileImageUrl);
 
-  const fileInputRef = useRef(null);
-
-  // 로컬 상태: 편집 중 미리보기(blob)
-  const [previewUrl, setPreviewUrl] = useState(profileImageUrl);
+  const [localNickname, setLocalNickname] = useState(storeNickname || '');
+  const [previewUrl, setPreviewUrl] = useState(storeProfileImageUrl || '');
   const [selectedFile, setSelectedFile] = useState(null);
 
-  // 이미지 클릭 -> 파일 선택창 열기
-  const handleImageClick = () => fileInputRef.current.click();
+  const fileInputRef = useRef(null);
+  useEffect(() => {
+    setLocalNickname(storeNickname || '');
+  }, [storeNickname]);
 
-  // 이미지 변경 시 미리보기(blob) 업데이트
+  useEffect(() => {
+    setPreviewUrl(storeProfileImageUrl || '');
+  }, [storeProfileImageUrl]);
+
+  const handleImageClick = () => fileInputRef.current?.click();
+
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
-    // 기존 blob 해제
     if (previewUrl?.startsWith('blob:')) {
       URL.revokeObjectURL(previewUrl);
     }
-
     const blobUrl = URL.createObjectURL(file);
     setPreviewUrl(blobUrl);
     setSelectedFile(file);
   };
 
-  // 언마운트 시 blob 해제
   useEffect(() => {
     return () => {
       if (previewUrl?.startsWith('blob:')) {
@@ -50,44 +49,62 @@ const EditProfile = () => {
     };
   }, [previewUrl]);
 
-  // 닉네임 초기화
-  const clearNickname = () => {
-    useUserStore.setState({ nickname: '' });
-  };
+  const clearNickname = () => setLocalNickname('');
 
-  // 프로필 업데이트
   const handleUpdate = async () => {
     try {
-      let finalImageUrl = profileImageUrl;
+      const trimmedNickname = (localNickname || '').trim();
+      if (!trimmedNickname) {
+        alert('닉네임을 입력해주세요.');
+        return;
+      }
 
-      // 파일 업로드
+      let finalImageUrl = storeProfileImageUrl || '';
+
+      // 1) 이미지 업로드(선택 시)
       if (selectedFile) {
         const uploadRes = await uploadProfileImage(selectedFile);
-        if (!uploadRes.success) {
+        if (!uploadRes?.success) {
           alert('이미지 업로드 실패');
           return;
         }
-        finalImageUrl = uploadRes.imageUrl; // 서버에서 받은 URL
+        const uploadedUrl =
+          uploadRes?.imageUrl ||
+          uploadRes?.data?.imageUrl ||
+          uploadRes?.data?.url ||
+          uploadRes?.url;
+        if (!uploadedUrl) {
+          alert('서버에서 이미지 URL을 받지 못했어요.');
+          return;
+        }
+        finalImageUrl = uploadedUrl;
       }
 
-      // 2) 닉네임 + 최종 URL로 프로필 수정
-      const result = await userProfileUpdate({
-        userNickname: nickname,
+      const payload = {
+        nickname: trimmedNickname,
+        profileImageUrl: finalImageUrl,
+        userNickname: trimmedNickname,
+        userProfileImage: finalImageUrl,
+      };
+
+      const result = await userProfileUpdate(payload);
+      if (!result?.success) {
+        alert(`수정 실패: ${result?.error || '알 수 없는 오류'}`);
+        return;
+      }
+
+      useUserStore.setState({
+        nickname: trimmedNickname,
+        userNickname: trimmedNickname,
+        profileImageUrl: finalImageUrl,
         userProfileImage: finalImageUrl,
       });
 
-      if (result.success) {
-        // 전역 상태에 서버 URL 저장
-        setNickname(nickname);
-        setProfileImageUrl(finalImageUrl);
-
-        alert('프로필 수정 완료!');
-        navigate('/');
-      } else {
-        alert(`수정 실패: ${result.error}`);
-      }
+      alert('프로필 수정 완료!');
+      navigate('/');
     } catch (err) {
-      alert('수정 중 오류 발생: ' + err.message);
+      console.error(err);
+      alert('수정 중 오류: ' + (err?.message || err));
     }
   };
 
@@ -104,6 +121,9 @@ const EditProfile = () => {
                 src={previewUrl || profileDefault}
                 alt="프로필 이미지"
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = profileDefault;
+                }}
               />
             </div>
 
@@ -128,12 +148,12 @@ const EditProfile = () => {
           <div className="w-full relative mt-6">
             <input
               type="text"
-              value={nickname || ''}
-              onChange={(e) => setNickname(e.target.value)}
+              value={localNickname}
+              onChange={(e) => setLocalNickname(e.target.value)}
               placeholder="닉네임을 입력하세요"
               className="w-full border-b border-gray-300 py-2 text-center text-lg font-semibold bg-transparent focus:outline-none"
             />
-            {nickname && (
+            {localNickname && (
               <button
                 type="button"
                 onClick={clearNickname}
@@ -147,7 +167,7 @@ const EditProfile = () => {
           <PrimaryButton
             className="w-full m-4"
             onClick={handleUpdate}
-            disabled={!nickname?.trim()}
+            disabled={!localNickname.trim()}
           >
             프로필 수정
           </PrimaryButton>

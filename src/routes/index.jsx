@@ -27,7 +27,9 @@ import PlanStylePage from '../pages/Plan/PlanStylePage';
 import PlanInvitePage from '../pages/Plan/PlanInvitePage';
 import PlanBudgetPage from '../pages/Plan/PlanBudgetPage';
 import PlanCartPage from '../pages/Plan/PlanCartPage';
+import PlanFlowBoundary from '../components/plan/PlanFlowBoundary';
 
+import ScheduleAutoPage from '../pages/Schedule/ScheduleAutoPage';
 import ScheduleResultPage from '../pages/Schedule/ScheduleResultPage';
 import AddPlace from '../pages/Schedule/AddPlace';
 
@@ -55,7 +57,7 @@ const AppRoutes = () => (
       <Route path="/board/hot" element={<HotBoardPage />} />
       <Route path="/region/detail/:city" element={<RegionDetailPage />} />
       <Route path="/board/budget" element={<BudgetBoardPage />} />
-      <Route path="/place/detail/:contentID" element={<PlaceDetail />} />
+      <Route path="/place/detail/:contentId" element={<PlaceDetail />} />
 
       <Route path="/board/travel/diary" element={<TravelDiaryBoardPage />} />
       <Route
@@ -68,18 +70,23 @@ const AppRoutes = () => (
         element={<UpdateTravelDiaryPage />}
       />
 
-      <Route path="/plan/location" element={<PlanLocationPage />} />
+      <Route path="/plan" element={<PlanFlowBoundary />}>
+        <Route path="location" element={<PlanLocationPage />} />
+        <Route path="date" element={<PlanDatePage />} />
+        <Route path="style" element={<PlanStylePage />} />
+        <Route path="invite" element={<PlanInvitePage />} />
+        <Route path="budget" element={<PlanBudgetPage />} />
+        <Route path="cart" element={<PlanCartPage />} />
+        <Route path="auto" element={<ScheduleAutoPage />} />
+        <Route
+          path="schedule/result/:scheduleId"
+          element={<ScheduleResultPage />}
+        />
+        <Route path="add" element={<AddPlace />} />
+      </Route>
+
       <Route path="/kakao/callback" element={<KakaoCallbackPage />} />
-      <Route path="/plan/date" element={<PlanDatePage />} />
-      <Route path="/plan/style" element={<PlanStylePage />} />
-      <Route path="/plan/invite" element={<PlanInvitePage />} />
-      <Route path="/plan/budget" element={<PlanBudgetPage />} />
-      <Route path="/plan/cart" element={<PlanCartPage />} />
-
       <Route path="/invite" element={<InviteAcceptPage />} />
-
-      <Route path="/plan/schedule" element={<ScheduleResultPage />} />
-      <Route path="/plan/add" element={<AddPlace />} />
     </Routes>
   </Router>
 );

@@ -1,102 +1,115 @@
-import React, { useState } from 'react';
-import { Edit } from 'lucide-react';
-import PrimaryButton from '../../components/common/PrimaryButton';
+import React, { useMemo, useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import DefaultLayout from '../../layouts/DefaultLayout';
-import BackHeader from '../../components/header/BackHeader';
+import HomeHeader from '../../components/header/HomeHeader';
+import PrimaryButton from '../../components/common/PrimaryButton';
 import DayScheduleSection from '../../components/schedule/DayScheduleSection';
 import EditModal from '../../components/schedule/EditModal';
 import KakaoMap from '../../components/map/KakaoMap';
+import useScheduleStore from '../../store/scheduleStore';
+import useCartStore from '../../store/cartStore';
+import { getSchedule } from '../../api';
+import { message } from 'antd';
 
 const ScheduleResultPage = () => {
+  const { scheduleId } = useParams();
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+  const scheduleStore = useScheduleStore();
+  const detail = scheduleStore.detail;
 
-  const schedule = {
-    title: '제주도 여행',
-    dateRange: '2025.07.02 - 2025.07.05',
-    organizer: '친구와 | 액티비티',
-    // 사실 여기에 category 추가해야함, 더미값이라 넘길게요 그때 색상 추가하던가 하시죠
-    days: [
-      {
-        date: '7.2/수',
-        plans: [
-          {
-            id: 1,
-            name: '아쿠아플라넷 제주',
-            distance: '10km',
-            memo: '',
-            lat: 33.4497,
-            lng: 126.9206,
-          },
-          {
-            id: 2,
-            name: '고기국수 문도령',
-            distance: '',
-            memo: '고기국수 8000원\n4개 시키기',
-            lat: 33.4513,
-            lng: 126.9215,
-          },
-        ],
-      },
-      {
-        date: '7.3/목',
-        plans: [
-          {
-            id: 3,
-            name: '성산일출봉 해양공원',
-            distance: '15km',
-            memo: '',
-            lat: 33.4583,
-            lng: 126.9425,
-          },
-        ],
-      },
-      {
-        date: '7.4/금',
-        plans: [
-          {
-            id: 4,
-            name: '성산일출봉 해양공원',
-            distance: '15km',
-            memo: '',
-            lat: 33.4583,
-            lng: 126.9425,
-          },
-        ],
-      },
-      {
-        date: '7.4/금',
-        plans: [
-          {
-            id: 5,
-            name: '성산일출봉 해양공원',
-            distance: '16km',
-            memo: '',
-            lat: 30.4583,
-            lng: 126.9425,
-          },
-        ],
-      },
-    ],
-  };
+  // 새로고침으로 store 비었을 때를 대비해 서버에서 다시 로드
+  useEffect(() => {
+    (async () => {
+      if (detail?.scheduleId === scheduleId || detail?.id === scheduleId)
+        return;
+      try {
+        const res = await getSchedule(scheduleId);
+        // 콘솔에 리스폰스 출력
+        console.log('[ScheduleResultPage] getSchedule response →', res);
 
-  // 선택된 날짜의 장소들을 마커로 변환
-  const selectedMarkers = schedule.days[selectedDayIndex].plans
-    .filter((p) => p.lat && p.lng)
-    .map((p) => ({
-      lat: p.lat,
-      lng: p.lng,
-      dayIndex: selectedDayIndex,
-    }));
+        scheduleStore.setDetail(res);
+      } catch (e) {
+        console.error('[ScheduleResult] reload fail', e?.response?.data || e);
+        message.error('일정 정보를 불러오지 못했어요.');
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scheduleId]);
+  // ✅ 새로고침 등으로 placeIndex가 비었으면, 카트/서버 응답으로 보강
+  useEffect(() => {
+    if (!detail || !Array.isArray(detail?.scheduleItems)) return;
+    const currentIndex = scheduleStore.placeIndex || {};
+    if (Object.keys(currentIndex).length > 0) return; // 이미 있음
+
+    // 1) 카트에서 보강
+    const { items: cartItems = [] } = useCartStore.getState();
+    const idxFromCart = {};
+    cartItems.forEach((it) => {
+      const key = String(it.contentId ?? '');
+      if (!key) return;
+      idxFromCart[key] = {
+        name: it.name,
+        title: it.name,
+        imageUrl: it.imageUrl,
+        lat: it?.location?.lat,
+        lng: it?.location?.lng,
+        address: it.address,
+      };
+    });
+
+    // 2) 서버 응답으로 최소 이름 보강 (좌표 없으면 이름만)
+    const idxMerged = { ...idxFromCart };
+    detail.scheduleItems.forEach((it) => {
+      const key = String(it.contentId ?? '');
+      if (!key) return;
+      if (!idxMerged[key]) {
+        idxMerged[key] = { name: it.title || key, title: it.title || key };
+      }
+    });
+
+    scheduleStore.setPlaceIndex(idxMerged);
+  }, [detail, scheduleStore]);
+
+  // days 변환
+  const days = scheduleStore.getDays();
+
+  // ✅ days 길이 변화에 따른 인덱스 가드
+  useEffect(() => {
+    if (selectedDayIndex >= days.length) setSelectedDayIndex(0);
+  }, [days.length, selectedDayIndex]);
+
+  const selectedMarkers = useMemo(() => {
+    if (!days[selectedDayIndex]) return [];
+    return days[selectedDayIndex].plans
+      .filter((p) => typeof p.lat === 'number' && typeof p.lng === 'number')
+      .map((p, i) => ({
+        lat: p.lat,
+        lng: p.lng,
+        order: i + 1,
+        title: p.title || `#${i + 1}`,
+      }));
+  }, [days, selectedDayIndex]);
+
+  // 폴리라인 경로 (LatLng 배열)
+  const path = useMemo(() => {
+    return selectedMarkers.map((m) => ({ lat: m.lat, lng: m.lng }));
+  }, [selectedMarkers]);
+
+  const title = detail?.scheduleName || '여행 일정';
+  const dateRange =
+    detail?.startDate && detail?.endDate
+      ? `${detail.startDate} ~ ${detail.endDate}`
+      : '';
 
   return (
     <DefaultLayout>
       <div className="w-full max-w-sm mx-auto px-4">
-        <BackHeader />
+        <HomeHeader />
 
         {/* Header */}
         <div className="flex justify-between items-center mb-1">
-          <h1 className="text-xl font-bold">{schedule.title}</h1>
+          <h1 className="text-xl font-bold">{title}</h1>
           <button
             onClick={() => setShowEditModal(true)}
             className="text-sm text-gray-400"
@@ -104,21 +117,19 @@ const ScheduleResultPage = () => {
             편집
           </button>
         </div>
-        <p className="text-sm text-gray-500 mt-1">{schedule.dateRange}</p>
-        <p className="text-sm text-gray-500">{schedule.organizer}</p>
+        <p className="text-sm text-gray-500 mt-1">{dateRange}</p>
 
         <div className="flex items-center gap-2 mb-4">
-          {/* 고정된 일행 버튼 */}
           <div className="flex-shrink-0">
             <PrimaryButton className="px-3 py-1 text-sm whitespace-nowrap">
               함께하는 일행
             </PrimaryButton>
           </div>
 
-          {/* 가로 스크롤 가능한 Day 버튼 */}
+          {/* Day 버튼 */}
           <div className="flex-1 overflow-x-auto scrollbar-hide">
             <div className="flex gap-2 w-max">
-              {schedule.days.map((day, idx) => (
+              {days.map((_, idx) => (
                 <button
                   key={idx}
                   onClick={() => setSelectedDayIndex(idx)}
@@ -137,17 +148,26 @@ const ScheduleResultPage = () => {
 
         {/* 지도 */}
         <div className="w-full h-48 rounded-lg mb-6 overflow-hidden">
-          <KakaoMap markers={selectedMarkers} useCustomOverlay={true} />
+          <KakaoMap
+            markers={selectedMarkers}
+            useCustomOverlay={true}
+            drawPath={true} // ← 숫자 순서대로 선 그리기
+            path={path} // ← 폴리라인 경로
+            fitToMarkers={true} // ← 모든 포인트 보이도록 자동 줌/이동
+            fitPadding={60} // ← bounds 여백(px)
+          />
         </div>
 
-        {/* 선택한 날짜의 일정만 보여줌 */}
-        <DayScheduleSection
-          day={schedule.days[selectedDayIndex]}
-          dayIndex={selectedDayIndex}
-        />
+        {/* 선택한 날짜 일정 */}
+        {days[selectedDayIndex] && (
+          <DayScheduleSection
+            key={selectedDayIndex}
+            day={days[selectedDayIndex]}
+            dayIndex={selectedDayIndex}
+          />
+        )}
 
         {/* 편집 모달 */}
-        {showEditModal && <EditModal onClose={() => setShowEditModal(false)} />}
         {showEditModal && <EditModal onClose={() => setShowEditModal(false)} />}
       </div>
     </DefaultLayout>

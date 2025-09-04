@@ -2,12 +2,30 @@ import axios from 'axios';
 import { API_BASE_URL } from '../config';
 import { getItem } from '../../utils/localStorage';
 
-export const writeDiary = async ({ title, content, tag, imageUrls }) => {
+/**
+ * 여행일기 작성
+ * @param {Object} params
+ * @param {string} params.title
+ * @param {string} params.content
+ * @param {string} params.tag      
+ * @param {string[]} params.imageUrls
+ * @param {string} params.scheduleId - UUID
+ */
+export const writeDiary = async ({ title, content, tag, imageUrls, scheduleId }) => {
   const accessToken = getItem('accessToken');
+
+  const payload = {
+    title,
+    content,
+    tag: tag && tag.trim().length > 0 ? tag : '일반', 
+    imageUrls: Array.isArray(imageUrls) ? imageUrls : [],
+    scheduleId,
+  };
+
   try {
     const response = await axios.post(
       `${API_BASE_URL}/board`,
-      { title, content, tag, imageUrls },
+      payload,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -16,20 +34,12 @@ export const writeDiary = async ({ title, content, tag, imageUrls }) => {
       }
     );
 
-    const data = response?.data;
-    // 모든 가능성 .. 
-    const boardId =
-      (typeof data === 'string' && data) ||
-      data?.boardId ||                    
-      data?.data?.boardId ||               
-      data?.id ||                           
-      data?.board?.id;                     
+    return { success: true, ...response.data };
 
-  
-
-    return { success: !!boardId, boardId, data };
   } catch (error) {
-    console.error('여행일기 작성 실패:', error.response?.data || error.message);
-    return { success: false, error: error.response?.data || '작성 실패' };
+    return {
+      success: false,
+      error: error.response?.data || '여행일기 작성 실패',
+    };
   }
 };
