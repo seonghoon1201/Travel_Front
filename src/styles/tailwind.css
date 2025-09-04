@@ -27,3 +27,22 @@ body {
   font-weight: 400;
   font-style: normal;
 }
+
+.one-month-range .ant-picker-panels {
+  display: block;
+}
+.one-month-range .ant-picker-panels > *:last-child {
+  display: none !important;
+}
+
+.one-month-range .ant-picker-range-wrapper {
+  min-width: 280px;
+}
+
+.one-month-range .ant-picker-header {
+  display: none !important;
+}
+
+.one-month-range .ant-picker-body {
+  padding-top: 4px;
+}

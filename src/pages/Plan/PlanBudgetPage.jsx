@@ -16,7 +16,7 @@ const PlanBudgetPage = () => {
   const saveBudget = usePlanStore((s) => s.setBudget);
 
   const [people, setPeople] = useState(1);
-  const [budget, setBudget] = useState(0);
+  const [budget, setBudget] = useState('');
 
   useEffect(() => {
     if (storePeople && Number(storePeople) > 0) setPeople(storePeople);
@@ -29,28 +29,27 @@ const PlanBudgetPage = () => {
 
   const handlePeopleChange = (d) => setPeople((p) => Math.max(1, p + d));
   const handleBudgetChange = (e) => {
-    const v = Number(e.target.value);
-    setBudget(Number.isFinite(v) ? v : 0);
+    let v = e.target.value.replace(/[^\d]/g, '');
+    v = v.replace(/^0+(?=\d)/, '');
+    setBudget(v);
   };
+
+  const numBudget = Number(budget || 0);
+  const submitDisabled =
+    Number.isNaN(numBudget) ||
+    numBudget < minBudget ||
+    numBudget > maxBudget ||
+    people < 1;
 
   const handleSubmit = () => {
     const clampedPeople = Math.max(1, Number(people) || 1);
-    const clampedBudget = Math.min(
-      maxBudget,
-      Math.max(minBudget, Number(budget) || 0)
-    );
+    const clampedBudget = Math.min(maxBudget, Math.max(minBudget, numBudget));
     savePeople(clampedPeople);
     saveBudget(clampedBudget);
     navigate('/plan/cart');
   };
 
-  const perPerson = people > 0 ? Math.round((Number(budget) || 0) / people) : 0;
-
-  const submitDisabled =
-    !Number.isFinite(budget) ||
-    budget < minBudget ||
-    budget > maxBudget ||
-    people < 1;
+  const perPerson = people > 0 ? Math.round(Number(budget || 0) / people) : 0;
 
   return (
     <DefaultLayout>
@@ -87,12 +86,17 @@ const PlanBudgetPage = () => {
               </p>
               <div className="relative">
                 <input
-                  type="number"
-                  min={minBudget}
-                  max={maxBudget}
-                  step={1000}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="\d*"
                   value={budget}
                   onChange={handleBudgetChange}
+                  onPaste={(e) => {
+                    const text = (
+                      e.clipboardData || window.clipboardData
+                    ).getData('text');
+                    if (/[^\d]/.test(text)) e.preventDefault(); // 숫자 아닌게 섞여있으면 붙여넣기 방지
+                  }}
                   placeholder="예산을 입력하세요"
                   className="w-full bg-gray-100 rounded-lg px-4 py-2 pl-10 text-center text-base font-medium focus:outline-none focus:ring-2 focus:ring-primary"
                 />
