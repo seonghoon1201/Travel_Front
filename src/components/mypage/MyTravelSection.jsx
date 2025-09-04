@@ -4,34 +4,30 @@ import MyTravelItem from './MyTravelItem';
 
 import useUserStore from '../../store/userStore';
 import { fetchMyTravel } from '../../api/user/userContentApi';
+import { useNavigate } from 'react-router-dom';
 
 const MyTravelSection = () => {
   const [upcomingTrips, setUpcomingTrips] = useState([]);
   const [pastTrips, setPastTrips] = useState([]);
   const accessToken = useUserStore((state) => state.accessToken);
+  const navigate = useNavigate(); // ✅ 추가
 
   useEffect(() => {
     const loadData = async () => {
       try {
         const data = await fetchMyTravel(accessToken);
 
-        // 오늘 날짜
+        // 오늘 날짜 기준 분류
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // 여행 분류 (미래, 과거)
         const upcoming = [];
         const past = [];
 
         data.forEach((trip) => {
           const start = new Date(trip.startDate);
           start.setHours(0, 0, 0, 0);
-
-          if (start >= today) {
-            upcoming.push(trip);
-          } else {
-            past.push(trip);
-          }
+          (start >= today ? upcoming : past).push(trip);
         });
 
         setUpcomingTrips(upcoming);
@@ -43,6 +39,11 @@ const MyTravelSection = () => {
 
     loadData();
   }, [accessToken]);
+
+  // ✅ 클릭 핸들러
+  const handleClickTrip = (scheduleId) => {
+    navigate(`/plan/schedule/result/${scheduleId}`);
+  };
 
   return (
     <div className="bg-white">
@@ -58,8 +59,9 @@ const MyTravelSection = () => {
               key={trip.scheduleId}
               title={trip.scheduleName}
               dateRange={`${trip.startDate} ~ ${trip.endDate}`}
-              companionCount={trip.groupName ? 1 : 0} // 동행자 수 필드 없으면 groupName 여부로 처리
+              companionCount={trip.groupName ? 1 : 0}
               imageUrl={trip.imageUrl || '/default-travel.jpg'}
+              onClick={() => handleClickTrip(trip.scheduleId)} // ✅ 추가
             />
           ))
         )}
@@ -77,6 +79,7 @@ const MyTravelSection = () => {
               dateRange={`${trip.startDate} ~ ${trip.endDate}`}
               companionCount={trip.groupName ? 1 : 0}
               imageUrl={trip.imageUrl || '/default-travel.jpg'}
+              onClick={() => handleClickTrip(trip.scheduleId)} // ✅ 추가
             />
           ))
         )}
