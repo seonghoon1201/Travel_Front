@@ -19,10 +19,11 @@ const ScheduleResultPage = () => {
   const scheduleStore = useScheduleStore();
   const detail = scheduleStore.detail;
 
-  // ✅ 예산 (PlanStore에서 사용하던 값 그대로 활용)
-  const budget = usePlanStore((s) => s.budget ?? 0);
+  // ✅ 예산: 응답(detail.budget) 우선, 없으면 PlanStore
+  const planBudget = usePlanStore((s) => s.budget ?? 0);
+  const budget = detail?.budget ?? planBudget;
 
-  // 새로고침으로 store 비었을 때를 대비해 서버에서 다시 로드
+  // 새로고침 대비 서버 재로드
   useEffect(() => {
     (async () => {
       if (detail?.scheduleId === scheduleId || detail?.id === scheduleId)
@@ -39,13 +40,12 @@ const ScheduleResultPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scheduleId]);
 
-  // ✅ 새로고침 등으로 placeIndex가 비었으면, 카트/서버 응답으로 보강
+  // ✅ placeIndex 보강
   useEffect(() => {
     if (!detail || !Array.isArray(detail?.scheduleItems)) return;
     const currentIndex = scheduleStore.placeIndex || {};
-    if (Object.keys(currentIndex).length > 0) return; // 이미 있음
+    if (Object.keys(currentIndex).length > 0) return;
 
-    // 1) 카트에서 보강
     const { items: cartItems = [] } = useCartStore.getState();
     const idxFromCart = {};
     cartItems.forEach((it) => {
@@ -61,7 +61,6 @@ const ScheduleResultPage = () => {
       };
     });
 
-    // 2) 서버 응답으로 최소 이름 보강 (좌표 없으면 이름만)
     const idxMerged = { ...idxFromCart };
     detail.scheduleItems.forEach((it) => {
       const key = String(it.contentId ?? '');
@@ -77,12 +76,12 @@ const ScheduleResultPage = () => {
   // days 변환
   const days = scheduleStore.getDays();
 
-  // ✅ days 길이 변화에 따른 인덱스 가드
+  // ✅ index 가드
   useEffect(() => {
     if (selectedDayIndex >= days.length) setSelectedDayIndex(0);
   }, [days.length, selectedDayIndex]);
 
-  // ✅ 스케줄 전체 비용 합계 (cost 또는 price 대응)
+  // ✅ 전체 비용 합계
   const totalCost = useMemo(() => {
     const getCost = (p) => Number(p?.cost ?? p?.price ?? p?.amount ?? 0) || 0;
     try {
@@ -104,6 +103,7 @@ const ScheduleResultPage = () => {
     return Math.min(100, (totalCost / budget) * 100);
   }, [budget, totalCost]);
 
+  // ✅ 선택 Day의 마커: 백엔드 order를 그대로 숫자로 표시
   const selectedMarkers = useMemo(() => {
     if (!days[selectedDayIndex]) return [];
     return days[selectedDayIndex].plans
@@ -111,15 +111,16 @@ const ScheduleResultPage = () => {
       .map((p, i) => ({
         lat: p.lat,
         lng: p.lng,
-        order: i + 1,
-        title: p.title || `#${i + 1}`,
+        order: i + 1, // ✅ 당일 리스트 순서대로 1..N
+        title: p.title || p.name || `#${i + 1}`,
       }));
   }, [days, selectedDayIndex]);
 
-  // 폴리라인 경로 (LatLng 배열)
-  const path = useMemo(() => {
-    return selectedMarkers.map((m) => ({ lat: m.lat, lng: m.lng }));
-  }, [selectedMarkers]);
+  // 폴리라인 경로
+  const path = useMemo(
+    () => selectedMarkers.map((m) => ({ lat: m.lat, lng: m.lng })),
+    [selectedMarkers]
+  );
 
   const title = detail?.scheduleName || '여행 일정';
   const dateRange =
@@ -144,7 +145,7 @@ const ScheduleResultPage = () => {
         </div>
         <p className="text-sm text-gray-500 mt-1">{dateRange}</p>
 
-        {/* ✅ 예산 진행률 (카트 페이지 스타일과 유사) */}
+        {/* 예산 진행률 */}
         <div className="mt-3">
           <p className="text-sm text-center flex justify-center items-center gap-1">
             전체 예산 대비{' '}
