@@ -113,7 +113,7 @@ const ScheduleSelectModal = ({
               아직 등록된 여행 일정이 없습니다.
             </p>
             <button
-              onClick={() => (window.location.href = '/plan/create')}
+              onClick={() => (window.location.href = '/plan/location')}
               className="inline-flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-sky-500 text-white"
             >
               일정 만들기
@@ -129,7 +129,7 @@ const ScheduleSelectModal = ({
               새로운 여행 일정을 만들어보세요.
             </p>
             <button
-              onClick={() => (window.location.href = '/plan/create')}
+              onClick={() => (window.location.href = '/plan/location')}
               className="inline-flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-sky-500 text-white mt-4"
             >
               새 일정 만들기

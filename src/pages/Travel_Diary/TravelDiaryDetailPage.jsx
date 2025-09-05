@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { CalendarDays } from 'lucide-react';
+import {  ChevronDown  } from 'lucide-react';
 import ImageCarousel from '../../components/common/ImageCarousel';
 import CommentList from '../../components/comment/CommentList';
 import profileDefault from '../../assets/profile_default.png';
@@ -24,6 +24,7 @@ const TravelDiaryDetail = () => {
   const [scheduleDetail, setScheduleDetail] = useState(null);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [showDaySelector, setShowDaySelector] = useState(false); 
+  const [showPreview, setShowPreview] = useState(false); 
 
   const token = useUserStore((state) => state.accessToken);
   const scheduleStore = useScheduleStore(); 
@@ -33,7 +34,6 @@ const TravelDiaryDetail = () => {
     const fetchDiaryDetail = async () => {
       try {
         const res = await getDiaryDetail(id, token);
-        console.log("getDiaryDetail 응답:", res); 
         
         if (!cancelled) {
           if (res.success) {
@@ -56,7 +56,6 @@ const TravelDiaryDetail = () => {
                     // 스토어에도 저장 (필요한 경우)
                     scheduleStore.setDetail(scheduleRes);
                   } catch (scheduleErr) {
-                    console.error("getSchedule 에러:", scheduleErr);
                   }
                 }
               } catch (e) {
@@ -84,13 +83,10 @@ const TravelDiaryDetail = () => {
     };
   }, [id, token]);
 
-  // 날짜 선택 핸들러
   const handleDaySelect = (dayIndex) => {
     if (dayIndex === 'all') {
-      // 전체 일정 보기 - 기존 스케줄 페이지로 이동
       navigate(`/plan/schedule/result/${scheduleInfo.scheduleId}`);
     } else {
-      // 특정 날짜 선택 - 해당 날짜로 이동 (쿼리 파라미터 사용)
       navigate(`/plan/schedule/result/${scheduleInfo.scheduleId}?day=${dayIndex}`);
     }
   };
@@ -210,28 +206,59 @@ const TravelDiaryDetail = () => {
           )}
         </div>
 
-        {/* 연결된 스케줄의 지도와 일정 표시 (선택적으로 표시) */}
-        {scheduleDetail && scheduleDays.length > 0 && (
-          <div className="mt-6 bg-white rounded-xl shadow-md p-4">
-            <h3 className="text-lg font-semibold mb-4">여행 일정 미리보기</h3>
-            <ScheduleMapSection
-              days={scheduleDays}
-              selectedDayIndex={selectedDayIndex}
-              onDaySelect={setSelectedDayIndex}
-              showDayButtons={true}
-              showScheduleList={false} // 리스트는 숨기고 지도만 표시
-              mapHeight="h-48"
+       {scheduleDetail && scheduleDays.length > 0 && (
+        <div className="mt-2 bg-white rounded-xl shadow-md overflow-hidden">
+          {/* 헤더 */}
+          <button
+            type="button"
+            onClick={() => setShowPreview((v) => !v)}
+            className="w-full flex items-center justify-between px-4 py-2 text-left"
+          >
+            <div className="flex flex-col">
+              <h3 className="pt-2 text-lg font-semibold leading-tight">여행 일정 미리보기</h3>
+              {scheduleInfo?.startDate && scheduleInfo?.endDate && (
+                <p className="text-xs text-gray-500 mt-1 leading-snug">
+                  {scheduleInfo.startDate} ~ {scheduleInfo.endDate}
+                </p>
+              )}
+            </div>
+            <ChevronDown
+              className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${
+                showPreview ? 'rotate-180' : ''
+              }`}
             />
-            <div className="mt-3 text-center">
-              <button
-                onClick={() => setShowDaySelector(true)}
-                className="text-sm text-blue-500 hover:text-blue-600"
-              >
-                상세 일정 보기 →
-              </button>
+          </button>
+
+
+          <div
+            id="preview-panel"
+            className={`
+              transition-all duration-300 ease-out
+              ${showPreview ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}
+              overflow-hidden
+            `}
+          >
+            <div className={`border-t ${showPreview ? 'px-4 pb-4 pt-4' : 'p-0 border-t-0'}`}>
+              <ScheduleMapSection
+                days={scheduleDays}
+                selectedDayIndex={selectedDayIndex}
+                onDaySelect={setSelectedDayIndex}
+                showDayButtons={true}
+                showScheduleList={false}
+                mapHeight="h-48"
+              />
+              <div className="mt-3 text-center">
+                <button
+                  onClick={() => setShowDaySelector(true)}
+                  className="text-sm text-blue-500 hover:text-blue-600"
+                >
+                  상세 일정 보기 →
+                </button>
+              </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
         {/* 기존 단일 위치 지도 (연결된 스케줄이 없을 때만) */}
         {!scheduleDetail && diary.latitude && diary.longitude && (
@@ -249,7 +276,7 @@ const TravelDiaryDetail = () => {
           </div>
         )}
 
-        <div className="mt-6 px-4">
+        <div className="mt-4 ">
           <CommentList boardId={diary?.boardId} />
         </div>
         </div>

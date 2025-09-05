@@ -38,9 +38,9 @@ const CommentItem = ({ comment, onDelete, onEdit, onReport }) => {
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
             />
-            <div className="flex gap-2 mt-1 text-xs">
+           <div className="flex gap-2 mt-1 text-xs justify-end">
               <button
-                className="px-2 py-1 bg-blue-500 text-white rounded"
+                className="px-2 py-1 bg-primary text-white rounded"
                 onClick={() => {
                   onEdit(comment.commentId, editValue);
                   setIsEditing(false);
@@ -58,6 +58,7 @@ const CommentItem = ({ comment, onDelete, onEdit, onReport }) => {
                 취소
               </button>
             </div>
+
           </div>
         ) : (
           <p className="text-sm mt-1">{comment.content || '내용 없음'}</p>
@@ -70,7 +71,7 @@ const CommentItem = ({ comment, onDelete, onEdit, onReport }) => {
         writerUserId={comment.userId}
         writerNickname={comment.userNickname}
         onDelete={onDelete}
-        onEdit={() => setIsEditing(true)} // 수정 모드 전환
+        onEdit={() => setIsEditing(true)} 
         onReport={onReport}
       />
     </div>
@@ -88,7 +89,7 @@ const CommentItemList = ({ comments, onDelete, onEdit, onReport }) => {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       {comments.map((comment, index) => (
         <CommentItem
           key={comment.commentId || `comment-${index}`}
