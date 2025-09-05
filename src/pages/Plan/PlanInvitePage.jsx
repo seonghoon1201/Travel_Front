@@ -236,9 +236,9 @@ const PlanInvitePage = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto pb-28">
+      <div className="w-full mx-auto pb-28">
         <BackHeader title={'친구 초대'} />
-        <div className="px-4">
+        <div className="px-4 sm:px-6 md:px-8">
           <div className="mt-6">
             <p className="font-semibold text-md text-gray-900">
               여행 친구 {others.length}
@@ -288,7 +288,7 @@ const PlanInvitePage = () => {
           </div>
 
           <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
-            <div className="mx-auto max-w-sm px-4 py-3">
+            <div className="mx-auto w-full px-4 sm:px-6 md:px-8 py-3">
               <PrimaryButton onClick={handleNext} className="w-full">
                 예산 설정하러 가기
               </PrimaryButton>

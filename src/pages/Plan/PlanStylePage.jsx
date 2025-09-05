@@ -92,18 +92,19 @@ const PlanStylePage = () => {
     navigate('/plan/invite');
   };
 
-  const gridClass = 'grid grid-cols-3 gap-3';
+  const gridResponsive =
+    'grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3';
 
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto pb-28">
+      <div className="w-full mx-auto pb-28">
         <BackHeader title="여행 스타일 선택" />
-        <div className="px-4">
+        <div className="px-4 sm:px-6 md:px-8">
           <div className="mt-6 space-y-8">
             {/* 누구와 */}
             <div>
               <p className="text-sm font-semibold text-gray-800 mb-3">누구와</p>
-              <div className={gridClass}>
+              <div className={gridResponsive}>
                 {companions.map((item) => (
                   <CategoryButton
                     key={item}
@@ -120,7 +121,7 @@ const PlanStylePage = () => {
               <p className="text-sm font-semibold text-gray-800 mb-3">
                 여행 스타일
               </p>
-              <div className={gridClass}>
+              <div className={gridResponsive}>
                 {travelStyles.map((style) => (
                   <CategoryButton
                     key={style}
@@ -137,7 +138,7 @@ const PlanStylePage = () => {
               <p className="text-sm font-semibold text-gray-800 mb-3">
                 이동 수단
               </p>
-              <div className={gridClass}>
+              <div className={gridResponsive}>
                 {transports.map((mode) => (
                   <CategoryButton
                     key={mode}
@@ -149,21 +150,23 @@ const PlanStylePage = () => {
               </div>
             </div>
           </div>
-          <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
-            <div className="mx-auto max-w-sm px-4 py-3">
-              <PrimaryButton
-                onClick={handleSubmit}
-                className="w-full"
-                disabled={
-                  !selectedCompanion ||
-                  !selectedTransport ||
-                  selectedStyles.length === 0
-                }
-              >
-                완료
-              </PrimaryButton>
-            </div>
-          </div>
+        </div>
+      </div>
+
+      {/* 하단 고정 버튼 바 (페이지 래퍼 밖에 두되, 폭은 w-full) */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
+        <div className="mx-auto w-full px-4 sm:px-6 md:px-8 py-3">
+          <PrimaryButton
+            onClick={handleSubmit}
+            className="w-full"
+            disabled={
+              !selectedCompanion ||
+              !selectedTransport ||
+              selectedStyles.length === 0
+            }
+          >
+            완료
+          </PrimaryButton>
         </div>
       </div>
     </DefaultLayout>

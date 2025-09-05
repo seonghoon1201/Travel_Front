@@ -9,7 +9,7 @@ const EditTitle = ({ currentTitle, onClose, onSave }) => {
       onClick={onClose}
     >
       <div
-        className="bg-white w-full max-w-sm mx-auto rounded-t-xl px-6 pt-6 pb-3 overflow-auto"
+        className="bg-white w-full mx-auto rounded-t-xl px-4 sm:px-6 md:px-8 pt-6 pb-3 overflow-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <p className="text-sm text-gray-500 mb-2">여행 제목 수정</p>

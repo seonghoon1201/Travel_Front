@@ -2,8 +2,9 @@ import React from 'react';
 
 const DefaultLayout = ({ children }) => {
   return (
-    <div className="bg-background min-h-screen flex flex-col w-full font-pretendard ">
-      <div className="w-full mx-auto">{children}</div>
+    <div className="bg-background min-h-dvh flex flex-col w-full font-pretendard">
+      {/* 전체 폭 사용: 내부 래퍼에서 max-w 제거 */}
+      <div className="w-full">{children}</div>
     </div>
   );
 };

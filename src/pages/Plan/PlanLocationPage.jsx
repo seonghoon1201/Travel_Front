@@ -150,10 +150,10 @@ const PlanLocationPage = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto pb-28">
+      <div className="w-full mx-auto pb-28">
         {/* 고정 버튼 자리 확보 */}
         <BackHeader title="여행지 선택" />
-        <div className="px-4">
+        <div className="px-4 sm:px-6 md:px-8">
           <SearchBar
             placeholder="관광지/맛집/숙소 검색"
             value={searchText}
@@ -218,7 +218,7 @@ const PlanLocationPage = () => {
 
       {/* 하단 고정 버튼 바 */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
-        <div className="mx-auto max-w-sm px-4 py-3">
+        <div className="mx-auto w-full px-4 py-3 sm:px-6 md:px-8 py-3">
           <PrimaryButton
             onClick={handleNext}
             className="w-full"

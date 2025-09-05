@@ -27,7 +27,7 @@ const EditPlanCard = ({ plan, checked, onCheck, dragHandleProps }) => {
       </label>
 
       {/* 카드 본문 */}
-      <div className="flex-1 bg-white rounded-lg border px-4 py-3 shadow-sm">
+      <div className="flex-1 w-full bg-white rounded-lg border px-4 py-3 shadow-sm">
         <p className="font-medium text-sm">{plan.name}</p>
         <p className="text-[11px] text-gray-400 mt-1">관광 | 제주</p>
         {plan.memo && (
