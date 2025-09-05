@@ -42,10 +42,12 @@ const PlanInvitePage = () => {
   // 절대 URL 보장 (카카오 템플릿 이미지는 https 접근 가능해야 함)
   const toAbsUrl = (pathOrUrl) => {
     if (!pathOrUrl) return '';
-    if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
-    // 예: 'assets/logo.png' 또는 '/assets/logo.png'
-    const p = pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`;
-    return `${window.location.origin}${p}`;
+    let url = String(pathOrUrl).trim();
+    // 어떤 절대 URL이 와도 http는 https로 강제
+    url = url.replace(/^http:\/\//i, 'https://');
+    if (/^https:\/\//i.test(url)) return url;
+    const p = url.startsWith('/') ? url : `/${url}`;
+    return `${window.location.origin}${p}`.replace(/^http:\/\//i, 'https://');
   };
 
   // 본인 제외 멤버
