@@ -1,48 +1,54 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import BookmarkItem from './BookmarkItem';
 import CategoryButtonSection from './CategoryButtonSection';
+import { getFavorites } from '../../api/favorite/getFavorites'; // API 유틸 분리했다고 가정
 
 const MyBookmarkSection = () => {
   const [activeCategory, setActiveCategory] = useState('전체');
+  const [bookmarks, setBookmarks] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const bookmarks = [
-    {
-      destination: '섭지코지',
-      category: '힐링',
-      location: '제주',
-      address: '제주특별자치도 서귀포시 성산읍 섭지코지로 95',
-      opentime: '09:30',
-      closetime: '18:00',
-      tel: '1833-7001',
-      imageUrl: '/assets/jeju_sample.jpg',
-    },
-    {
-      destination: '성산일출봉',
-      category: '힐링',
-      location: '제주',
-      address: '제주특별자치도 서귀포시 성산읍 일출로 284-12',
-      opentime: '07:00',
-      closetime: '20:00',
-      tel: '064-783-0959',
-      imageUrl: '/assets/jeju_sample.jpg',
-    },
-    {
-      destination: '강릉서핑',
-      category: '레저',
-      location: '강릉',
-      address: '강원특별자치도 강릉시 해변로 100',
-      opentime: '08:00',
-      closetime: '19:00',
-      tel: '033-123-4567',
-      imageUrl: '/assets/gangneung_sample.jpg',
-    },
-  ];
+  // 최초 로드 시 즐겨찾기 불러오기
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      try {
+        const res = await getFavorites(); 
+        if (res?.favorites) {
+          // API 응답 형식에 맞게 변환
+          setBookmarks(
+            res.favorites.map((f) => ({
+              destination: f.placeTitle,
+              category: f.regionCode, // 카테고리 필드 없으니 regionCode로 구분? (백엔드와 협의 필요)
+              location: f.regionCode,
+              address: f.placeAddress,
+              opentime: '',   // 스웨거에는 없음 → 빈값 처리
+              closetime: '',  // 스웨거에는 없음 → 빈값 처리
+              tel: '',        // 스웨거에는 없음 → 빈값 처리
+              imageUrl: f.placeImage,
+            }))
+          );
+        }
+      } catch (err) {
+        console.error('즐겨찾기 불러오기 실패:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFavorites();
+  }, []);
 
   // 카테고리 필터링
   const filteredBookmarks =
     activeCategory === '전체'
       ? bookmarks
       : bookmarks.filter((item) => item.category === activeCategory);
+
+  if (loading) {
+    return (
+      <div className="p-4 text-center text-gray-400">불러오는 중...</div>
+    );
+  }
 
   return (
     <div className="p-4 space-y-4">
