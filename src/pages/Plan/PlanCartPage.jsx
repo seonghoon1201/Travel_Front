@@ -14,7 +14,7 @@ import CategoryButton from '../../components/common/CategoryButton';
 import CartButton from '../../components/common/CartButton';
 import FavoriteButton from '../../components/common/FavoriteButton';
 import AmountInputModal from '../../components/modal/AmountInputModal';
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, AlertTriangle, XCircle, Info } from 'lucide-react';
 import usePlanStore from '../../store/planStore';
 import { loadKakaoMap } from '../../utils/kakaoMapLoader';
 import { getPlacesByRegionTheme, getRegions } from '../../api';
@@ -99,7 +99,7 @@ const PlanCartPage = () => {
     []
   );
 
-  // ✅ 여행 일수(포함) 계산 → 한도(일×5)
+  // ✅ 여행 일수(포함) 계산
   const tripDays = useMemo(() => {
     if (!startDate || !endDate) return null;
     const s = new Date(String(startDate));
@@ -108,9 +108,14 @@ const PlanCartPage = () => {
     const diff = Math.floor((e - s) / 86400000) + 1; // inclusive
     return diff > 0 ? diff : null;
   }, [startDate, endDate]);
+
+  // ✅ 최대/최소 한도 (NEW)
   const cartLimit = useMemo(() => (tripDays ? tripDays * 5 : null), [tripDays]);
+  const cartMin = useMemo(() => (tripDays ? tripDays * 2 : null), [tripDays]); // ✅ NEW
   const isLimitReached = cartLimit != null && cartItems.length >= cartLimit;
+  const isMinMet = cartMin != null ? cartItems.length >= cartMin : false; // ✅ NEW
   const overBy = cartLimit != null ? cartItems.length - cartLimit : 0;
+  const underBy = cartMin != null ? Math.max(0, cartMin - cartItems.length) : 0; // ✅ NEW
 
   // 예산 계산
   useEffect(() => {
@@ -165,7 +170,7 @@ const PlanCartPage = () => {
     })();
   }, [locationCodes, locationIds, setLocationCodes, canonPair, isValidPair]);
 
-  // 목록 불러오기 (useCallback로 경고 제거)
+  // 목록 불러오기
   const loadPage = useCallback(
     async (pageIndex, reset = false) => {
       if (!codePair?.ldongRegnCd || !codePair?.ldongSignguCd || codeInvalid)
@@ -177,7 +182,6 @@ const PlanCartPage = () => {
       try {
         setLoadingList(true);
         const data = await getPlacesByRegionTheme({
-          // ⚠️ 백엔드 스펙에 맞춰 전달 (lDong*)
           ldongRegnCd: codePair.ldongRegnCd,
           ldongSignguCd: codePair.ldongSignguCd,
           contentTypeId,
@@ -185,8 +189,7 @@ const PlanCartPage = () => {
           size: 20,
         });
         const content = Array.isArray(data?.content) ? data.content : [];
-        // 이미지  url 콘솔에 찍기 시작
-        // 주소에서 지역명 추출
+
         const pickRegion = (item) => {
           const direct =
             item?.sigungu || item?.sigunguName || item?.region || '';
@@ -199,7 +202,6 @@ const PlanCartPage = () => {
           return '';
         };
 
-        // 관광공사 필드가 소문자/대문자 혼용될 수 있어 전부 체크
         const pickImage = (c) =>
           c?.firstImage ||
           c?.firstimage ||
@@ -232,15 +234,14 @@ const PlanCartPage = () => {
             name: item.title,
             address: `${item.address ?? ''} ${item.address2 ?? ''}`.trim(),
             price: undefined,
-            imageUrl, // ← 기본 이미지만 (없으면 빈 문자열)
-            hasRemoteImage: !!imageUrl, // ← 원격 이미지 존재 여부
+            imageUrl,
+            hasRemoteImage: !!imageUrl,
             phone: item.tel,
             location: { lat: Number(item.mapY), lng: Number(item.mapX) },
           };
         });
 
         setApiItems((prev) => (reset ? mapped : [...prev, ...mapped]));
-        // Spring Page 기준: last=true면 마지막 페이지
         setHasMore(
           data?.last === false && pageIndex + 1 < (data?.totalPages ?? 0)
         );
@@ -256,7 +257,7 @@ const PlanCartPage = () => {
     [activeCategory, codePair, codeInvalid]
   );
 
-  // 코드/카테고리 변경 시: 카트 준비 → 서버 동기화 → 첫 페이지 로드
+  // 코드/카테고리 변경 시 준비 → 동기화 → 첫 페이지
   useEffect(() => {
     if (!codePair?.ldongRegnCd || !codePair?.ldongSignguCd || codeInvalid)
       return;
@@ -403,7 +404,7 @@ const PlanCartPage = () => {
       if (exists) {
         await removeByContentId(place.contentId);
       } else {
-        // ✅ 카트 추가 전 한도 검사
+        // ✅ 최대 한도 검사 (최소 조건과는 무관)
         if (cartLimit != null && cartItems.length >= cartLimit) {
           message.warning(
             `이번 여행은 총 ${tripDays}일이라 카트는 최대 ${cartLimit}개(일×5)까지 담을 수 있어요.`
@@ -419,7 +420,7 @@ const PlanCartPage = () => {
 
   const handleAddToCart = useCallback(
     async (placeWithPrice) => {
-      // ✅ 모달 제출 시에도 레이스 가드
+      // ✅ 레이스 가드(최대 한도)
       if (
         cartLimit != null &&
         useCartStore.getState().items.length >= cartLimit
@@ -444,7 +445,14 @@ const PlanCartPage = () => {
     if (!cartItems.length) {
       message.warning('장바구니가 비어있어요.');
       return;
-    } // ✅ 한도 초과 시 자동 일정 차단
+    }
+    // ✅ 최소/최대 조건 체크 (NEW)
+    if (cartMin != null && cartItems.length < cartMin) {
+      message.warning(
+        `이번 여행은 총 ${tripDays}일이라 자동 일정은 최소 ${cartMin}개(일×2) 이상 담아야 가능해요. 현재 ${cartItems.length}개로 ${underBy}개 더 담아 주세요.`
+      );
+      return;
+    }
     if (cartLimit != null && cartItems.length > cartLimit) {
       message.warning(
         `카트가 제한(${cartLimit}개)을 ${
@@ -460,7 +468,15 @@ const PlanCartPage = () => {
       setSyncing(false);
     }
     navigate('/plan/auto');
-  }, [cartItems.length, cartLimit, loadFromServer, navigate]);
+  }, [
+    cartItems.length,
+    cartLimit,
+    cartMin,
+    tripDays,
+    underBy,
+    loadFromServer,
+    navigate,
+  ]);
 
   const [titleRegion, setTitleRegion] = useState(null);
   useEffect(() => {
@@ -477,11 +493,16 @@ const PlanCartPage = () => {
     })();
   }, [locationIds]);
 
+  // ✅ 버튼 활성화 여부 (NEW)
+  const disableAutoPlan =
+    (cartLimit != null && cartItems.length > cartLimit) ||
+    (cartMin != null && cartItems.length < cartMin);
+
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto pb-32">
+      <div className="w-full mx-auto pb-32">
         <BackHeader title={`${titleRegion || '여행지'} 여행`} />
-        <div className="px-4">
+        <div className="px-4 sm:px-6 md:px-8">
           {/* 지도 */}
           <div className="w-full h-64 rounded-lg bg-gray-200 overflow-hidden">
             <div ref={mapContainerRef} className="w-full h-full" />
@@ -546,34 +567,129 @@ const PlanCartPage = () => {
             </Tooltip>
           </div>
 
-          {/* ✅ 카트 한도 안내 박스 */}
+          {/* ✅ 최소/최대 한도 안내 박스 (REDESIGN) */}
           <div className="mt-3">
-            {cartLimit == null ? (
-              <div className="text-[12px] text-gray-500">
-                여행 날짜를 선택하면 카트 개수 제한(일 × 5)이 적용됩니다.
+            {cartLimit == null || cartMin == null ? (
+              <div className="text-[12px] text-gray-600 bg-gray-50 border border-gray-200 rounded-xl p-3">
+                여행 날짜를 선택하면 카트 <b>최소/최대</b> 개수 제한이
+                적용됩니다.
+                <span className="ml-1">(최소: 일×2, 최대: 일×5)</span>
               </div>
             ) : (
-              <div
-                className={`text-[12px] rounded-lg border p-2 ${
-                  isLimitReached
-                    ? 'bg-red-50 border-red-200 text-red-600'
-                    : 'bg-gray-50 border-gray-200 text-gray-700'
-                }`}
-              >
-                이번 여행은 <b>{tripDays}일</b> 일정이에요. 카트는
-                <b> {cartLimit}개 (일×5)</b>까지 담을 수 있어요.
-                <br />
-                현재{' '}
-                <b>
-                  {cartItems.length}/{cartLimit}
-                </b>
-                개.
-                {overBy > 0 && (
-                  <span className="ml-1">
-                    (초과: <b>{overBy}</b>개)
-                  </span>
-                )}
-              </div>
+              (() => {
+                const status = overBy > 0 ? 'over' : !isMinMet ? 'under' : 'ok';
+
+                const styles = {
+                  over: {
+                    wrap: 'bg-red-50 border-red-200 text-red-700',
+                    chipWrap: 'bg-white/70',
+                    chip: 'border-red-200',
+                    icon: <XCircle size={18} className="text-red-600" />,
+                    title: '최대 개수 초과',
+                    hint: (
+                      <>
+                        카트가 제한(<b>{cartLimit}개</b>)을{' '}
+                        <b>{cartItems.length - cartLimit}개</b> 초과했어요. 일부
+                        항목을 제거해 주세요.
+                      </>
+                    ),
+                  },
+                  under: {
+                    wrap: 'bg-amber-50 border-amber-200 text-amber-800',
+                    chipWrap: 'bg-white/70',
+                    chip: 'border-amber-200',
+                    icon: (
+                      <AlertTriangle size={18} className="text-amber-600" />
+                    ),
+                    title: '최소 개수 미충족',
+                    hint: (
+                      <>
+                        자동 일정을 위해 최소 <b>{cartMin}개</b> 필요해요. 현재{' '}
+                        <b>{cartItems.length}개</b>로 <b>{underBy}개</b> 더
+                        담아주세요.
+                      </>
+                    ),
+                  },
+                  ok: {
+                    wrap: 'bg-blue-50 border-blue-200 text-blue-700',
+                    chipWrap: 'bg-white/70',
+                    chip: 'border-blue-200',
+                    icon: <Info size={18} className="text-blue-600" />,
+                    title: '요건 충족!',
+                    hint: (
+                      <>
+                        자동 일정을 바로 만들 수 있어요. 최대{' '}
+                        <b>{cartLimit}개</b>까지 담을 수 있습니다.
+                      </>
+                    ),
+                  },
+                }[status];
+
+                return (
+                  <div
+                    className={`rounded-xl border p-3 md:p-4 shadow-[0_1px_0_rgba(0,0,0,0.02)] ${styles.wrap}`}
+                    role="alert"
+                    aria-live="polite"
+                  >
+                    <div className="flex items-start gap-2">
+                      <div className="shrink-0 mt-0.5">{styles.icon}</div>
+                      <div className="grow">
+                        <div className="font-semibold text-[13px] leading-5">
+                          {styles.title}
+                        </div>
+
+                        {/* 칩: 최소 / 현재 / 최대 */}
+                        <div
+                          className={`mt-2 inline-flex flex-wrap items-center gap-2 rounded-lg px-2 py-2 ${styles.chipWrap}`}
+                        >
+                          <span
+                            className={`text-[11px] px-2 py-1 rounded-md border ${styles.chip}`}
+                          >
+                            최소 <b>{cartMin}</b>개
+                          </span>
+                          <span
+                            className={`text-[11px] px-2 py-1 rounded-md border ${
+                              styles.chip
+                            } ${
+                              status === 'ok'
+                                ? 'bg-blue-100/70'
+                                : status === 'under'
+                                ? 'bg-amber-100/70'
+                                : 'bg-red-100/70'
+                            }`}
+                          >
+                            현재 <b>{cartItems.length}</b>개
+                          </span>
+                          <span
+                            className={`text-[11px] px-2 py-1 rounded-md border ${styles.chip}`}
+                          >
+                            최대 <b>{cartLimit}</b>개
+                          </span>
+                        </div>
+
+                        {/* 설명/가이드 */}
+                        <p className="mt-2 text-[12px] leading-6">
+                          {styles.hint}
+                        </p>
+
+                        {/* 추가 힌트 (under/over일 때만) */}
+                        {status === 'under' && (
+                          <p className="mt-1 text-[11px] opacity-90">
+                            팁:맛집/관광을 골고루 담으면 더 자연스러운 일정이
+                            만들어져요.
+                          </p>
+                        )}
+                        {status === 'over' && (
+                          <p className="mt-1 text-[11px] opacity-90">
+                            팁: 비슷한 위치의 장소를 줄이거나, 하루당 5개 이내로
+                            맞춰보세요.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()
             )}
           </div>
 
@@ -601,7 +717,7 @@ const PlanCartPage = () => {
                           alt={item.name}
                           className="w-14 h-14 rounded-md object-cover"
                           loading="lazy"
-                          onError={() => markBroken(String(item.contentId))} // 실패 시 No Image로 전환
+                          onError={() => markBroken(String(item.contentId))}
                         />
                       ) : (
                         <div className="w-14 h-14 rounded-md bg-gray-200 flex items-center justify-center text-[10px] text-gray-500">
@@ -674,7 +790,7 @@ const PlanCartPage = () => {
 
       {/* 하단 고정 바 */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
-        <div className="mx-auto max-w-sm px-4 py-3 flex gap-2">
+        <div className="mx-auto w-full px-4 sm:px-6 md:px-8 py-3 flex gap-2">
           <button
             onClick={() => setDrawerOpen(true)}
             className="flex-1 rounded-xl border border-gray-300 py-2 text-sm"
@@ -682,7 +798,11 @@ const PlanCartPage = () => {
             카트 보기 ({cartItems.length}
             {cartLimit != null ? `/${cartLimit}` : ''})
           </button>
-          <PrimaryButton onClick={syncCartThenGo} className="flex-1">
+          <PrimaryButton
+            onClick={syncCartThenGo}
+            className="flex-1"
+            disabled={disableAutoPlan} // ✅ NEW: 최소/최대 충족 시에만 활성화
+          >
             자동 일정 짜기
           </PrimaryButton>
         </div>

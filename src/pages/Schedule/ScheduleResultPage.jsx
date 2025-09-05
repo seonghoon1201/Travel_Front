@@ -130,7 +130,7 @@ const ScheduleResultPage = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto px-4">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-8">
         <HomeHeader />
 
         {/* Header */}

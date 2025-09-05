@@ -7,7 +7,7 @@ const EditDelete = ({ onClose, onDelete }) => {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl w-[300px] text-center p-4"
+        className="bg-white rounded-xl w-full text-center p-4 px-4 sm:px-6 md:px-8 max-w-none"
         onClick={(e) => e.stopPropagation()}
       >
         <p className="text-sm text-gray-800 mb-6 leading-relaxed">

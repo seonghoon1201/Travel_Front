@@ -33,10 +33,15 @@ export { default as CartAPI } from './cart/cart';
 // 장소
 export { getPlacesByRegionTheme } from './place/getPlacesByTheme';
 
-// 일정
+// 스케줄
 export { createSchedule } from './schedule/createSchedule';
 export { optimizeSchedule } from './schedule/optimizeSchedule';
 export { getSchedule } from './schedule/getSchedule';
+
+// 스케줄 아이템
+export { createScheduleItem } from './scheduleItem/scheduleItems';
+export { updateScheduleItem } from './scheduleItem/scheduleItems';
+export { deleteScheduleItem } from './scheduleItem/scheduleItems';
 
 // 공통 설정 & 유저 유틸
 export { API_BASE_URL } from './config';
