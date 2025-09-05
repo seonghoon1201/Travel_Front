@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import CommentItemList from './CommentItemList';
 import CommentInput from './CommentInput';
 import { getComments } from '../../api/comment/getComment';
@@ -17,6 +17,9 @@ const CommentList = ({ boardId }) => {
   const [moreLoading, setMoreLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [hasNext, setHasNext] = useState(false);
+
+  // 댓글 섹션 ref 추가
+  const commentSectionRef = useRef(null);
 
   const { userId: currentUserId, nickname, profileImageUrl } = useUserStore();
   const safeId = normalizeBoardId(boardId);
@@ -79,6 +82,16 @@ const CommentList = ({ boardId }) => {
     setHasNext(Boolean(res?.data?.hasNext));
     setPage(nextPage);
     setMoreLoading(false);
+  };
+
+  // 맨 위로 스크롤
+  const scrollToTop = () => {
+    if (commentSectionRef.current) {
+      commentSectionRef.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    }
   };
 
   // 작성
@@ -168,7 +181,7 @@ const CommentList = ({ boardId }) => {
   }
 
   return (
-    <div className="mt-8">
+    <div className="mt-8" ref={commentSectionRef}>
       <h3 className="font-bold text-base mb-3">
         댓글 {comments.length > 0 && `(${comments.length})`}
       </h3>
@@ -186,21 +199,35 @@ const CommentList = ({ boardId }) => {
             onEdit={handleEdit}
             onReport={handleReport}
           />
-          {hasNext && (
-            <div className="mt-3">
-              <button
-                onClick={loadMore}
-                disabled={moreLoading}
-                className="px-3 py-1.5 rounded bg-gray-100 hover:bg-gray-200 text-sm"
-              >
-                {moreLoading ? '불러오는 중...' : '댓글 더 보기'}
-              </button>
+          {(hasNext || page > 0) && (
+            <div className="mt-3 flex justify-between items-center">
+              {hasNext && (
+                <button
+                  onClick={loadMore}
+                  disabled={moreLoading}
+                  className="px-3 py-1.5 rounded bg-gray-100 hover:bg-gray-200 text-sm"
+                >
+                  {moreLoading ? '불러오는 중...' : '댓글 더 보기'}
+                </button>
+              )}
+
+              {page > 0 && (
+                <button
+                  onClick={scrollToTop}
+                  className="px-3 py-1.5 rounded bg-primary hover:bg-blue-200 text-white text-sm font-medium"
+                >
+                  ↑ 맨 위로
+                </button>
+              )}
             </div>
           )}
+
         </>
       )}
 
-      <CommentInput onSubmit={handleCreate} disabled={loading || moreLoading} />
+      <div className="pb-[2rem]"> 
+        <CommentInput onSubmit={handleCreate} disabled={loading || moreLoading} />
+      </div>
     </div>
   );
 };

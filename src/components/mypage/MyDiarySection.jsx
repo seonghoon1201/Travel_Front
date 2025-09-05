@@ -5,26 +5,47 @@ import TravelDiary from '../../components/traveldiary/TravelDiary';
 import { useNavigate } from 'react-router-dom';
 import { Pencil } from 'lucide-react';
 
+const firstImageOf = (item) => {
+  if (Array.isArray(item.imageUrls) && item.imageUrls.length > 0) {
+    return String(item.imageUrls[0]).trim();
+  }
+  if (typeof item.imageUrl === 'string' && item.imageUrl.trim() !== '') {
+    return item.imageUrl.trim();
+  }
+  return '';
+};
+
 const MyDiarySection = () => {
   const [diaries, setDiaries] = useState([]);
   const accessToken = useUserStore((state) => state.accessToken);
   const navigate = useNavigate();
 
   useEffect(() => {
-  const loadDiaries = async () => {
-    try {
-      const data = await fetchMyDiaries(accessToken);
-      const myNickname = useUserStore.getState().nickname;
+    const loadDiaries = async () => {
+      try {
+        const data = await fetchMyDiaries(accessToken);
+        const myNickname = useUserStore.getState().nickname;
 
-      const filtered = data.filter((d) => d.userNickname === myNickname);
-      setDiaries(filtered);
-    } catch (error) {
-      console.error('내 여행일기 불러오기 실패:', error);
-    }
-  };
+        const filtered = (Array.isArray(data) ? data : [])
+          .filter((d) => d.userNickname === myNickname)
+          .map((d) => ({
+            boardId: d.boardId,
+            title: d.title,
+            userNickname: d.userNickname,
+            userProfileImage: d.userProfileImage,
+            content: d.content,
+            createdAt: d.createdAt,
+            imageUrl: firstImageOf(d), // 첫 번째 이미지만
+          }));
 
-  loadDiaries();
-}, [accessToken]);
+        setDiaries(filtered);
+      } catch (error) {
+        console.error('내 여행일기 불러오기 실패:', error);
+      }
+    };
+
+    loadDiaries();
+  }, [accessToken]);
 
   const handleWriteDiary = () => {
     navigate('/write/travel/diary');
@@ -32,16 +53,12 @@ const MyDiarySection = () => {
 
   return (
     <div className="bg-white px-4 pt-2 m-2 relative min-h-[200px]">
-      <p className="text-sm font-semibold text-gray-600 mb-3 m-2">
-        내 여행 일기
-      </p>
+      <p className="text-sm font-semibold text-gray-600 mb-3 m-2">내 여행 일기</p>
 
       {diaries.length === 0 ? (
         <p className="text-gray-400 text-sm">작성한 여행일기가 없습니다.</p>
       ) : (
         <div className="space-y-4 mb-6">
-          {' '}
-          {/* 리스트 사이 간격 및 하단 여백 */}
           {diaries.map((diary) => (
             <TravelDiary
               key={diary.boardId}

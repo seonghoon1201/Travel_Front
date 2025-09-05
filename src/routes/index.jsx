@@ -57,7 +57,7 @@ const AppRoutes = () => (
       <Route path="/board/hot" element={<HotBoardPage />} />
       <Route path="/region/detail/:city" element={<RegionDetailPage />} />
       <Route path="/board/budget" element={<BudgetBoardPage />} />
-      <Route path="/place/detail/:contentID" element={<PlaceDetail />} />
+      <Route path="/place/detail/:contentId" element={<PlaceDetail />} />
 
       <Route path="/board/travel/diary" element={<TravelDiaryBoardPage />} />
       <Route
