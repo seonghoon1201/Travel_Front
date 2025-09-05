@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
+import PrimaryButton from '../../components/common/PrimaryButton';
 
 import { getDiaryDetail } from '../../api/board/getDiaryDetail';
 import { updateDiary } from '../../api/board/updateDiary';
@@ -45,7 +46,6 @@ const UpdateTravelDiaryPage = () => {
     fetchDiary();
   }, [boardId]);
 
-  // 태그 추가
   const addTag = () => {
     const trimmed = inputValue.trim();
     if (tags.length >= 10) {
@@ -69,7 +69,6 @@ const UpdateTravelDiaryPage = () => {
     setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
-  // 이미지 선택
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
@@ -97,7 +96,6 @@ const UpdateTravelDiaryPage = () => {
     };
   }, [previewUrls]);
 
-  // 수정 API 호출
   const handleUpdate = async () => {
     if (!title.trim() || !content.trim()) {
       alert('제목과 내용을 입력해주세요.');
@@ -147,9 +145,8 @@ const UpdateTravelDiaryPage = () => {
       <div className="w-full max-w-sm mx-auto">
         <BackHeader />
 
-        <div>
+        <div className="px-4">
           <div className="bg-white rounded-xl shadow-md p-4 space-y-4">
-            {/* 제목 입력 */}
             <div>
               <input
                 type="text"
@@ -160,7 +157,6 @@ const UpdateTravelDiaryPage = () => {
               />
             </div>
 
-            {/* 태그 입력 */}
             <div className="border border-gray-200 rounded-lg p-2 flex flex-wrap gap-2 items-start">
               {tags.map((tag) => (
                 <span
@@ -186,7 +182,6 @@ const UpdateTravelDiaryPage = () => {
               />
             </div>
 
-            {/* 내용 입력 */}
             <textarea
               rows={10}
               value={content}
@@ -195,7 +190,6 @@ const UpdateTravelDiaryPage = () => {
               className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
             />
 
-            {/* 이미지 업로드 버튼 */}
             <div className="w-full flex justify-between items-center">
               <label className="flex items-center gap-1 text-sm text-white bg-gray-300 px-3 py-1.5 rounded-full cursor-pointer">
                 이미지 추가
@@ -244,15 +238,18 @@ const UpdateTravelDiaryPage = () => {
               </div>
             )}
 
-            {/* 수정 버튼 */}
-            <div className="w-full mt-6">
-              <button
-                onClick={handleUpdate}
-                className="w-full py-3 bg-blue-500 text-white rounded-xl text-sm shadow hover:bg-blue-600"
-              >
-                수정 완료
-              </button>
+            {/* 하단 고정 수정 버튼 바 */}
+            <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
+              <div className="mx-auto max-w-sm px-4 py-3">
+                <PrimaryButton
+                  onClick={handleUpdate}
+                  className="w-full"
+                >
+                  수정 완료
+                </PrimaryButton>
+              </div>
             </div>
+
           </div>
         </div>
       </div>

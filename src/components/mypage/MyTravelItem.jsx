@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Ellipsis, Trash2, CalendarSync } from 'lucide-react';
+import { Ellipsis, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const MyTravelItem = ({
@@ -65,13 +65,7 @@ const MyTravelItem = ({
           className="absolute right-2 top-10 flex gap-3 bg-white shadow-md rounded px-3 py-2 border z-10"
           onClick={(e) => e.stopPropagation()} // 메뉴 클릭 시 상세 이동 막기
         >
-          <button
-            onClick={handleEdit}
-            className="p-1 hover:bg-gray-100 rounded"
-            title="일정 수정"
-          >
-            <CalendarSync className="text-gray-600 w-5 h-5" />
-          </button>
+
           <button
             onClick={handleDelete}
             className="p-1 hover:bg-gray-100 rounded"
