@@ -31,6 +31,23 @@ const PlanInvitePage = () => {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false); // 클릭 중 보호
 
+  // 날짜 포맷터: 'YYYY-MM-DD' → 'YYYY.MM.DD'
+  const fmt = (d) => {
+    if (!d) return '';
+    const [y, m, dd] = String(d).split('-');
+    if (!y || !m || !dd) return String(d);
+    return `${y}.${m}.${dd}`;
+  };
+
+  // 절대 URL 보장 (카카오 템플릿 이미지는 https 접근 가능해야 함)
+  const toAbsUrl = (pathOrUrl) => {
+    if (!pathOrUrl) return '';
+    if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
+    // 예: 'assets/logo.png' 또는 '/assets/logo.png'
+    const p = pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`;
+    return `${window.location.origin}${p}`;
+  };
+
   // 본인 제외 멤버
   const others = useMemo(() => {
     const myId = String(userId || '');
@@ -158,23 +175,42 @@ const PlanInvitePage = () => {
   const handleKakaoInvite = async () => {
     try {
       setBusy(true);
-      const { gid, gname } = await ensureGroupReady(); // ← 구조분해!
+      const { gid, gname } = await ensureGroupReady();
       const url = makeInviteUrl(gid, gname);
 
       const Kakao = await loadKakao();
-      Kakao.Share.sendDefault({
-        objectType: 'text',
-        text: `[${
-          gname || '여행 그룹'
-        }] 여행 일정에 함께할래요? 아래 버튼으로 참여해주세요!`,
-        link: { mobileWebUrl: url, webUrl: url },
-        buttons: [
-          { title: '참여하기', link: { mobileWebUrl: url, webUrl: url } },
-        ],
+      const TEMPLATE_ID = Number(
+        process.env.REACT_APP_KAKAO_TEMPLATE_ID ||
+          import.meta?.env?.VITE_KAKAO_TEMPLATE_ID
+      );
+      if (!TEMPLATE_ID) throw new Error('KAKAO_TEMPLATE_ID 누락');
+      // ① 제목
+      const planTitle = groupName || '여행 플랜';
+      // ② 날짜 구간: planStore의 startDate/endDate 사용
+      const { startDate, endDate } = usePlanStore.getState();
+      const dateRange =
+        startDate && endDate ? `${fmt(startDate)} - ${fmt(endDate)}` : '';
+      // ③ 썸네일: 커버 이미지가 있으면 사용, 없으면 앱 로고로 대체
+      const coverImage = usePlanStore.getState()?.coverImage; // 있으면 쓰고
+      const thumb = coverImage
+        ? toAbsUrl(coverImage)
+        : toAbsUrl('assets/logo.png');
+
+      Kakao.Share.sendCustom({
+        templateId: TEMPLATE_ID,
+        templateArgs: {
+          USERNAME: username || '친구',
+          PLAN_TITLE: planTitle,
+          PLAN_DATE_RANGE: dateRange,
+          THUMB_URL: thumb,
+          INVITE_URL: url,
+        },
       });
     } catch (e) {
       console.error(e);
-      message.error('카카오 공유에 실패했어요. 키/도메인 설정을 확인해주세요.');
+      message.error(
+        '카카오 공유에 실패했어요. 키/도메인/템플릿 설정을 확인해주세요.'
+      );
     } finally {
       setBusy(false);
     }
