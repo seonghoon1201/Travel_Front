@@ -1,7 +1,8 @@
+// src/components/bookmark/MyBookmarkSection.jsx
 import React, { useEffect, useState } from 'react';
 import BookmarkItem from './BookmarkItem';
 import CategoryButtonSection from './CategoryButtonSection';
-import { getFavorites } from '../../api/favorite/getFavorites'; // API 유틸 분리했다고 가정
+import { getFavorites } from '../../api/favorite/getFavorites';
 
 const MyBookmarkSection = () => {
   const [activeCategory, setActiveCategory] = useState('전체');
@@ -12,13 +13,13 @@ const MyBookmarkSection = () => {
   useEffect(() => {
     const fetchFavorites = async () => {
       try {
-        const res = await getFavorites(); 
+        const res = await getFavorites();
         if (res?.favorites) {
-          // API 응답 형식에 맞게 변환
           setBookmarks(
             res.favorites
               .filter((f) => f.placeTitle && f.placeTitle.trim() !== '') // 제목 없는 건 제외
               .map((f) => ({
+                contentId: f.contentId, // ✅ 식별자 꼭 포함
                 destination: f.placeTitle,
                 category: f.regionCode || '기타',
                 location: f.regionCode || '기타',
@@ -26,10 +27,10 @@ const MyBookmarkSection = () => {
                 opentime: '',
                 closetime: '',
                 tel: '',
-                imageUrl: f.placeImage || '/assets/default_place.jpg', // 이미지 없으면 기본 이미지
+                imageUrl: f.placeImage || '/assets/default_place.jpg',
+                isFavorite: true, // ✅ 즐겨찾기 목록이므로 항상 true
               }))
           );
-
         }
       } catch (err) {
         console.error('즐겨찾기 불러오기 실패:', err);
@@ -48,9 +49,7 @@ const MyBookmarkSection = () => {
       : bookmarks.filter((item) => item.category === activeCategory);
 
   if (loading) {
-    return (
-      <div className="p-4 text-center text-gray-400">불러오는 중...</div>
-    );
+    return <div className="p-4 text-center text-gray-400">불러오는 중...</div>;
   }
 
   return (
@@ -61,25 +60,26 @@ const MyBookmarkSection = () => {
       />
 
       {filteredBookmarks.length > 0 ? (
-        filteredBookmarks
-          .filter((bookmark) => bookmark.destination && bookmark.destination.trim() !== '')
-          .map((bookmark, index) => (
-            <BookmarkItem
-              key={index}
-              destination={bookmark.destination}
-              category={bookmark.category}
-              location={bookmark.location}
-              address={bookmark.address}
-              tel={bookmark.tel}
-              imageUrl={bookmark.imageUrl}
-            />
-          ))
+        filteredBookmarks.map((bookmark) => (
+          <BookmarkItem
+            key={bookmark.contentId} 
+            contentId={bookmark.contentId}
+            destination={bookmark.destination}
+            category={bookmark.category}
+            location={bookmark.location}
+            address={bookmark.address}
+            opentime={bookmark.opentime}
+            closetime={bookmark.closetime}
+            tel={bookmark.tel}
+            imageUrl={bookmark.imageUrl}
+            isFavorite={bookmark.isFavorite}
+          />
+        ))
       ) : (
         <p className="text-center text-gray-400 text-sm">
           저장된 여행이 없습니다.
         </p>
       )}
-
     </div>
   );
 };
