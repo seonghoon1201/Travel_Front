@@ -38,6 +38,7 @@ const normalizeImageUrl = (raw) => {
 const PlanLocationPage = () => {
   const navigate = useNavigate();
   const { setLocationIds, setLocationCodes } = usePlanStore();
+  const setSelectedRegionMeta = usePlanStore((s) => s.setSelectedRegionMeta);
 
   const [searchText, setSearchText] = useState('');
   const [locations, setLocations] = useState([]);
@@ -132,6 +133,7 @@ const PlanLocationPage = () => {
       ),
     });
     setLocationCodes([canon(selected)]);
+    setSelectedRegionMeta({ name: selected.name, imageUrl: selected.imageUrl });
     navigate('/plan/date');
   };
 

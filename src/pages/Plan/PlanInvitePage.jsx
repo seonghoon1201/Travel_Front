@@ -160,10 +160,11 @@ const PlanInvitePage = () => {
   const handleCopyLink = async () => {
     try {
       setBusy(true);
-      const { gid, gname } = await ensureGroupReady(); // ← 구조분해!
+      const { gid, gname } = await ensureGroupReady();
       const url = makeInviteUrl(gid, gname);
+
       await navigator.clipboard.writeText(url);
-      message.success('초대 링크가 복사되었습니다!');
+      message.success('초대 링크가 복사되었습니다! 카카오톡에 붙여넣어보세요.');
     } catch (e) {
       console.error(e);
       message.error('초대 링크 복사에 실패했어요.');
@@ -184,15 +185,21 @@ const PlanInvitePage = () => {
           import.meta?.env?.VITE_KAKAO_TEMPLATE_ID
       );
       if (!TEMPLATE_ID) throw new Error('KAKAO_TEMPLATE_ID 누락');
-      // ① 제목
-      const planTitle = groupName || '여행 플랜';
-      // ② 날짜 구간: planStore의 startDate/endDate 사용
-      const { startDate, endDate } = usePlanStore.getState();
+      // ① 제목,  ② 날짜 구간: planStore의 startDate/endDate 사용
+      // ✅ 선택 지역명이 있으면 "OO 여행"
+      const { selectedRegionName, selectedRegionImage, startDate, endDate } =
+        usePlanStore.getState();
+      const planTitle = selectedRegionName
+        ? `${selectedRegionName} 여행`
+        : groupName || '여행 플랜';
       const dateRange =
         startDate && endDate ? `${fmt(startDate)} - ${fmt(endDate)}` : '';
       // ③ 썸네일: 커버 이미지가 있으면 사용, 없으면 앱 로고로 대체
-      const coverImage = usePlanStore.getState()?.coverImage; // 있으면 쓰고
-      const thumb = coverImage
+      // ✅ 선택 지역 이미지가 우선, 없으면 기존 coverImage → 앱 로고
+      const coverImage = usePlanStore.getState()?.coverImage;
+      const thumb = selectedRegionImage
+        ? toAbsUrl(selectedRegionImage)
+        : coverImage
         ? toAbsUrl(coverImage)
         : toAbsUrl('assets/logo.png');
 
