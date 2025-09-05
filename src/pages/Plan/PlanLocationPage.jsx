@@ -20,9 +20,7 @@ const normalizeImageUrl = (raw) => {
     .replace(/^"(.*)"$/, '$1');
   if (/^data:/.test(src)) return src;
   if (/^https?:\/\//i.test(src)) {
-    return window.location.protocol === 'https:'
-      ? src.replace(/^http:\/\//i, 'https://')
-      : src;
+    return src.replace(/^http:\/\//i, 'https://');
   }
   const base = http?.defaults?.baseURL || window.location.origin;
   const baseUrl = new URL(base, window.location.origin);
@@ -32,12 +30,15 @@ const normalizeImageUrl = (raw) => {
       url = url.replace(/^http:\/\//i, 'https://');
     return url;
   }
-  return new URL(src, baseUrl.href).toString();
+  return new URL(src, baseUrl.href)
+    .toString()
+    .replace(/^http:\/\//i, 'https://');
 };
 
 const PlanLocationPage = () => {
   const navigate = useNavigate();
   const { setLocationIds, setLocationCodes } = usePlanStore();
+  const setSelectedRegionMeta = usePlanStore((s) => s.setSelectedRegionMeta);
 
   const [searchText, setSearchText] = useState('');
   const [locations, setLocations] = useState([]);
@@ -132,6 +133,7 @@ const PlanLocationPage = () => {
       ),
     });
     setLocationCodes([canon(selected)]);
+    setSelectedRegionMeta({ name: selected.name, imageUrl: selected.imageUrl });
     navigate('/plan/date');
   };
 
