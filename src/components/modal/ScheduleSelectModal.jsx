@@ -136,8 +136,8 @@ const ScheduleSelectModal = ({
             <Section title="다가오는 여행" items={upcoming} />
             <Section title="지난 여행" items={past} />
 
-            <div className="mt-3 p-1 bg-blue-50 rounded-lg flex items-center">
-              <p className="text-xs text-blue-700">
+            <div className="mt-[1rem] p-[0.2rem] bg-blue-50 rounded-lg flex items-center">
+              <p className="pt-[0.4rem] text-xs text-blue-700">
                 💡 이미 일기를 작성한 일정은 선택할 수 없습니다.
               </p>
             </div>
