@@ -22,6 +22,10 @@ const usePlanStore = create(
       people: 1,
       budget: 0,
 
+      // 선택 지역 메타
+      selectedRegionName: '',
+      selectedRegionImage: '',
+
       // (구) planStore.cartItems — 호환을 위해 남겨두지만 실제로는 cartStore 사용
       cartItems: [],
 
@@ -99,6 +103,12 @@ const usePlanStore = create(
       setScheduleType: (v) => set({ scheduleType: v }),
       setScheduleStyle: (v) => set({ scheduleStyle: v }),
 
+      setSelectedRegionMeta: ({ name, imageUrl }) =>
+        set({
+          selectedRegionName: String(name || ''),
+          selectedRegionImage: String(imageUrl || ''),
+        }),
+
       // ✅ 라우트 경계에서 호출: /plan/* 들어옴
       beginPlanFlow: () => set({ inPlanFlow: true, planSessionId: Date.now() }),
 
@@ -128,6 +138,8 @@ const usePlanStore = create(
           groupName: '',
           scheduleType: 'GROUP',
           scheduleStyle: '',
+          selectedRegionName: '',
+          selectedRegionImage: '',
           // favorites 유지
         });
       },
@@ -159,6 +171,8 @@ const usePlanStore = create(
           groupName: '',
           scheduleType: 'GROUP',
           scheduleStyle: '',
+          selectedRegionName: state.selectedRegionName, // 지역은 유지하고 싶으면 그대로
+          selectedRegionImage: state.selectedRegionImage,
           // favorites는 그대로 둠
         }));
       },
@@ -189,6 +203,8 @@ const usePlanStore = create(
           scheduleType: 'GROUP',
           scheduleStyle: '',
           favorites: [],
+          selectedRegionName: '',
+          selectedRegionImage: '',
         });
         try {
           sessionStorage.removeItem('plan-store-v2');
@@ -284,6 +300,8 @@ const usePlanStore = create(
           scheduleType: 'GROUP',
           scheduleStyle: '',
           favorites: [],
+          selectedRegionName: '',
+          selectedRegionImage: '',
         }),
 
       // ✅ 영구 저장(세션)까지 완전 삭제 — 로그아웃 등에서 호출
@@ -310,6 +328,8 @@ const usePlanStore = create(
           scheduleType: 'GROUP',
           scheduleStyle: '',
           favorites: [],
+          selectedRegionName: '',
+          selectedRegionImage: '',
         });
         try {
           sessionStorage.removeItem('plan-store-v2');
@@ -344,6 +364,8 @@ const usePlanStore = create(
         scheduleType: s.scheduleType,
         scheduleStyle: s.scheduleStyle,
         favorites: s.favorites,
+        selectedRegionName: s.selectedRegionName,
+        selectedRegionImage: s.selectedRegionImage,
       }),
 
       // 과거 키 마이그레이션
