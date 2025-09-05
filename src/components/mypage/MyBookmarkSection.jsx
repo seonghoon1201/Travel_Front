@@ -16,17 +16,20 @@ const MyBookmarkSection = () => {
         if (res?.favorites) {
           // API 응답 형식에 맞게 변환
           setBookmarks(
-            res.favorites.map((f) => ({
-              destination: f.placeTitle,
-              category: f.regionCode, // 카테고리 필드 없으니 regionCode로 구분? (백엔드와 협의 필요)
-              location: f.regionCode,
-              address: f.placeAddress,
-              opentime: '',   // 스웨거에는 없음 → 빈값 처리
-              closetime: '',  // 스웨거에는 없음 → 빈값 처리
-              tel: '',        // 스웨거에는 없음 → 빈값 처리
-              imageUrl: f.placeImage,
-            }))
+            res.favorites
+              .filter((f) => f.placeTitle && f.placeTitle.trim() !== '') // 제목 없는 건 제외
+              .map((f) => ({
+                destination: f.placeTitle,
+                category: f.regionCode || '기타',
+                location: f.regionCode || '기타',
+                address: f.placeAddress || '',
+                opentime: '',
+                closetime: '',
+                tel: '',
+                imageUrl: f.placeImage || '/assets/default_place.jpg', // 이미지 없으면 기본 이미지
+              }))
           );
+
         }
       } catch (err) {
         console.error('즐겨찾기 불러오기 실패:', err);
@@ -58,24 +61,25 @@ const MyBookmarkSection = () => {
       />
 
       {filteredBookmarks.length > 0 ? (
-        filteredBookmarks.map((bookmark, index) => (
-          <BookmarkItem
-            key={index}
-            destination={bookmark.destination}
-            category={bookmark.category}
-            location={bookmark.location}
-            address={bookmark.address}
-            opentime={bookmark.opentime}
-            closetime={bookmark.closetime}
-            tel={bookmark.tel}
-            imageUrl={bookmark.imageUrl}
-          />
-        ))
+        filteredBookmarks
+          .filter((bookmark) => bookmark.destination && bookmark.destination.trim() !== '')
+          .map((bookmark, index) => (
+            <BookmarkItem
+              key={index}
+              destination={bookmark.destination}
+              category={bookmark.category}
+              location={bookmark.location}
+              address={bookmark.address}
+              tel={bookmark.tel}
+              imageUrl={bookmark.imageUrl}
+            />
+          ))
       ) : (
         <p className="text-center text-gray-400 text-sm">
           저장된 여행이 없습니다.
         </p>
       )}
+
     </div>
   );
 };

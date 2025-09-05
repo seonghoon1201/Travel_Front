@@ -2,11 +2,8 @@ import React from 'react';
 
 const BookmarkItem = ({
   destination,
-  category,
   location,
   address,
-  opentime,
-  closetime,
   tel,
   imageUrl,
 }) => {
@@ -23,18 +20,12 @@ const BookmarkItem = ({
       {/* 관광지 정보*/}
       <div className="flex flex-col justify-between flex-1">
         <p className="font-semibold">{destination}</p>
-        <p className="text-xs text-gray-500">
-          {category} | {location}
-        </p>
         <p
           className="text-xs text-gray-500 truncate"
           style={{ maxWidth: '100%' }}
           title={address}
         >
           주소 : {address}
-        </p>
-        <p className="text-xs text-gray-500">
-          이용 시간 : {opentime} ~ {closetime}
         </p>
         <p className="text-xs text-gray-500">이용문의 : {tel}</p>
       </div>
