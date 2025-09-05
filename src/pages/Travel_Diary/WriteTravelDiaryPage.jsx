@@ -136,11 +136,9 @@ const WriteTravelDiary = () => {
         scheduleId: selectedScheduleId,
       };
 
-      console.log('📤 writeDiary payload:', payload);
       const result = await writeDiary(payload);
 
       if (result?.success && result?.boardId) {
-        // 미리보기 URL 정리
         previewUrls.forEach((u) => URL.revokeObjectURL(u));
         navigate(`/board/travel/diary/${result.boardId}`);
       } else {
@@ -157,9 +155,10 @@ const WriteTravelDiary = () => {
   return (
     <DefaultLayout>
       <div className="w-full max-w-sm mx-auto">
-        <BackHeader />
-
-        <div className="bg-white rounded-xl shadow-md p-4 space-y-4">
+        <BackHeader 
+        title='여행일기'/>
+        <div className="px-4 pb-[calc(env(safe-area-inset-bottom)+80px)]">
+        <div className="bg-white rounded-xl shadow-md p-4  space-y-4">
           {/* 연결된 일정 표시 */}
           <div className="min-h-[28px]">
             {selectedScheduleId ? (
@@ -257,15 +256,18 @@ const WriteTravelDiary = () => {
           )}
         </div>
 
-        {/* 작성하기 */}
-        <div className="w-full mt-6 px-4 pb-[1rem]">
-          <PrimaryButton
-            className="w-full py-3 text-sm rounded-xl shadow"
-            onClick={handleSubmit}
-          >
-            작성 완료하기
-          </PrimaryButton>
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-sm z-40 bg-white/90 backdrop-blur border-t">
+          <div className="px-4 py-3">
+            <PrimaryButton
+              className="w-full py-3 text-sm rounded-xl shadow"
+              onClick={handleSubmit}
+            >
+              작성 완료하기
+            </PrimaryButton>
+          </div>
         </div>
+
+      </div>
       </div>
     </DefaultLayout>
   );

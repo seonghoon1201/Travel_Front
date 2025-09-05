@@ -61,6 +61,7 @@ const ScheduleSelectModal = ({
               />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
+                
                 <p
                   className={`mt-[0.6rem] text-sm font-medium truncate ${
                     t.isWritten ? 'text-gray-500' : ''
@@ -72,16 +73,15 @@ const ScheduleSelectModal = ({
                     {t.startDate} ~ {t.endDate}
                   </span>
                 </p>
-                {t.isWritten && (
-                  <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                )}
               </div>
 
               {t.isWritten && (
-                <p className="text-xs text-green-600 font-medium mt-0.5">
-                  일기 작성 완료
-                </p>
-              )}
+              <div className="flex items-center text-xs text-green-600 font-medium ">
+                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                <span>일기 작성 완료</span>
+              </div>
+            )}
+
             </div>
 
 
