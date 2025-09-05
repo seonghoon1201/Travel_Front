@@ -53,9 +53,9 @@ const PlanBudgetPage = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto pb-28">
+      <div className="w-full mx-auto pb-28">
         <BackHeader title={'예산 설정'} />
-        <div className="px-4">
+        <div className="px-4 sm:px-6 md:px-8">
           <div className="mt-6 space-y-6">
             <div>
               <p className="text-sm font-semibold text-gray-800 mb-2">
@@ -123,7 +123,7 @@ const PlanBudgetPage = () => {
 
       {/* 하단 고정 버튼 */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
-        <div className="mx-auto max-w-sm px-4 py-3">
+        <div className="mx-auto w-full px-4 sm:px-6 md:px-8 py-3">
           <PrimaryButton
             onClick={handleSubmit}
             disabled={submitDisabled}
