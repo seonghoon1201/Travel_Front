@@ -5,8 +5,8 @@ import PrimaryButton from '../components/common/PrimaryButton';
 import { Pencil, X } from 'lucide-react';
 import useUserStore from '../store/userStore';
 import profileDefault from '../assets/profile_default.png';
-import { uploadProfileImage } from '../api/file/uploadProfileImage';
-import { userProfileUpdate } from '../api/user/userProfileUpdate';
+import { uploadProfileImage } from '../api';
+import { userProfileUpdate } from '../api';
 
 const EditProfile = () => {
   const navigate = useNavigate();

@@ -19,9 +19,7 @@ export { searchTours as searchTour } from './tour/searchTour';
 
 // 유저
 export { fetchMyDiaries, fetchMyTravel } from './user/userContentApi';
-
 export { userProfileUpdate } from './user/userProfileUpdate';
-
 
 // 날씨
 export { getWeather } from './weather/getWeather';
@@ -42,4 +40,3 @@ export { getSchedule } from './schedule/getSchedule';
 
 // 공통 설정 & 유저 유틸
 export { API_BASE_URL } from './config';
-export { updateUserProfile } from './user';
