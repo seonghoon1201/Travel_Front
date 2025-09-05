@@ -13,15 +13,26 @@ const PlanCard = ({ plan, index, isLast }) => {
   const colorList = ['#5E87EB', '#F97316', '#10B981', '#EC4899', '#FACC15'];
   const color = colorList[index % colorList.length];
 
+  
+  const badgeNumber = index + 1;
+
+  // ✅ 메타 라벨: tema | regionName (DayScheduleSection에서 metaLabel을 넘기면 우선)
+  const meta =
+    plan.metaLabel ||
+    [plan?.tema || plan?.category, plan?.regionName || plan?.region]
+      .map((v) => (v ?? '').toString().trim())
+      .filter(Boolean)
+      .join(' | ');
+
   return (
     <div className="relative ">
-      {/* 번호 + 선 */}
+      {/* 번호 + 세로선 */}
       <div className="absolute left-4 top-3 flex flex-col items-center z-10">
         <div
           className="w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center"
           style={{ backgroundColor: color }}
         >
-          {index + 1}
+          {badgeNumber}
         </div>
 
         {/* 거리 표시 (다음 계획이 있다면) */}
@@ -41,7 +52,7 @@ const PlanCard = ({ plan, index, isLast }) => {
         className="relative ml-16 bg-white rounded-lg border border-[#E5E7EB] px-4 py-3 shadow-sm cursor-pointer"
       >
         <p className="font-medium text-sm">{plan.name}</p>
-        <p className="text-[11px] text-gray-400 mt-1">관광 | 제주</p>
+        {meta && <p className="text-[11px] text-gray-400 mt-1">{meta}</p>}
 
         {plan.memo && (
           <div className="text-xs text-gray-600 mt-2 whitespace-pre-line">
@@ -61,7 +72,7 @@ const PlanCard = ({ plan, index, isLast }) => {
         </button>
       </div>
 
-      {/* isLast 마지막 index에만 추가 */}
+      {/* 마지막 카드에만 하단 버튼 */}
       <div className="ml-16">
         {isLast && (
           <div className="mt-2 flex gap-2 ">
@@ -74,7 +85,8 @@ const PlanCard = ({ plan, index, isLast }) => {
           </div>
         )}
       </div>
-      {/* card 클릭 시 상세정보 모달 */}
+
+      {/* 상세 모달 */}
       {showModal && (
         <PlaceDetailModal
           place={{
@@ -85,7 +97,8 @@ const PlanCard = ({ plan, index, isLast }) => {
           onClose={() => setShowModal(false)}
         />
       )}
-      {/* 메모 버튼 클릭 시 메모 수정 모달 */}
+
+      {/* 메모 모달 */}
       {showMemoModal && (
         <MemoModal
           defaultValue={memo}

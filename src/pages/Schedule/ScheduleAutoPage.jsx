@@ -1,8 +1,10 @@
+// src/pages/plan/ScheduleAutoPage.jsx
 import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
-import { message } from 'antd';
+import { message, Spin } from 'antd';
+import { LoadingOutlined } from '@ant-design/icons';
 import useUserStore from '../../store/userStore';
 import usePlanStore from '../../store/planStore';
 import useCartStore from '../../store/cartStore';
@@ -14,9 +16,8 @@ import {
   getRegions,
 } from '../../api';
 
-// 지역 표시 이름 찾기: 1) regions API, 2) 주소에서 추출(시/군/구), 3) fallback
+// 지역 표시 이름 찾기
 async function resolveRegionLabel(locationIds, cartItems) {
-  // 1) regions 에서 id로 이름 찾기
   try {
     const regions = await getRegions();
     const pickedId = String(locationIds?.[0] ?? '');
@@ -42,7 +43,6 @@ async function resolveRegionLabel(locationIds, cartItems) {
     }
   } catch (_) {}
 
-  // 2) 카트 아이템 주소에서 "○○시/군/구" 추출
   const counts = new Map();
   const re = /([가-힣]+(?:시|군|구))/;
   (cartItems || []).forEach((it) => {
@@ -54,7 +54,6 @@ async function resolveRegionLabel(locationIds, cartItems) {
     }
   });
   if (counts.size) {
-    // 최빈값
     let best = '';
     let max = -1;
     for (const [k, v] of counts.entries()) {
@@ -66,12 +65,12 @@ async function resolveRegionLabel(locationIds, cartItems) {
     if (best) return best;
   }
 
-  // 3) fallback
   const firstId = String(locationIds?.[0] ?? '').trim();
-  if (firstId && isNaN(Number(firstId))) return firstId; // 숫자가 아니면 그대로 사용
+  if (firstId && isNaN(Number(firstId))) return firstId;
   return '여행';
 }
 
+// ✅ 백엔드 스펙 변경(시간 제거)에 맞춘 완료 감지: dayNumber & order가 있으면 완료로 판단
 async function waitUntilOptimized(id, { tries = 20, interval = 1200 } = {}) {
   for (let i = 0; i < tries; i++) {
     const detail = await getSchedule(id);
@@ -79,12 +78,11 @@ async function waitUntilOptimized(id, { tries = 20, interval = 1200 } = {}) {
       ? detail.scheduleItems
       : [];
     const optimized = items.some(
-      (it) => Number(it?.dayNumber) > 0 && it?.startTime && it?.endTime
+      (it) => Number(it?.dayNumber) > 0 && Number.isFinite(Number(it?.order))
     );
     if (optimized) return detail;
     await new Promise((r) => setTimeout(r, interval));
   }
-  // 타임아웃 시 fallback
   return await getSchedule(id);
 }
 
@@ -146,51 +144,51 @@ const ScheduleAutoPage = () => {
     ranRef.current = true;
 
     (async () => {
-      // 0) 서버 카트 동기화
       try {
-        await useCartStore.getState().loadFromServer();
-      } catch (e) {
-        if (e?.code === 'NO_CART') {
+        // 0) 서버 카트 동기화
+        try {
+          await useCartStore.getState().loadFromServer();
+        } catch (e) {
+          if (e?.code === 'NO_CART') {
+            message.error(
+              '장바구니가 준비되지 않았어요. 지역을 먼저 선택해 주세요.'
+            );
+            navigate(-1);
+            return;
+          }
+        }
+        const cartItems = useCartStore.getState().items;
+        const cartId = useCartStore.getState().cartId;
+
+        if (!cartId) {
           message.error(
-            '장바구니가 준비되지 않았어요. 지역을 먼저 선택해 주세요.'
+            '카트 정보(cartId)를 찾을 수 없어요. 지역을 다시 선택해 주세요.'
           );
           navigate(-1);
           return;
         }
-      }
-      const cartItems = useCartStore.getState().items;
-      const cartId = useCartStore.getState().cartId;
+        if (!cartItems.length) {
+          message.warning('장바구니가 비어있어요.');
+          navigate(-1);
+          return;
+        }
 
-      if (!cartId) {
-        message.error(
-          '카트 정보(cartId)를 찾을 수 없어요. 지역을 다시 선택해 주세요.'
-        );
-        navigate(-1);
-        return;
-      }
-      if (!cartItems.length) {
-        message.warning('장바구니가 비어있어요.');
-        navigate(-1);
-        return;
-      }
+        // 결과용 placeIndex
+        const idx = {};
+        cartItems.forEach((it) => {
+          const pid = String(it.contentId ?? '').trim();
+          if (!pid) return;
+          idx[pid] = {
+            name: it.name,
+            title: it.name,
+            imageUrl: it.imageUrl,
+            lat: it?.location?.lat,
+            lng: it?.location?.lng,
+            address: it.address,
+          };
+        });
+        scheduleStore.setPlaceIndex(idx);
 
-      // 결과용 placeIndex
-      const idx = {};
-      cartItems.forEach((it) => {
-        const pid = String(it.contentId ?? '').trim();
-        if (!pid) return;
-        idx[pid] = {
-          name: it.name,
-          title: it.name,
-          imageUrl: it.imageUrl,
-          lat: it?.location?.lat,
-          lng: it?.location?.lng,
-          address: it.address,
-        };
-      });
-      scheduleStore.setPlaceIndex(idx);
-
-      try {
         const base = getSchedulePayload();
 
         if (!base?.startDate || !base?.endDate) {
@@ -201,7 +199,6 @@ const ScheduleAutoPage = () => {
           return;
         }
 
-        // 지역명으로 여행 제목 만들기
         const regionLabel = await resolveRegionLabel(locationIds, cartItems);
         const scheduleName =
           (base.scheduleName && String(base.scheduleName).trim()) ||
@@ -265,10 +262,8 @@ const ScheduleAutoPage = () => {
         if (!scheduleId) throw new Error('scheduleId가 응답에 없습니다.');
 
         await optimizeSchedule(scheduleId);
-        // ✅ 최적화 완료까지 짧게 폴링 (백엔드가 즉시 OK를 주므로)
         const detail = await waitUntilOptimized(scheduleId);
 
-        // 콘솔에 리스폰스 출력
         console.groupCollapsed(
           '%c[schedule/result] Optimized detail',
           'color:#52c41a;font-weight:bold;'
@@ -296,15 +291,27 @@ const ScheduleAutoPage = () => {
     scheduleStore,
   ]);
 
+  const indicator = <LoadingOutlined style={{ fontSize: 32 }} spin />;
+
   return (
     <DefaultLayout>
       <div className="w-full max-w-sm mx-auto px-4">
         <BackHeader title="일정 짜는 중..." />
-        <div className="py-16 text-center">
-          <div className="animate-pulse text-lg font-semibold">
-            일정을 최적화하고 있어요...
+        <div className="py-16">
+          <div className="flex flex-col items-center justify-center text-center">
+            <Spin indicator={indicator} size="large" className="mb-2" />
+            <div className="mt-1 text-base font-semibold">
+              일정을 최적화하고 있어요...
+            </div>
+            <div className="mt-3 text-sm text-gray-500">
+              잠시만 기다려 주세요
+            </div>
+
+            {/* 서브 힌트(선택) */}
+            <div className="mt-6 text-[12px] text-gray-400">
+              장바구니를 기반으로 이동 동선과 순서를 정리하고 있어요.
+            </div>
           </div>
-          <div className="mt-2 text-sm text-gray-500">잠시만 기다려 주세요</div>
         </div>
       </div>
     </DefaultLayout>

@@ -31,6 +31,25 @@ const PlanInvitePage = () => {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false); // 클릭 중 보호
 
+  // 날짜 포맷터: 'YYYY-MM-DD' → 'YYYY.MM.DD'
+  const fmt = (d) => {
+    if (!d) return '';
+    const [y, m, dd] = String(d).split('-');
+    if (!y || !m || !dd) return String(d);
+    return `${y}.${m}.${dd}`;
+  };
+
+  // 절대 URL 보장 (카카오 템플릿 이미지는 https 접근 가능해야 함)
+  const toAbsUrl = (pathOrUrl) => {
+    if (!pathOrUrl) return '';
+    let url = String(pathOrUrl).trim();
+    // 어떤 절대 URL이 와도 http는 https로 강제
+    url = url.replace(/^http:\/\//i, 'https://');
+    if (/^https:\/\//i.test(url)) return url;
+    const p = url.startsWith('/') ? url : `/${url}`;
+    return `${window.location.origin}${p}`.replace(/^http:\/\//i, 'https://');
+  };
+
   // 본인 제외 멤버
   const others = useMemo(() => {
     const myId = String(userId || '');
@@ -143,10 +162,11 @@ const PlanInvitePage = () => {
   const handleCopyLink = async () => {
     try {
       setBusy(true);
-      const { gid, gname } = await ensureGroupReady(); // ← 구조분해!
+      const { gid, gname } = await ensureGroupReady();
       const url = makeInviteUrl(gid, gname);
+
       await navigator.clipboard.writeText(url);
-      message.success('초대 링크가 복사되었습니다!');
+      message.success('초대 링크가 복사되었습니다! 카카오톡에 붙여넣어보세요.');
     } catch (e) {
       console.error(e);
       message.error('초대 링크 복사에 실패했어요.');
@@ -158,23 +178,48 @@ const PlanInvitePage = () => {
   const handleKakaoInvite = async () => {
     try {
       setBusy(true);
-      const { gid, gname } = await ensureGroupReady(); // ← 구조분해!
+      const { gid, gname } = await ensureGroupReady();
       const url = makeInviteUrl(gid, gname);
 
       const Kakao = await loadKakao();
-      Kakao.Share.sendDefault({
-        objectType: 'text',
-        text: `[${
-          gname || '여행 그룹'
-        }] 여행 일정에 함께할래요? 아래 버튼으로 참여해주세요!`,
-        link: { mobileWebUrl: url, webUrl: url },
-        buttons: [
-          { title: '참여하기', link: { mobileWebUrl: url, webUrl: url } },
-        ],
+      const TEMPLATE_ID = Number(
+        process.env.REACT_APP_KAKAO_TEMPLATE_ID ||
+          import.meta?.env?.VITE_KAKAO_TEMPLATE_ID
+      );
+      if (!TEMPLATE_ID) throw new Error('KAKAO_TEMPLATE_ID 누락');
+      // ① 제목,  ② 날짜 구간: planStore의 startDate/endDate 사용
+      // ✅ 선택 지역명이 있으면 "OO 여행"
+      const { selectedRegionName, selectedRegionImage, startDate, endDate } =
+        usePlanStore.getState();
+      const planTitle = selectedRegionName
+        ? `${selectedRegionName} 여행`
+        : groupName || '여행 플랜';
+      const dateRange =
+        startDate && endDate ? `${fmt(startDate)} - ${fmt(endDate)}` : '';
+      // ③ 썸네일: 커버 이미지가 있으면 사용, 없으면 앱 로고로 대체
+      // ✅ 선택 지역 이미지가 우선, 없으면 기존 coverImage → 앱 로고
+      const coverImage = usePlanStore.getState()?.coverImage;
+      const thumb = selectedRegionImage
+        ? toAbsUrl(selectedRegionImage)
+        : coverImage
+        ? toAbsUrl(coverImage)
+        : toAbsUrl('assets/logo.png');
+
+      Kakao.Share.sendCustom({
+        templateId: TEMPLATE_ID,
+        templateArgs: {
+          USERNAME: username || '친구',
+          PLAN_TITLE: planTitle,
+          PLAN_DATE_RANGE: dateRange,
+          THUMB_URL: thumb,
+          INVITE_URL: url,
+        },
       });
     } catch (e) {
       console.error(e);
-      message.error('카카오 공유에 실패했어요. 키/도메인 설정을 확인해주세요.');
+      message.error(
+        '카카오 공유에 실패했어요. 키/도메인/템플릿 설정을 확인해주세요.'
+      );
     } finally {
       setBusy(false);
     }
@@ -191,9 +236,9 @@ const PlanInvitePage = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto pb-28">
+      <div className="w-full mx-auto pb-28">
         <BackHeader title={'친구 초대'} />
-        <div className="px-4">
+        <div className="px-4 sm:px-6 md:px-8">
           <div className="mt-6">
             <p className="font-semibold text-md text-gray-900">
               여행 친구 {others.length}
@@ -243,7 +288,7 @@ const PlanInvitePage = () => {
           </div>
 
           <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
-            <div className="mx-auto max-w-sm px-4 py-3">
+            <div className="mx-auto w-full px-4 sm:px-6 md:px-8 py-3">
               <PrimaryButton onClick={handleNext} className="w-full">
                 예산 설정하러 가기
               </PrimaryButton>
