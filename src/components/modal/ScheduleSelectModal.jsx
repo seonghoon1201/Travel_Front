@@ -59,28 +59,32 @@ const ScheduleSelectModal = ({
                 onChange={() => setTempSelected(t.scheduleId)}
                 disabled={t.isWritten} 
               />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className={`text-sm font-medium truncate ${
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p
+                  className={`mt-[0.6rem] text-sm font-medium truncate ${
                     t.isWritten ? 'text-gray-500' : ''
-                  }`}>
-                    {t.scheduleName}
-                  </p>
-                  {t.isWritten && (
-                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  )}
-                </div>
-                <p className={`text-xs ${
-                  t.isWritten ? 'text-gray-400' : 'text-gray-500'
-                }`}>
-                  {t.startDate} ~ {t.endDate}
+                  }`}
+                >
+                  {t.scheduleName}
+                  <br />
+                  <span className="text-xs text-gray-400">
+                    {t.startDate} ~ {t.endDate}
+                  </span>
                 </p>
                 {t.isWritten && (
-                  <p className="text-xs text-green-600 font-medium">
-                    일기 작성 완료
-                  </p>
+                  <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
                 )}
               </div>
+
+              {t.isWritten && (
+                <p className="text-xs text-green-600 font-medium mt-0.5">
+                  일기 작성 완료
+                </p>
+              )}
+            </div>
+
+
               <ChevronRight className={`w-4 h-4 ${
                 t.isWritten ? 'text-gray-300' : 'text-gray-400'
               }`} />
