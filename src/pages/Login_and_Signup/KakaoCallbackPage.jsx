@@ -25,7 +25,7 @@ const KakaoCallbackPage = () => {
       }
 
       try {
-        const data = await kakaoCallback(code);
+        const data = await kakaoCallback({code});
         const jwtDto = data?.jwtDto;
         if (!jwtDto) {
           throw new Error('jwtDto가 응답에 없습니다.');
