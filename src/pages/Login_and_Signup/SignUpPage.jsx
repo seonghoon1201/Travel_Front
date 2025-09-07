@@ -1,6 +1,6 @@
-// src/pages/auth/SignUpPage.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { message } from 'antd';
 
 import CommonModal from '../../components/modal/CommonModal';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -9,7 +9,6 @@ import BackHeader from '../../components/header/BackHeader';
 import { Eye, EyeOff } from 'lucide-react';
 import DefaultLayout from '../../layouts/DefaultLayout';
 
-// ✅ 우리 API 모듈만 사용 (authAxios 기반)
 import {
   checkEmail,
   sendAuthCode,
@@ -33,13 +32,20 @@ const SignUpPage = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [userName, setUserName] = useState('');
   const [userNickname, setUserNickname] = useState('');
-  const [profileImage, setProfileImage] = useState(null); // preview
-  const [profileImageUrl, setProfileImageUrl] = useState(''); // 서버 업로드 URL
+  const [profileImage, setProfileImage] = useState(null);
+  const [profileImageUrl, setProfileImageUrl] = useState('');
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // loading flags
+  const [sendingCode, setSendingCode] = useState(false);
+  const [verifyingCode, setVerifyingCode] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [msg, contextHolder] = message.useMessage();
   const navigate = useNavigate();
 
   const handleAllAgreeChange = () => {
@@ -53,66 +59,77 @@ const SignUpPage = () => {
   const passwordsMatch = confirmPassword && password === confirmPassword;
   const passwordsMismatch = confirmPassword && password !== confirmPassword;
 
-  // ✅ 이메일 중복 확인 + 인증코드 발송
+  // 이메일 중복 확인 + 인증코드 발송
   const handleSendAuthCode = async () => {
     if (!email) {
-      alert('이메일을 입력해주세요.');
+      msg.warning('이메일을 입력해 주세요.');
       return;
     }
 
     try {
-      const isDuplicate = await checkEmail({ email }); // true면 이미 존재
+      setSendingCode(true);
+      const hide = msg.loading('이메일 확인 중...', 0);
+      const isDuplicate = await checkEmail({ email });
       if (isDuplicate) {
-        alert('이미 등록된 이메일입니다. 다른 이메일을 사용해주세요.');
+        hide();
+        msg.error('이미 등록된 이메일입니다. 다른 이메일을 사용해 주세요.');
         setEmail('');
         return;
       }
 
       await sendAuthCode({ email });
-      alert('인증코드가 이메일로 전송되었습니다.');
+      hide();
+      msg.success('인증코드가 이메일로 전송되었습니다.');
       setIsCodeSent(true);
     } catch (error) {
-      console.error('이메일 확인 또는 인증코드 전송 실패:', error);
-      alert('이메일 확인 또는 인증코드 전송에 실패했습니다.');
+      msg.error('이메일 확인 또는 인증코드 전송에 실패했습니다.');
+    } finally {
+      setSendingCode(false);
     }
   };
 
-  // ✅ 인증코드 검증
+  // 인증코드 검증
   const handleVerifyAuthCode = async () => {
     if (!authCode) {
-      alert('인증코드를 입력해주세요.');
+      msg.warning('인증코드를 입력해 주세요.');
       return;
     }
     try {
+      setVerifyingCode(true);
+      const hide = msg.loading('인증코드 확인 중...', 0);
       await verifyAuthCode({ token: authCode });
+      hide();
       setIsEmailVerified(true);
-      alert('이메일 인증이 완료되었습니다.');
+      msg.success('이메일 인증이 완료되었습니다.');
     } catch (error) {
-      console.error('인증 실패:', error);
-      const msg =
-        error?.response?.data?.message ||
-        error?.message ||
-        '인증에 실패했습니다.';
-      alert(`인증 실패: ${msg}`);
+      msg.error(error?.response?.data?.message || '인증에 실패했습니다.');
+    } finally {
+      setVerifyingCode(false);
     }
   };
 
-  // ✅ 프로필 이미지 업로드
+  // 프로필 이미지 업로드
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 미리보기
     setProfileImage(URL.createObjectURL(file));
 
-    const { success, imageUrl, error } = await uploadProfileImage(file);
-    if (success) {
-      setProfileImageUrl(imageUrl || '');
-    } else {
-      console.error('이미지 업로드 실패:', error);
-      alert('프로필 이미지 업로드에 실패했습니다.');
-      setProfileImage(null);
-      setProfileImageUrl('');
+    try {
+      setUploading(true);
+      const hide = msg.loading('이미지 업로드 중...', 0);
+      const { success, imageUrl, error } = await uploadProfileImage(file);
+      hide();
+      if (success) {
+        setProfileImageUrl(imageUrl || '');
+        msg.success('이미지를 업로드했습니다.');
+      } else {
+        setProfileImage(null);
+        setProfileImageUrl('');
+        msg.error(error || '프로필 이미지 업로드에 실패했습니다.');
+      }
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -125,27 +142,24 @@ const SignUpPage = () => {
     navigate('/login');
   };
 
-  // ✅ 회원가입 제출
+  // 회원가입 제출
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email || !password || !confirmPassword || !userName || !userNickname) {
-      alert('모든 필수 정보를 입력해 주세요.');
+      msg.warning('모든 필수 정보를 입력해 주세요.');
       return;
     }
-
     if (password !== confirmPassword) {
-      alert('비밀번호가 일치하지 않습니다.');
+      msg.warning('비밀번호가 일치하지 않습니다.');
       return;
     }
-
     if (!terms || !privacy) {
-      alert('필수 약관에 동의해 주세요.');
+      msg.warning('필수 약관에 동의해 주세요.');
       return;
     }
-
     if (!isEmailVerified) {
-      alert('이메일 인증을 완료해 주세요.');
+      msg.warning('이메일 인증을 완료해 주세요.');
       return;
     }
 
@@ -158,18 +172,23 @@ const SignUpPage = () => {
     };
 
     try {
-      await registerUser(payload); // 2xx면 성공
+      setSubmitting(true);
+      const hide = msg.loading('회원가입 처리 중...', 0);
+      await registerUser(payload);
+      hide();
       handleSignUpSuccess();
     } catch (error) {
-      console.error('회원가입 실패:', error?.response?.data || error);
-      alert(
+      msg.error(
         error?.response?.data?.message || '회원가입 중 문제가 발생했습니다.'
       );
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
     <DefaultLayout>
+      {contextHolder}
       <BackHeader title="회원가입" />
       <p className="font-noonnu font-semibold mb-4 text-center">반갑습니다!</p>
       <div className="flex justify-center mb-4">
@@ -181,12 +200,13 @@ const SignUpPage = () => {
             className="w-20 h-20 rounded-full bg-white object-cover"
           />
           <label className="text-blue-500 mt-1 text-sm cursor-pointer">
-            업로드
+            {uploading ? '업로드 중...' : '업로드'}
             <input
               type="file"
               accept="image/*"
               onChange={handleImageUpload}
               className="hidden"
+              disabled={uploading}
             />
           </label>
         </div>
@@ -205,14 +225,15 @@ const SignUpPage = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="이메일을 입력해 주세요."
               className="border w-full px-3 py-2 rounded text-sm"
+              disabled={sendingCode || submitting}
             />
             <button
               type="button"
               onClick={handleSendAuthCode}
-              className="text-sm border px-3 py-2 rounded text-blue-500 whitespace-nowrap"
-              disabled={!email}
+              className="text-sm border px-3 py-2 rounded text-blue-500 whitespace-nowrap disabled:opacity-60"
+              disabled={!email || sendingCode || submitting}
             >
-              이메일 중복 확인
+              {sendingCode ? '전송 중...' : '이메일 중복 확인'}
             </button>
           </div>
 
@@ -229,13 +250,15 @@ const SignUpPage = () => {
                   onChange={(e) => setAuthCode(e.target.value)}
                   placeholder="인증코드를 입력해 주세요."
                   className="border w-full px-3 py-2 rounded text-sm"
+                  disabled={verifyingCode || submitting}
                 />
                 <button
                   type="button"
                   onClick={handleVerifyAuthCode}
-                  className="text-sm border px-3 py-2 rounded text-blue-500 whitespace-nowrap"
+                  className="text-sm border px-3 py-2 rounded text-blue-500 whitespace-nowrap disabled:opacity-60"
+                  disabled={!authCode || verifyingCode || submitting}
                 >
-                  인증하기
+                  {verifyingCode ? '확인 중...' : '인증하기'}
                 </button>
               </div>
             </>
@@ -252,11 +275,13 @@ const SignUpPage = () => {
               className="border w-full px-3 py-2 rounded text-sm pr-10"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={submitting}
             />
             <button
               type="button"
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
               onClick={() => setShowPassword(!showPassword)}
+              disabled={submitting}
             >
               {showPassword ? (
                 <EyeOff className="w-4 h-4" />
@@ -277,11 +302,13 @@ const SignUpPage = () => {
               className="border w-full px-3 py-2 rounded text-sm pr-10"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={submitting}
             />
             <button
               type="button"
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              disabled={submitting}
             >
               {showConfirmPassword ? (
                 <EyeOff className="w-4 h-4" />
@@ -309,6 +336,7 @@ const SignUpPage = () => {
             onChange={(e) => setUserName(e.target.value)}
             placeholder="이름을 입력해 주세요."
             className="border w-full px-3 py-2 rounded text-sm mb-3"
+            disabled={submitting}
           />
 
           {/* 닉네임 */}
@@ -321,6 +349,7 @@ const SignUpPage = () => {
             onChange={(e) => setUserNickname(e.target.value)}
             placeholder="닉네임을 입력해 주세요."
             className="border w-full px-3 py-2 rounded text-sm mb-5"
+            disabled={submitting}
           />
 
           {/* 약관 */}
@@ -332,6 +361,7 @@ const SignUpPage = () => {
                 type="checkbox"
                 checked={allChecked}
                 onChange={handleAllAgreeChange}
+                disabled={submitting}
               />
               모두 동의합니다
             </label>
@@ -342,6 +372,7 @@ const SignUpPage = () => {
                 type="checkbox"
                 checked={terms}
                 onChange={(e) => setTerms(e.target.checked)}
+                disabled={submitting}
               />
               [필수] 이용약관{' '}
               <span className="text-blue-500 cursor-pointer">[보기]</span>
@@ -351,6 +382,7 @@ const SignUpPage = () => {
                 type="checkbox"
                 checked={privacy}
                 onChange={(e) => setPrivacy(e.target.checked)}
+                disabled={submitting}
               />
               [필수] 개인정보 수집 이용 동의{' '}
               <span className="text-blue-500 cursor-pointer">[보기]</span>
@@ -360,13 +392,16 @@ const SignUpPage = () => {
                 type="checkbox"
                 checked={marketing}
                 onChange={(e) => setMarketing(e.target.checked)}
+                disabled={submitting}
               />
               [선택] 마케팅 정보 수신 동의
             </label>
           </div>
 
           <div className="mt-6">
-            <PrimaryButton type="submit">여담 가입하기</PrimaryButton>
+            <PrimaryButton type="submit" disabled={submitting}>
+              {submitting ? '가입 중...' : '여담 가입하기'}
+            </PrimaryButton>
           </div>
         </form>
       </div>
