@@ -14,6 +14,8 @@ const EditProfile = () => {
   const navigate = useNavigate();
   const { toast, showToast, hideToast, showSuccess, showError } = useToast();
 
+  const [loading, setLoading] = useState(false);
+
   const storeNickname = useUserStore((s) => s.nickname);
   const storeProfileImageUrl = useUserStore((s) => s.profileImageUrl);
 
@@ -57,9 +59,11 @@ const EditProfile = () => {
 
   const handleUpdate = async () => {
     try {
+      setLoading(true);
       const trimmedNickname = (localNickname || '').trim();
       if (!trimmedNickname) {
         showError('닉네임을 입력해주세요.');
+        setLoading(false);
         return;
       }
 
@@ -69,6 +73,7 @@ const EditProfile = () => {
         const uploadRes = await uploadProfileImage(selectedFile);
         if (!uploadRes?.success) {
           showError('이미지 업로드 실패');
+          setLoading(false);
           return;
         }
         const uploadedUrl =
@@ -78,6 +83,7 @@ const EditProfile = () => {
           uploadRes?.url;
         if (!uploadedUrl) {
           showError('서버에서 이미지 URL을 받지 못했어요.');
+           setLoading(false);
           return;
         }
         finalImageUrl = uploadedUrl;
@@ -93,6 +99,7 @@ const EditProfile = () => {
       const result = await userProfileUpdate(payload);
       if (!result?.success) {
         showError(`수정 실패: ${result?.error || '알 수 없는 오류'}`);
+         setLoading(false);
         return;
       }
 
@@ -106,12 +113,13 @@ const EditProfile = () => {
       showSuccess('프로필 수정 완료!');
       
       setTimeout(() => {
+        setLoading(false);
         navigate('/');
       }, 1500);
     } catch (err) {
-      console.error(err);
-      showError('수정 중 오류: ' + (err?.message || err));
-    }
+        showError('수정 중 오류: ' + (err?.message || err));
+        setLoading(false);
+      }
   };
 
   return (
@@ -182,9 +190,9 @@ const EditProfile = () => {
           <PrimaryButton
             className="w-full m-4"
             onClick={handleUpdate}
-            disabled={!localNickname.trim()}
+            disabled={!localNickname.trim() || loading}
           >
-            프로필 수정
+             {loading ? '수정 중…' : '프로필 수정'}
           </PrimaryButton>
         </div>
       </div>
