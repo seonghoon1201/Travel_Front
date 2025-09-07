@@ -426,7 +426,7 @@ const SignUpPage = () => {
         </div>
       </div>
 
-      <div className="w-full max-w-md mx-auto px-4">
+      <div className="w-full max-w-md mx-auto px-4 mb-3">
         <form onSubmit={handleSubmit}>
           {/* 이메일 */}
           <label className="block text-sm font-medium mb-1">
