@@ -1,6 +1,7 @@
+// src/pages/auth/SignUpPage.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { message } from 'antd';
+import { message, Drawer } from 'antd';
 
 import CommonModal from '../../components/modal/CommonModal';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -16,6 +17,176 @@ import {
   uploadProfileImage,
   registerUser,
 } from '../../api';
+
+const TERMS_TEXT = (
+  <div className="space-y-3 text-sm leading-6">
+    <h3 className="text-base font-bold">여담 서비스 이용약관</h3>
+    <p>
+      본 약관은 여담(이하 “회사”)이 제공하는 서비스의 이용과 관련하여 회사와
+      이용자 간의 권리·의무 및 책임사항을 규정합니다.
+    </p>
+
+    <h4 className="font-semibold">1. 계정 및 가입</h4>
+    <ul className="list-disc pl-5">
+      <li>이용자는 정확한 정보를 제공하여 회원가입을 완료해야 합니다.</li>
+      <li>타인의 정보를 도용하거나 허위 정보를 기재할 수 없습니다.</li>
+    </ul>
+
+    <h4 className="font-semibold">2. 서비스 이용</h4>
+    <ul className="list-disc pl-5">
+      <li>서비스는 개인적·비상업적 용도에 한해 사용할 수 있습니다.</li>
+      <li>
+        법령 위반, 서버·네트워크 장애 유발, 크롤링/스크래핑 등은 금지됩니다.
+      </li>
+    </ul>
+
+    <h4 className="font-semibold">3. 사용자 콘텐츠</h4>
+    <ul className="list-disc pl-5">
+      <li>이용자가 게시한 콘텐츠의 저작권은 이용자에게 있습니다.</li>
+      <li>
+        이용자는 회사가 서비스 운영·홍보를 위해 비독점적으로 콘텐츠를 이용(저장,
+        노출, 수정 크기 조정 등)할 수 있도록 허락합니다.
+      </li>
+      <li>
+        타인의 권리를 침해하는 콘텐츠 게시 시 법적 책임은 이용자에게 있습니다.
+      </li>
+    </ul>
+
+    <h4 className="font-semibold">4. 서비스 변경 및 중단</h4>
+    <ul className="list-disc pl-5">
+      <li>
+        회사는 운영상·기술상 필요에 따라 서비스의 전부 또는 일부를 변경·중단할
+        수 있습니다.
+      </li>
+      <li>유료 서비스 변경·중단 시 관계 법령에 따른 조치를 취합니다.</li>
+    </ul>
+
+    <h4 className="font-semibold">5. 책임의 제한</h4>
+    <ul className="list-disc pl-5">
+      <li>
+        회사는 천재지변, 장애, 제3자 행위 등 불가항력으로 인한 손해에 대해
+        책임을 지지 않습니다.
+      </li>
+      <li>이용자의 귀책사유로 인한 손해에 대해 회사는 책임을 지지 않습니다.</li>
+    </ul>
+
+    <h4 className="font-semibold">6. 계약 해지(회원 탈퇴)</h4>
+    <ul className="list-disc pl-5">
+      <li>
+        이용자는 언제든지 서비스 내 기능을 통해 회원 탈퇴를 요청할 수 있습니다.
+      </li>
+      <li>
+        약관 위반 시 회사는 사전 통지 후 이용을 제한하거나 계약을 해지할 수
+        있습니다.
+      </li>
+    </ul>
+
+    <h4 className="font-semibold">7. 준거법 및 분쟁 해결</h4>
+    <p>
+      본 약관은 대한민국 법을 준거법으로 하며, 분쟁은 민사소송법상 관할법원의
+      전속 관할로 합니다.
+    </p>
+
+    <p className="text-xs text-gray-500">시행일: 2025-01-01</p>
+  </div>
+);
+
+const PRIVACY_TEXT = (
+  <div className="space-y-3 text-sm leading-6">
+    <h3 className="text-base font-bold">개인정보 수집·이용 동의</h3>
+    <p>회사는 다음과 같은 목적과 범위 내에서 개인정보를 수집·이용합니다.</p>
+
+    <h4 className="font-semibold">1. 수집 항목</h4>
+    <ul className="list-disc pl-5">
+      <li>필수: 이메일, 비밀번호(암호화 저장), 닉네임/이름</li>
+      <li>선택: 프로필 이미지, 마케팅 수신 동의 여부</li>
+      <li>자동 수집: 접속 로그, 접속 IP, 기기 정보, 쿠키</li>
+    </ul>
+
+    <h4 className="font-semibold">2. 이용 목적</h4>
+    <ul className="list-disc pl-5">
+      <li>회원 관리, 본인확인 및 로그인(소셜 로그인 포함)</li>
+      <li>서비스 제공 및 맞춤형 추천, 고객 지원</li>
+      <li>서비스 품질 개선을 위한 통계·분석</li>
+      <li>마케팅 정보 제공(선택 동의 시)</li>
+    </ul>
+
+    <h4 className="font-semibold">3. 보유 및 이용 기간</h4>
+    <ul className="list-disc pl-5">
+      <li>
+        회원 탈퇴 시 지체 없이 파기합니다. 단, 관련 법령에 따라 일정 기간 보관될
+        수 있습니다.
+      </li>
+    </ul>
+
+    <h4 className="font-semibold">4. 제3자 제공 및 처리 위탁</h4>
+    <ul className="list-disc pl-5">
+      <li>
+        결제/인증/알림 발송 등 서비스 운영을 위해 필요한 범위에서 위탁할 수
+        있으며, 위탁사는 계약을 통해 개인정보 보호 의무를 부담합니다.
+      </li>
+      <li>
+        법령에 근거하거나 수사기관의 적법한 요청이 있는 경우 제공될 수 있습니다.
+      </li>
+    </ul>
+
+    <h4 className="font-semibold">5. 이용자의 권리</h4>
+    <ul className="list-disc pl-5">
+      <li>
+        개인정보 열람, 정정·삭제, 처리정지 요구권이 있으며, 앱 내 또는
+        고객지원으로 문의할 수 있습니다.
+      </li>
+    </ul>
+
+    <h4 className="font-semibold">6. 안전성 확보 조치</h4>
+    <ul className="list-disc pl-5">
+      <li>
+        암호화 저장, 접근권한 통제, 침입 차단 등 합리적 보호조치를 시행합니다.
+      </li>
+    </ul>
+
+    <p className="text-xs text-gray-500">시행일: 2025-01-01</p>
+  </div>
+);
+
+const MARKETING_TEXT = (
+  <div className="space-y-3 text-sm leading-6">
+    <h3 className="text-base font-bold">마케팅 정보 수신 동의(선택)</h3>
+    <p>
+      회사는 이용자에게 더 나은 혜택과 정보를 제공하기 위해 아래와 같이 광고성
+      정보를 발송할 수 있습니다.
+    </p>
+
+    <h4 className="font-semibold">1. 발송 내용</h4>
+    <ul className="list-disc pl-5">
+      <li>이벤트/프로모션, 할인·쿠폰, 신규 기능·서비스 안내, 맞춤 추천</li>
+    </ul>
+
+    <h4 className="font-semibold">2. 발송 채널</h4>
+    <ul className="list-disc pl-5">
+      <li>이메일, 앱 푸시, 문자(SMS/MMS)</li>
+    </ul>
+
+    <h4 className="font-semibold">3. 수신 철회</h4>
+    <ul className="list-disc pl-5">
+      <li>
+        설정 화면 또는 각 메시지의 수신거부 링크를 통해 언제든지 철회할 수
+        있습니다.
+      </li>
+    </ul>
+
+    <h4 className="font-semibold">4. 보관 기간</h4>
+    <ul className="list-disc pl-5">
+      <li>
+        철회 또는 회원 탈퇴 시 까지, 혹은 법령상 보관기간 경과 시 파기합니다.
+      </li>
+    </ul>
+
+    <p className="text-xs text-gray-500">
+      수신 동의는 선택이며, 미동의 시에도 핵심 서비스 이용에는 제한이 없습니다.
+    </p>
+  </div>
+);
 
 const SignUpPage = () => {
   const [terms, setTerms] = useState(false);
@@ -45,8 +216,16 @@ const SignUpPage = () => {
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  // 약관 Drawer
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerType, setDrawerType] = useState(null);
+
   const [msg, contextHolder] = message.useMessage();
   const navigate = useNavigate();
+
+  const syncAllChecked = (nextTerms, nextPrivacy, nextMarketing) => {
+    setAllChecked(Boolean(nextTerms && nextPrivacy && nextMarketing));
+  };
 
   const handleAllAgreeChange = () => {
     const next = !allChecked;
@@ -133,10 +312,7 @@ const SignUpPage = () => {
     }
   };
 
-  const handleSignUpSuccess = () => {
-    setIsModalOpen(true);
-  };
-
+  const handleSignUpSuccess = () => setIsModalOpen(true);
   const handleConfirm = () => {
     setIsModalOpen(false);
     navigate('/login');
@@ -184,6 +360,44 @@ const SignUpPage = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // Drawer 열기/닫기
+  const openDrawer = (type) => {
+    setDrawerType(type);
+    setDrawerOpen(true);
+  };
+  const closeDrawer = () => setDrawerOpen(false);
+
+  const drawerTitle =
+    drawerType === 'terms'
+      ? '이용약관'
+      : drawerType === 'privacy'
+      ? '개인정보 수집·이용 동의'
+      : '마케팅 정보 수신 동의';
+
+  const drawerContent =
+    drawerType === 'terms'
+      ? TERMS_TEXT
+      : drawerType === 'privacy'
+      ? PRIVACY_TEXT
+      : MARKETING_TEXT;
+
+  const agreeFromDrawer = () => {
+    if (drawerType === 'terms') {
+      const next = true;
+      setTerms(next);
+      syncAllChecked(next, privacy, marketing);
+    } else if (drawerType === 'privacy') {
+      const next = true;
+      setPrivacy(next);
+      syncAllChecked(terms, next, marketing);
+    } else if (drawerType === 'marketing') {
+      const next = true;
+      setMarketing(next);
+      syncAllChecked(terms, privacy, next);
+    }
+    setDrawerOpen(false);
   };
 
   return (
@@ -371,30 +585,58 @@ const SignUpPage = () => {
               <input
                 type="checkbox"
                 checked={terms}
-                onChange={(e) => setTerms(e.target.checked)}
+                onChange={(e) => {
+                  setTerms(e.target.checked);
+                  syncAllChecked(e.target.checked, privacy, marketing);
+                }}
                 disabled={submitting}
               />
               [필수] 이용약관{' '}
-              <span className="text-blue-500 cursor-pointer">[보기]</span>
+              <button
+                type="button"
+                className="text-blue-500 underline underline-offset-2"
+                onClick={() => openDrawer('terms')}
+              >
+                [보기]
+              </button>
             </label>
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={privacy}
-                onChange={(e) => setPrivacy(e.target.checked)}
+                onChange={(e) => {
+                  setPrivacy(e.target.checked);
+                  syncAllChecked(terms, e.target.checked, marketing);
+                }}
                 disabled={submitting}
               />
-              [필수] 개인정보 수집 이용 동의{' '}
-              <span className="text-blue-500 cursor-pointer">[보기]</span>
+              [필수] 개인정보 수집·이용 동의{' '}
+              <button
+                type="button"
+                className="text-blue-500 underline underline-offset-2"
+                onClick={() => openDrawer('privacy')}
+              >
+                [보기]
+              </button>
             </label>
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={marketing}
-                onChange={(e) => setMarketing(e.target.checked)}
+                onChange={(e) => {
+                  setMarketing(e.target.checked);
+                  syncAllChecked(terms, privacy, e.target.checked);
+                }}
                 disabled={submitting}
               />
-              [선택] 마케팅 정보 수신 동의
+              [선택] 마케팅 정보 수신 동의{' '}
+              <button
+                type="button"
+                className="text-blue-500 underline underline-offset-2"
+                onClick={() => openDrawer('marketing')}
+              >
+                [보기]
+              </button>
             </label>
           </div>
 
@@ -405,6 +647,40 @@ const SignUpPage = () => {
           </div>
         </form>
       </div>
+
+      {/* 약관 Drawer */}
+      <Drawer
+        title={drawerTitle}
+        placement="bottom"
+        height="70%"
+        open={drawerOpen}
+        onClose={closeDrawer}
+        destroyOnClose
+      >
+        {/* ⬇️ 텍스트와 버튼을 하나의 스크롤 영역으로 묶음 */}
+        <div className="h-full overflow-y-auto pr-1">
+          {/* 약관 본문 */}
+          <div className="space-y-3 text-sm leading-6">{drawerContent}</div>
+
+          {/* 스크롤을 끝까지 내려야 보이는 버튼 */}
+          <div className="mt-6 mb-2 flex gap-2">
+            <button
+              type="button"
+              onClick={agreeFromDrawer}
+              className="px-4 py-2 rounded-md bg-blue-500 text-white text-sm"
+            >
+              동의하고 닫기
+            </button>
+            <button
+              type="button"
+              onClick={closeDrawer}
+              className="px-4 py-2 rounded-md border text-sm"
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      </Drawer>
 
       <CommonModal
         isOpen={isModalOpen}
