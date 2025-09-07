@@ -59,10 +59,10 @@ const LocationSection = ({ navigateTo = '/board/hot', limit = 10 }) => {
 
   return (
     <section className="mb-5">
-      <div className="flex justify-between items-center px-2">
+      <div className="flex justify-between items-center ">
         <h2 className="font-jalnongothic">요즘 핫플</h2>
         <button
-          className="font-pretendard text-sm text-blue-500 border rounded-full px-2 py-0.5"
+          className="font-pretendard text-sm text-blue-500 border rounded-full py-0.5"
           onClick={() => navigate(navigateTo)}
         >
           + 더보기
@@ -80,7 +80,7 @@ const LocationSection = ({ navigateTo = '/board/hot', limit = 10 }) => {
           ))}
         </div>
       ) : (
-        <div className="flex gap-2 sm:gap-3 overflow-x-auto px-3 mt-2 scrollbar-hide">
+        <div className="flex gap-2 sm:gap-3 overflow-x-auto  mt-2 scrollbar-hide">
           {places.slice(0, 10).map((item, idx) => (
             <div
               key={idx}
