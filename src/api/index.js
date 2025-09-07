@@ -1,5 +1,24 @@
 // src/api/index.js
 
+// 인증/메일
+export {
+  checkEmail,
+  sendAuthCode,
+  verifyAuthCode,
+} from './auth/mail';
+
+export { sendAuthCode as sendEmailCode } from './auth/mail';
+export { verifyAuthCode as verifyEmailToken } from './auth/mail';
+
+// 인증/회원
+export {
+  registerUser,
+  loginUser,
+  getKakaoLoginUrl,
+  kakaoCallback,
+  resetPassword,
+} from './auth/user';
+
 // 그룹
 export { default as GroupAPI } from './group/group';
 
@@ -17,7 +36,7 @@ export { uploadProfileImage } from './file/uploadProfileImage';
 export { searchTours } from './tour/searchTour';
 export { searchTours as searchTour } from './tour/searchTour';
 
-// 유저
+// 유저 컨텐츠
 export { fetchMyDiaries, fetchMyTravel } from './user/userContentApi';
 export { userProfileUpdate } from './user/userProfileUpdate';
 
@@ -38,10 +57,10 @@ export { createSchedule } from './schedule/createSchedule';
 export { optimizeSchedule } from './schedule/optimizeSchedule';
 export { getSchedule } from './schedule/getSchedule';
 
-// 스케줄 아이템
+// 스케줄 아이템 (명시적)
 export { createScheduleItem } from './scheduleItem/scheduleItems';
 export { updateScheduleItem } from './scheduleItem/scheduleItems';
 export { deleteScheduleItem } from './scheduleItem/scheduleItems';
 
-// 공통 설정 & 유저 유틸
+// 공통 설정
 export { API_BASE_URL } from './config';

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import logo from '../../assets/logo.png';
 import { useNavigate } from 'react-router-dom';
-import { setItem } from '../../utils/localStorage';
 import PrimaryButton from '../../components/common/PrimaryButton';
-import axios from 'axios';
+import { loginUser, getKakaoLoginUrl } from '../../api';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import useUserStore from '../../store/userStore';
+import { Eye, EyeOff } from 'lucide-react';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -13,13 +13,10 @@ const LoginPage = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleKakaoLogin = () => {
-
-    // 로컬
-    //window.location.href = `${API_BASE_URL}/auth/kakao/login`;
-    //  서버
-    window.location.href = `${process.env.REACT_APP_API_BASE_URL}/auth/kakao/login`;
+    window.location.href = getKakaoLoginUrl();
   };
 
   const handleLogin = async () => {
@@ -29,37 +26,33 @@ const LoginPage = () => {
     }
 
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/login`, {
-        email,
-        password,
-      });
-      // console.log(' 로그인 응답 전체:', res.data);
-
+      const data = await loginUser({ email, password });
       const {
         jwtDto: { accessToken, refreshToken },
         userNickname: nickname,
         userProfileImage: profileImageUrl,
         userRole,
-      } = res.data;
+      } = data;
 
-      login({ accessToken, refreshToken, nickname, profileImageUrl, userRole }); // store 갱신
-
+      login({ accessToken, refreshToken, nickname, profileImageUrl, userRole });
       alert('로그인 성공!');
-      // console.log(' login 호출 시 전달값:', {
-      //   accessToken,
-      //   refreshToken,
-      //   nickname,
-      //   profileImageUrl,
-      // });
-      console.log('login 호출 완료');
       navigate('/');
     } catch (error) {
       console.error('로그인 실패:', error);
-
+      const status = error?.response?.status;
       alert(
         error?.response?.data?.message ||
-          '이메일 또는 비밀번호가 올바르지 않습니다.'
+          (status === 401 || status === 403
+            ? '이메일 또는 비밀번호가 올바르지 않습니다.'
+            : '로그인 중 오류가 발생했습니다.')
       );
+    }
+  };
+
+  const onPasswordKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleLogin();
     }
   };
 
@@ -80,15 +73,31 @@ const LoginPage = () => {
             />
           </div>
 
+          {/* 비밀번호 입력 + 보기/숨기기 토글 */}
           <div className="text-left mb-5">
             <label className="text-sm text-text font-semibold">비밀번호</label>
-            <input
-              type="password"
-              placeholder="비밀번호를 입력해 주세요."
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div className="relative mt-1">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="비밀번호를 입력해 주세요."
+                className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={onPasswordKeyDown}
+              />
+              <button
+                type="button"
+                aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                onClick={() => setShowPassword((v) => !v)}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
+            </div>
           </div>
 
           <PrimaryButton onClick={handleLogin}>로그인</PrimaryButton>

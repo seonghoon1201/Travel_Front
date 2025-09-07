@@ -1,15 +1,15 @@
-import React, { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
-import CommonModal from "../../components/modal/CommonModal";
-import { LockKeyhole } from "lucide-react";
-import BackHeader from "../../components/header/BackHeader";
-import PrimaryButton from "../../components/common/PrimaryButton";
-import DefaultLayout from "../../layouts/DefaultLayout";
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { resetPassword } from '../../api';
+import CommonModal from '../../components/modal/CommonModal';
+import { LockKeyhole } from 'lucide-react';
+import BackHeader from '../../components/header/BackHeader';
+import PrimaryButton from '../../components/common/PrimaryButton';
+import DefaultLayout from '../../layouts/DefaultLayout';
 
 const ResetPasswordPage = () => {
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,46 +17,42 @@ const ResetPasswordPage = () => {
 
   const handleConfirm = () => {
     setIsModalOpen(false);
-    navigate("/login");
+    navigate('/login');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email) {
-      alert("이메일 정보가 없습니다. 처음부터 다시 시도해주세요.");
-      navigate("/find-password");
+      alert('이메일 정보가 없습니다. 처음부터 다시 시도해주세요.');
+      navigate('/find-password');
       return;
     }
 
     if (!newPassword || !confirmPassword) {
-      alert("비밀번호를 입력해주세요.");
+      alert('비밀번호를 입력해주세요.');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      alert("비밀번호가 일치하지 않습니다.");
+      alert('비밀번호가 일치하지 않습니다.');
       return;
     }
 
     if (newPassword.length < 8 || newPassword.length > 20) {
-      alert("비밀번호는 8~20자로 설정해주세요.");
+      alert('비밀번호는 8~20자로 설정해주세요.');
       return;
     }
 
     try {
-      await axios.patch(`${process.env.REACT_APP_API_URL}/user/password`, {
-        email,
-        password: newPassword,
-      }); // 비밀번호 재설정 API 호출                                       
+      await resetPassword({ email, password: newPassword });
 
       setIsModalOpen(true);
     } catch (error) {
-      console.error("비밀번호 재설정 실패:", error.message);
+      console.error('비밀번호 재설정 실패:', error?.response || error);
       alert(
-        console.log("에러 응답:", error.response),
         error?.response?.data?.message ||
-        "비밀번호 재설정에 실패했습니다. 다시 시도해주세요."
+          '비밀번호 재설정에 실패했습니다. 다시 시도해주세요.'
       );
     }
   };

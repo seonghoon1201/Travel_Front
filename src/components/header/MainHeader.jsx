@@ -14,17 +14,31 @@ const MainHeader = ({ isMenuOpen, setIsMenuOpen }) => {
 
   return (
     <>
-      <header className="flex items-center justify-between bg-[#E2F2FA] h-[5rem] px-2">
-        {/* 왼쪽: 전체 로고 이미지 */}
-        <img src={logo} alt="여담 로고" className="h-16" />
+      <header className="flex items-center justify-between bg-[#E2F2FA] h-20 px-4 sm:px-6 md:px-8">
+        {/* 왼쪽: 로고 */}
+        <div className="flex items-center">
+          <img 
+            src={logo} 
+            alt="여담 로고" 
+            className="h-16 sm:h-14 md:h-16" 
+          />
+        </div>
 
-        {/* 오른쪽: 아이콘 2개 */}
-        <div className="flex space-x-5">
-          <button type="button" onClick={() => navigate('/search')}>
-            <Search className="w-6 h-6 text-[#143447]" />
+        {/* 오른쪽: 검색, 메뉴 아이콘 */}
+        <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4">
+          <button 
+            type="button" 
+            onClick={() => navigate('/search')}
+            className="p-2 sm:p-2.5 md:p-3 rounded-lg hover:bg-white/20 transition-colors"
+          >
+            <Search className="w-5 h-5 sm:w-6 sm:h-6 text-[#143447]" />
           </button>
-          <button type="button" onClick={onMenuClick}>
-            <Menu className="w-6 h-6 text-[#143447]" />
+          <button 
+            type="button" 
+            onClick={onMenuClick}
+            className="p-2 sm:p-2.5 md:p-3 rounded-lg hover:bg-white/20 transition-colors"
+          >
+            <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-[#143447]" />
           </button>
         </div>
       </header>

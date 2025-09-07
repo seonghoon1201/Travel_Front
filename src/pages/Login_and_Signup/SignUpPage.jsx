@@ -1,12 +1,22 @@
+// src/pages/auth/SignUpPage.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+
 import CommonModal from '../../components/modal/CommonModal';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import profileDefault from '../../assets/profile_default.png';
 import BackHeader from '../../components/header/BackHeader';
 import { Eye, EyeOff } from 'lucide-react';
 import DefaultLayout from '../../layouts/DefaultLayout';
+
+// ✅ 우리 API 모듈만 사용 (authAxios 기반)
+import {
+  checkEmail,
+  sendAuthCode,
+  verifyAuthCode,
+  uploadProfileImage,
+  registerUser,
+} from '../../api';
 
 const SignUpPage = () => {
   const [terms, setTerms] = useState(false);
@@ -23,8 +33,8 @@ const SignUpPage = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [userName, setUserName] = useState('');
   const [userNickname, setUserNickname] = useState('');
-  const [profileImage, setProfileImage] = useState(null);
-  const [profileImageUrl, setProfileImageUrl] = useState('');
+  const [profileImage, setProfileImage] = useState(null); // preview
+  const [profileImageUrl, setProfileImageUrl] = useState(''); // 서버 업로드 URL
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -43,6 +53,7 @@ const SignUpPage = () => {
   const passwordsMatch = confirmPassword && password === confirmPassword;
   const passwordsMismatch = confirmPassword && password !== confirmPassword;
 
+  // ✅ 이메일 중복 확인 + 인증코드 발송
   const handleSendAuthCode = async () => {
     if (!email) {
       alert('이메일을 입력해주세요.');
@@ -50,22 +61,14 @@ const SignUpPage = () => {
     }
 
     try {
-      const checkRes = await axios.get(
-        `${process.env.REACT_APP_API_URL}/mail/check-email`,
-        {
-          params: { email },
-        }
-      );
-
-      const isDuplicate = checkRes.data === true;
+      const isDuplicate = await checkEmail({ email }); // true면 이미 존재
       if (isDuplicate) {
         alert('이미 등록된 이메일입니다. 다른 이메일을 사용해주세요.');
         setEmail('');
         return;
       }
 
-      // 인증코드 전송
-      await axios.post(`${process.env.REACT_APP_API_URL}/mail/send`, { email });
+      await sendAuthCode({ email });
       alert('인증코드가 이메일로 전송되었습니다.');
       setIsCodeSent(true);
     } catch (error) {
@@ -74,56 +77,42 @@ const SignUpPage = () => {
     }
   };
 
+  // ✅ 인증코드 검증
   const handleVerifyAuthCode = async () => {
+    if (!authCode) {
+      alert('인증코드를 입력해주세요.');
+      return;
+    }
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/mail/verify`, {
-        token: authCode,
-      });
-
-      if (res.status === 200) {
-        setIsEmailVerified(true);
-        alert('이메일 인증이 완료되었습니다.');
-      } else {
-        alert('인증에 실패했습니다.');
-      }
+      await verifyAuthCode({ token: authCode });
+      setIsEmailVerified(true);
+      alert('이메일 인증이 완료되었습니다.');
     } catch (error) {
       console.error('인증 실패:', error);
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-        alert(`인증 실패: ${error.response.data.message}`);
-      } else {
-        alert('인증에 실패했습니다.');
-      }
+      const msg =
+        error?.response?.data?.message ||
+        error?.message ||
+        '인증에 실패했습니다.';
+      alert(`인증 실패: ${msg}`);
     }
   };
 
+  // ✅ 프로필 이미지 업로드
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    try {
-      const formData = new FormData();
-      formData.append('image', file);
+    // 미리보기
+    setProfileImage(URL.createObjectURL(file));
 
-      const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}/file/upload`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
-
-      const uploadedUrl = res.data.imageUrl;
-      setProfileImage(URL.createObjectURL(file));
-      setProfileImageUrl(uploadedUrl);
-    } catch (error) {
+    const { success, imageUrl, error } = await uploadProfileImage(file);
+    if (success) {
+      setProfileImageUrl(imageUrl || '');
+    } else {
       console.error('이미지 업로드 실패:', error);
       alert('프로필 이미지 업로드에 실패했습니다.');
+      setProfileImage(null);
+      setProfileImageUrl('');
     }
   };
 
@@ -136,6 +125,7 @@ const SignUpPage = () => {
     navigate('/login');
   };
 
+  // ✅ 회원가입 제출
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -167,23 +157,13 @@ const SignUpPage = () => {
       userProfileImage: profileImageUrl || '',
     };
 
-    console.log('회원가입 요청:', payload);
-
     try {
-      const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}/user/register`,
-        payload
-      );
-
-      if (res.status === 201) {
-        handleSignUpSuccess();
-      } else {
-        alert('회원가입에 실패했습니다.');
-      }
+      await registerUser(payload); // 2xx면 성공
+      handleSignUpSuccess();
     } catch (error) {
-      console.error('회원가입 실패:', error.response?.data || error);
+      console.error('회원가입 실패:', error?.response?.data || error);
       alert(
-        error.response?.data?.message || '회원가입 중 문제가 발생했습니다.'
+        error?.response?.data?.message || '회원가입 중 문제가 발생했습니다.'
       );
     }
   };
@@ -311,7 +291,9 @@ const SignUpPage = () => {
             </button>
           </div>
           {passwordsMismatch && (
-            <p className="text-sm text-red-500">비밀번호가 일치하지 않습니다.</p>
+            <p className="text-sm text-red-500">
+              비밀번호가 일치하지 않습니다.
+            </p>
           )}
           {passwordsMatch && (
             <p className="text-sm text-green-600">비밀번호가 일치합니다!</p>
