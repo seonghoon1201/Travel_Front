@@ -2,6 +2,8 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BackHeader from '../components/header/BackHeader';
 import PrimaryButton from '../components/common/PrimaryButton';
+import Toast from '../components/common/Toast';
+import { useToast } from '../utils/useToast';
 import { Pencil, X } from 'lucide-react';
 import useUserStore from '../store/userStore';
 import profileDefault from '../assets/profile_default.png';
@@ -10,6 +12,7 @@ import { userProfileUpdate } from '../api';
 
 const EditProfile = () => {
   const navigate = useNavigate();
+  const { toast, showToast, hideToast, showSuccess, showError } = useToast();
 
   const storeNickname = useUserStore((s) => s.nickname);
   const storeProfileImageUrl = useUserStore((s) => s.profileImageUrl);
@@ -19,6 +22,7 @@ const EditProfile = () => {
   const [selectedFile, setSelectedFile] = useState(null);
 
   const fileInputRef = useRef(null);
+  
   useEffect(() => {
     setLocalNickname(storeNickname || '');
   }, [storeNickname]);
@@ -55,17 +59,16 @@ const EditProfile = () => {
     try {
       const trimmedNickname = (localNickname || '').trim();
       if (!trimmedNickname) {
-        alert('닉네임을 입력해주세요.');
+        showError('닉네임을 입력해주세요.');
         return;
       }
 
       let finalImageUrl = storeProfileImageUrl || '';
 
-      // 1) 이미지 업로드(선택 시)
       if (selectedFile) {
         const uploadRes = await uploadProfileImage(selectedFile);
         if (!uploadRes?.success) {
-          alert('이미지 업로드 실패');
+          showError('이미지 업로드 실패');
           return;
         }
         const uploadedUrl =
@@ -74,7 +77,7 @@ const EditProfile = () => {
           uploadRes?.data?.url ||
           uploadRes?.url;
         if (!uploadedUrl) {
-          alert('서버에서 이미지 URL을 받지 못했어요.');
+          showError('서버에서 이미지 URL을 받지 못했어요.');
           return;
         }
         finalImageUrl = uploadedUrl;
@@ -89,7 +92,7 @@ const EditProfile = () => {
 
       const result = await userProfileUpdate(payload);
       if (!result?.success) {
-        alert(`수정 실패: ${result?.error || '알 수 없는 오류'}`);
+        showError(`수정 실패: ${result?.error || '알 수 없는 오류'}`);
         return;
       }
 
@@ -100,20 +103,32 @@ const EditProfile = () => {
         userProfileImage: finalImageUrl,
       });
 
-      alert('프로필 수정 완료!');
-      navigate('/');
+      showSuccess('프로필 수정 완료!');
+      
+      setTimeout(() => {
+        navigate('/');
+      }, 1500);
     } catch (err) {
       console.error(err);
-      alert('수정 중 오류: ' + (err?.message || err));
+      showError('수정 중 오류: ' + (err?.message || err));
     }
   };
 
   return (
     <div className="bg-background min-h-screen flex w-full justify-center px-4">
-      <div className="w-full  py-6 overflow-y-auto">
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          duration={toast.duration}
+          onClose={hideToast}
+        />
+      )}
+
+      <div className="w-full py-6 overflow-y-auto">
         <BackHeader title="프로필 편집" />
 
-        <div className="flex flex-col items-center">
+        <div className="px-4 sm:px-6 md:px-8 flex flex-col items-center">
           {/* 프로필 이미지 */}
           <div className="relative mt-6">
             <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
