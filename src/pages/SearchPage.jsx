@@ -97,7 +97,7 @@ const SearchPage = () => {
       <div className="w-full mx-auto">
         <BackHeader />
 
-        <div className="sm:px-6  md:px-8">
+        <div className="px-4  sm:px-6  md:px-8">
           {/* 검색창 */}
           <div className="w-full mb-4">
             <SearchBar
