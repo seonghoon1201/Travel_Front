@@ -13,8 +13,8 @@ const BackHeader = ({
   return (
     <header className="flex items-center px-4 sm:px-6 md:px-8 py-3 mb-6 mt-6">
       {/* 왼쪽: 뒤로가기 버튼 */}
-      <div className="flex-1  flex justify-start">
-        <button
+      <div className="flex-1 flex justify-start">
+        <button 
           onClick={() => navigate(-1)}
           className="flex items-center justify-center w-10 h-10"
         >
@@ -24,7 +24,7 @@ const BackHeader = ({
 
       {/* 가운데: 제목 */}
       <div className="flex-1 flex justify-center">
-        <h1 className="font-noonnu text-2xl font-extrabold">
+        <h1 className="font-noonnu text-xl sm:text-2xl font-extrabold text-center whitespace-nowrap">
           {title}
         </h1>
       </div>
