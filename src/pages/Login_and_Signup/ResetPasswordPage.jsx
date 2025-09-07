@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { message } from 'antd';
 import { resetPassword } from '../../api';
 import CommonModal from '../../components/modal/CommonModal';
 import { LockKeyhole } from 'lucide-react';
@@ -11,6 +12,8 @@ const ResetPasswordPage = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [msg, contextHolder] = message.useMessage();
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email;
@@ -24,41 +27,42 @@ const ResetPasswordPage = () => {
     e.preventDefault();
 
     if (!email) {
-      alert('이메일 정보가 없습니다. 처음부터 다시 시도해주세요.');
+      msg.error('이메일 정보가 없습니다. 처음부터 다시 시도해주세요.');
       navigate('/find-password');
       return;
     }
-
     if (!newPassword || !confirmPassword) {
-      alert('비밀번호를 입력해주세요.');
+      msg.warning('비밀번호를 입력해 주세요.');
       return;
     }
-
     if (newPassword !== confirmPassword) {
-      alert('비밀번호가 일치하지 않습니다.');
+      msg.warning('비밀번호가 일치하지 않습니다.');
       return;
     }
-
     if (newPassword.length < 8 || newPassword.length > 20) {
-      alert('비밀번호는 8~20자로 설정해주세요.');
+      msg.warning('비밀번호는 8~20자로 설정해 주세요.');
       return;
     }
 
     try {
+      setResetting(true);
+      const hide = msg.loading('비밀번호 변경 중...', 0);
       await resetPassword({ email, password: newPassword });
-
+      hide();
       setIsModalOpen(true);
     } catch (error) {
-      console.error('비밀번호 재설정 실패:', error?.response || error);
-      alert(
+      msg.error(
         error?.response?.data?.message ||
-          '비밀번호 재설정에 실패했습니다. 다시 시도해주세요.'
+          '비밀번호 재설정에 실패했습니다. 다시 시도해 주세요.'
       );
+    } finally {
+      setResetting(false);
     }
   };
 
   return (
     <DefaultLayout>
+      {contextHolder}
       <BackHeader title="비밀번호 재설정" />
 
       <div className="text-center mt-6 mb-6">
@@ -77,6 +81,7 @@ const ResetPasswordPage = () => {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               className="w-full px-10 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              disabled={resetting}
             />
             <LockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
           </div>
@@ -88,11 +93,14 @@ const ResetPasswordPage = () => {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full px-10 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              disabled={resetting}
             />
             <LockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
           </div>
 
-          <PrimaryButton type="submit">비밀번호 변경</PrimaryButton>
+          <PrimaryButton type="submit" disabled={resetting}>
+            {resetting ? '변경 중...' : '비밀번호 변경'}
+          </PrimaryButton>
         </form>
       </div>
 
