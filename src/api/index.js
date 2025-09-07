@@ -2,7 +2,7 @@
 
 // 인증/메일
 export {
-  checkEmail as checkEmailDuplicate,
+  checkEmail,
   sendAuthCode,
   verifyAuthCode,
 } from './auth/mail';

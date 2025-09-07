@@ -11,7 +11,7 @@ import DefaultLayout from '../../layouts/DefaultLayout';
 
 // ✅ 우리 API 모듈만 사용 (authAxios 기반)
 import {
-  checkEmailDuplicate,
+  checkEmail,
   sendAuthCode,
   verifyAuthCode,
   uploadProfileImage,
@@ -61,14 +61,14 @@ const SignUpPage = () => {
     }
 
     try {
-      const isDuplicate = await checkEmailDuplicate(email); // true면 이미 존재
+      const isDuplicate = await checkEmail({ email }); // true면 이미 존재
       if (isDuplicate) {
         alert('이미 등록된 이메일입니다. 다른 이메일을 사용해주세요.');
         setEmail('');
         return;
       }
 
-      await sendAuthCode(email);
+      await sendAuthCode({ email });
       alert('인증코드가 이메일로 전송되었습니다.');
       setIsCodeSent(true);
     } catch (error) {
@@ -84,7 +84,7 @@ const SignUpPage = () => {
       return;
     }
     try {
-      await verifyAuthCode(authCode);
+      await verifyAuthCode({ token: authCode });
       setIsEmailVerified(true);
       alert('이메일 인증이 완료되었습니다.');
     } catch (error) {
