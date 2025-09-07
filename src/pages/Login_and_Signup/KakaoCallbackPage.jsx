@@ -1,8 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { kakaoCallback } from '../../api';
 import useUserStore from '../../store/userStore';
-import { setItem } from '../../utils/localStorage';
 
 const KakaoCallbackPage = () => {
   const navigate = useNavigate();
@@ -26,25 +25,18 @@ const KakaoCallbackPage = () => {
       }
 
       try {
-        const res = await axios.post(
-          // 로컬
-          `${process.env.REACT_APP_API_BASE_URL}/auth/kakao/callback`,
-          { code }
-        );
-
-        console.log('카카오 로그인 응답:', res.data);
-
-        const jwtDto = res.data?.jwtDto;
+        const data = await kakaoCallback(code);
+        const jwtDto = data?.jwtDto;
         if (!jwtDto) {
           throw new Error('jwtDto가 응답에 없습니다.');
         }
 
         const { accessToken, refreshToken } = jwtDto;
-        const nickname = res.data?.userNickname || '';
-        const profileImageUrl = res.data?.userProfileImage || '';
-        const userRole = res.data?.userRole || '';
-        const userEmail = res.data?.userEmail || '';
-        const userName = res.data?.userName || '';
+        const nickname = data?.userNickname || '';
+        const profileImageUrl = data?.userProfileImage || '';
+        const userRole = data?.userRole || '';
+        const userEmail = data?.userEmail || '';
+        const userName = data?.userName || '';
 
         login({
           accessToken,
@@ -56,11 +48,6 @@ const KakaoCallbackPage = () => {
           userName,
           isLoggedIn: true,
         });
-
-        setItem('accessToken', accessToken);
-        setItem('refreshToken', refreshToken);
-        setItem('nickname', nickname);
-        setItem('profileImageUrl', profileImageUrl);
 
         navigate('/');
       } catch (error) {
