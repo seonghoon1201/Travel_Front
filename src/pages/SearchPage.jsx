@@ -48,7 +48,6 @@ const SearchPage = () => {
           setRegionData([]);
         }
       } catch (error) {
-        console.error('핫플 지역 조회 실패:', error);
         setRegionData([]);
       }
       setLoading(false);
@@ -57,23 +56,48 @@ const SearchPage = () => {
     load();
   }, []);
 
+  // 한글 초성 추출 함수
+  const getInitialConsonants = (str) => {
+    const initials = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+    return str.split('').map(char => {
+      const code = char.charCodeAt(0);
+      if (code >= 44032 && code <= 55203) { // 한글 완성형 범위
+        const index = Math.floor((code - 44032) / 588);
+        return initials[index];
+      }
+      return char;
+    }).join('');
+  };
+
   const filteredRegionData = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
     if (!q) return regionData;
-    return regionData.filter(
-      (item) =>
-        (item.city || '').toLowerCase().includes(q) ||
-        (item.Province || '').toLowerCase().includes(q) ||
-        (item.summary || '').toLowerCase().includes(q)
-    );
+    
+    return regionData.filter((item) => {
+      const city = (item.city || '').toLowerCase();
+      const summary = (item.summary || '').toLowerCase();
+      
+      // 기본 텍스트 검색
+      const textMatch = city.includes(q) || summary.includes(q);
+      
+      // 한글 초성 검색
+      let initialMatch = false;
+      if (/[ㄱ-ㅎ]/.test(searchTerm)) { // 초성이 포함된 경우만
+        const cityInitials = getInitialConsonants(item.city || '');
+        const summaryInitials = getInitialConsonants(item.summary || '');
+        initialMatch = cityInitials.includes(searchTerm) || summaryInitials.includes(searchTerm);
+      }
+      
+      return textMatch || initialMatch;
+    });
   }, [regionData, searchTerm]);
 
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto">
+      <div className="w-full mx-auto">
         <BackHeader />
 
-        <div className="pl-[1rem] pr-[1rem]">
+        <div className="sm:px-6  md:px-8">
           {/* 검색창 */}
           <div className="w-full mb-4">
             <SearchBar
@@ -98,7 +122,7 @@ const SearchPage = () => {
           </div>
 
           {/* 리스트 */}
-          <div className="space-y-4 px-2 pb-8">
+          <div className="space-y-4  pb-8">
             {loading ? (
               // 로딩 스켈레톤
               Array.from({ length: 6 }).map((_, i) => (

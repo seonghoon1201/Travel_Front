@@ -19,11 +19,12 @@ const CreateScheduleCard = () => {
       </div>
 
       <div>
-        <p className="font-jalnongothic text-base  text-blue-500">
+        <p className="font-jalnongothic text-base text-blue-500 mt-2 ">
           여행 일정 만들기
         </p>
         <p className="-mt-3 font-noonnu text-xs text-gray-500 ">
-          복잡한 계획은 이제 그만! 장바구니에 담기만 하면 자동으로 최적 동선을 추천받을 수 있어요.
+          복잡한 계획은 이제 그만! <br />
+          장바구니에 담기만 하면 자동으로 최적 동선을 추천받을 수 있어요 🛒
         </p>
       </div>
     </div>
