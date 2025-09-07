@@ -46,7 +46,7 @@ const HomePage = () => {
   return (
     <>
       <DefaultLayout>
-        <div className="w-full max-w-sm mx-auto">
+        <div className="w-full mx-auto">
           <MainHeader isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
           <div className="mt-[1rem]">
 
