@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { KeyRound } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { message } from 'antd';
 import { verifyAuthCode } from '../../api';
 import BackHeader from '../../components/header/BackHeader';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -9,28 +10,36 @@ import DefaultLayout from '../../layouts/DefaultLayout';
 const VerifyCodePage = () => {
   const navigate = useNavigate();
   const [code, setCode] = useState('');
+  const [verifying, setVerifying] = useState(false);
+  const [msg, contextHolder] = message.useMessage();
   const location = useLocation();
   const email = location.state?.email;
 
   const handleSubmit = async () => {
     if (!code) {
-      alert('인증 코드를 입력해주세요.');
+      msg.warning('인증 코드를 입력해 주세요.');
       return;
     }
 
     try {
+      setVerifying(true);
+      const hide = msg.loading('인증 코드 확인 중...', 0);
       await verifyAuthCode({ token: code.trim() });
-
-      alert('인증이 완료되었습니다.');
+      hide();
+      msg.success('인증이 완료되었습니다.');
       navigate('/reset-password', { state: { email } });
     } catch (error) {
-      console.error('인증 실패:', error);
-      alert(error?.response?.data?.message || '인증 코드가 유효하지 않습니다.');
+      msg.error(
+        error?.response?.data?.message || '인증 코드가 유효하지 않습니다.'
+      );
+    } finally {
+      setVerifying(false);
     }
   };
 
   return (
     <DefaultLayout>
+      {contextHolder}
       <BackHeader title="비밀번호 찾기" />
 
       <div className="text-center mt-6 mb-6">
@@ -50,11 +59,14 @@ const VerifyCodePage = () => {
             className="w-full px-10 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             value={code}
             onChange={(e) => setCode(e.target.value)}
+            disabled={verifying}
           />
           <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
         </div>
 
-        <PrimaryButton onClick={handleSubmit}>다음</PrimaryButton>
+        <PrimaryButton onClick={handleSubmit} disabled={verifying}>
+          {verifying ? '검증 중...' : '다음'}
+        </PrimaryButton>
       </div>
     </DefaultLayout>
   );

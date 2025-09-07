@@ -51,8 +51,8 @@ const TravelDiaryList = ({ title, showMore }) => {
 
   return (
     <div>
-      <div className="flex justify-between items-center px-2 mb-2">
-        <h2 className="font-jalnongothic">{title}</h2>
+      <div className="flex justify-between items-center  mb-2">
+        <h2 className="font-jalnangothic">{title}</h2>
            {showMore && (
           <button
             className="font-pretendard text-sm text-blue-500 border rounded-full px-2 py-0.5"
@@ -64,7 +64,7 @@ const TravelDiaryList = ({ title, showMore }) => {
       </div>
 
       {/* 리스트 */}
-      <section className="flex flex-col gap-4 px-3 py-2">
+      <section className="flex flex-col gap-4  py-2">
         {(Array.isArray(diaries) ? diaries : []).slice(0, 5).map((diary) => (
           <div
             key={diary.id}
@@ -85,12 +85,6 @@ const TravelDiaryList = ({ title, showMore }) => {
                   </h3>
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <span>{diary.userNickname || '익명'}의 일정</span>
-                    <span>·</span>
-                    <span>
-                      {dayjs(diary.createdAt).isValid()
-                        ? dayjs(diary.createdAt).format('M월 D일')
-                        : ''}
-                    </span>
                   </div>
                 </div>
               </div>
@@ -115,7 +109,7 @@ const TravelDiaryList = ({ title, showMore }) => {
 
             {/* 태그 */}
             {Array.isArray(diary.tags) && diary.tags.length > 0 && (
-              <div className="px-4 pb-4">
+              <div className="px-4 pb-2">
                 <div className="flex flex-wrap gap-1">
                   {diary.tags.map((t, idx) => (
                     <span
@@ -128,6 +122,17 @@ const TravelDiaryList = ({ title, showMore }) => {
                 </div>
               </div>
             )}
+
+            {/* 작성날짜 - 오른쪽 정렬 */}
+            <div className="px-4 pb-4">
+              <div className="text-right">
+                <span className="text-xs text-gray-400">
+                  작성일 : {dayjs(diary.createdAt).isValid()
+                    ? dayjs(diary.createdAt).format('M월 D일')
+                    : ''}
+                </span>
+              </div>
+            </div>
           </div>
         ))}
       </section>

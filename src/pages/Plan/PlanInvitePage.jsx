@@ -10,8 +10,6 @@ import { GroupAPI } from '../../api';
 import { loadKakao } from '../../utils/kakao';
 import useUserStore from '../../store/userStore';
 
-const APP_ORIGIN = process.env.REACT_APP_APP_ORIGIN || window.location.origin; // 없으면 현재 Origin 사용
-
 const PlanInvitePage = () => {
   const navigate = useNavigate();
 
@@ -20,7 +18,6 @@ const PlanInvitePage = () => {
   const username = useUserStore((s) => s.username);
 
   // 2) 플랜 스토어
-  const locationIds = usePlanStore((s) => s.locationIds);
   const groupId = usePlanStore((s) => s.groupId);
   const groupName = usePlanStore((s) => s.groupName);
   const setGroupId = usePlanStore((s) => s.setGroupId);
