@@ -56,7 +56,7 @@ const MyTravelSection = () => {
 };
 
   return (
-      <div className="px-4 pt-2 m-2 ">
+      <div className="px-4 pt-2 m-2  sm:px-6 md:px-8">
         <p className="text-sm font-semibold text-gray-600 mb-3 pt-2">
           다가오는 여행
         </p>

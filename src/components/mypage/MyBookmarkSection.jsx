@@ -53,7 +53,7 @@ const MyBookmarkSection = () => {
   }
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 sm:px-6 md:px-8">
       <CategoryButtonSection
         activeCategory={activeCategory}
         setActiveCategory={setActiveCategory}
@@ -77,7 +77,7 @@ const MyBookmarkSection = () => {
         ))
       ) : (
         <p className="text-center text-gray-400 text-sm">
-          저장된 여행이 없습니다.
+          즐겨찾기한 장소가 없습니다.
         </p>
       )}
     </div>
