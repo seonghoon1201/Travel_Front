@@ -1,5 +1,6 @@
+// src/pages/Schedule/ScheduleViewPage.jsx
 import React, { useMemo, useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import HomeHeader from '../../components/header/HomeHeader';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -7,20 +8,19 @@ import DayScheduleSection from '../../components/schedule/DayScheduleSection';
 import EditModal from '../../components/schedule/EditModal';
 import KakaoMap from '../../components/map/KakaoMap';
 import useScheduleStore from '../../store/scheduleStore';
-import useCartStore from '../../store/cartStore';
+// ✅ Cart 병합 사용 안 함
 import usePlanStore from '../../store/planStore';
 import { getSchedule } from '../../api';
 import { message, Progress, Flex } from 'antd';
 
-const ScheduleResultPage = () => {
+const ScheduleViewPage = () => {
   const { scheduleId } = useParams();
-  const navigate = useNavigate();
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const scheduleStore = useScheduleStore();
   const detail = scheduleStore.detail;
 
-  // ✅ 예산: 응답(detail.budget) 우선, 없으면 PlanStore
+  // 예산: 응답(detail.budget) 우선, 없으면 PlanStore
   const planBudget = usePlanStore((s) => s.budget ?? 0);
   const budget = detail?.budget ?? planBudget;
 
@@ -31,58 +31,51 @@ const ScheduleResultPage = () => {
         return;
       try {
         const res = await getSchedule(scheduleId);
-        console.log('[ScheduleResultPage] getSchedule response →', res);
+        console.log('[ScheduleViewPage] getSchedule response →', res);
         scheduleStore.setDetail(res);
       } catch (e) {
-        console.error('[ScheduleResult] reload fail', e?.response?.data || e);
+        console.error('[ScheduleViewPage] reload fail', e?.response?.data || e);
         message.error('일정 정보를 불러오지 못했어요.');
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scheduleId]);
 
-  // ✅ placeIndex 보강
+  // ✅ placeIndex: 서버 scheduleItems만으로 구성
   useEffect(() => {
     if (!detail || !Array.isArray(detail?.scheduleItems)) return;
-    const currentIndex = scheduleStore.placeIndex || {};
-    if (Object.keys(currentIndex).length > 0) return;
 
-    const { items: cartItems = [] } = useCartStore.getState();
-    const idxFromCart = {};
-    cartItems.forEach((it) => {
-      const key = String(it.contentId ?? '');
-      if (!key) return;
-      idxFromCart[key] = {
-        name: it.name,
-        title: it.name,
-        imageUrl: it.imageUrl,
-        lat: it?.location?.lat,
-        lng: it?.location?.lng,
-        address: it.address,
-      };
-    });
-
-    const idxMerged = { ...idxFromCart };
+    const idx = {};
     detail.scheduleItems.forEach((it) => {
       const key = String(it.contentId ?? '');
       if (!key) return;
-      if (!idxMerged[key]) {
-        idxMerged[key] = { name: it.title || key, title: it.title || key };
-      }
+
+      // 서버 필드에 맞춰 안전하게 메타데이터 구성
+      // (필드명은 프로젝트 스키마에 맞게 조정)
+      const meta = {
+        name: it.title || it.name || key,
+        title: it.title || it.name || key,
+        imageUrl: it.imageUrl || it.firstImage || it.firstimage || '',
+        lat: typeof it.lat === 'number' ? it.lat : Number(it.mapY ?? it.lat),
+        lng: typeof it.lng === 'number' ? it.lng : Number(it.mapX ?? it.lng),
+        address: it.address || it.addr1 || '',
+      };
+
+      idx[key] = meta;
     });
 
-    scheduleStore.setPlaceIndex(idxMerged);
+    scheduleStore.setPlaceIndex(idx);
   }, [detail, scheduleStore]);
 
   // days 변환
   const days = scheduleStore.getDays();
 
-  // ✅ index 가드
+  // index 가드
   useEffect(() => {
     if (selectedDayIndex >= days.length) setSelectedDayIndex(0);
   }, [days.length, selectedDayIndex]);
 
-  // ✅ 전체 비용 합계
+  // 전체 비용 합계
   const totalCost = useMemo(() => {
     const getCost = (p) => Number(p?.cost ?? p?.price ?? p?.amount ?? 0) || 0;
     try {
@@ -104,7 +97,7 @@ const ScheduleResultPage = () => {
     return Math.min(100, (totalCost / budget) * 100);
   }, [budget, totalCost]);
 
-  // ✅ 선택 Day의 마커: 백엔드 order를 그대로 숫자로 표시
+  // 선택 Day의 지도 마커
   const selectedMarkers = useMemo(() => {
     if (!days[selectedDayIndex]) return [];
     return days[selectedDayIndex].plans
@@ -112,12 +105,11 @@ const ScheduleResultPage = () => {
       .map((p, i) => ({
         lat: p.lat,
         lng: p.lng,
-        order: i + 1, // ✅ 당일 리스트 순서대로 1..N
+        order: i + 1,
         title: p.title || p.name || `#${i + 1}`,
       }));
   }, [days, selectedDayIndex]);
 
-  // 폴리라인 경로
   const path = useMemo(
     () => selectedMarkers.map((m) => ({ lat: m.lat, lng: m.lng })),
     [selectedMarkers]
@@ -129,32 +121,9 @@ const ScheduleResultPage = () => {
       ? `${detail.startDate} ~ ${detail.endDate}`
       : '';
 
-  // 결과 확정(완료) 버튼: 모든 계획/카트/로컬 저장 정리 후 홈으로
-  const finishAndExit = async () => {
-    try {
-      // 결과 화면 캐시도 지워주면 다음 스케줄에 꼬임 방지
-      await useScheduleStore.getState().clear();
-
-      // ✅ 여기서만 전체 정리 (로컬스토리지 포함)
-      await usePlanStore.getState().finishPlanning();
-    } finally {
-      navigate('/mypage', { replace: true });
-    }
-  };
-
-  // 새 일정 시작 버튼: 현재 진행 취소하고 /plan 플로우 처음으로
-  const startNewPlan = async () => {
-    try {
-      await useScheduleStore.getState().clear(); // 결과 캐시 정리
-      await usePlanStore.getState().cancelPlanning(); // ✅ 여기서만 전체 초기화
-    } finally {
-      navigate('/plan/location', { replace: true }); // 여행지 선택부터 다시
-    }
-  };
-
   return (
     <DefaultLayout>
-      <div className="w-full mx-auto px-4 sm:px-6 md:px-8 pb-28">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-8 pb-16">
         <HomeHeader />
 
         {/* Header */}
@@ -229,10 +198,10 @@ const ScheduleResultPage = () => {
         <div className="w-full h-48 rounded-lg mb-6 overflow-hidden">
           <KakaoMap
             markers={selectedMarkers}
-            useCustomOverlay={true}
-            drawPath={true}
+            useCustomOverlay
+            drawPath
             path={path}
-            fitToMarkers={true}
+            fitToMarkers
             fitPadding={60}
           />
         </div>
@@ -246,25 +215,11 @@ const ScheduleResultPage = () => {
           />
         )}
 
-        {/* 편집 모달 */}
+        {/* 편집 모달 (CRUD 연결은 기존 컴포넌트가 처리) */}
         {showEditModal && <EditModal onClose={() => setShowEditModal(false)} />}
-        {/* 하단 고정 버튼 바 */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
-          <div className="mx-auto w-full px-4 sm:px-6 md:px-8 py-3 flex gap-2">
-            <button
-              onClick={startNewPlan}
-              className="flex-1 rounded-xl border border-gray-300 py-2 text-sm"
-            >
-              새로운 일정 짜기
-            </button>
-            <PrimaryButton onClick={finishAndExit} className="flex-1">
-              내 일정에 추가하기
-            </PrimaryButton>
-          </div>
-        </div>
       </div>
     </DefaultLayout>
   );
 };
 
-export default ScheduleResultPage;
+export default ScheduleViewPage;
