@@ -173,10 +173,10 @@ const RegionDetailPage = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto">
+      <div className="w-full mx-auto">
         <BackHeader />
-        <div className="w-full min-h-screen bg-[#F8FBFF]">
-          <div className="pr-3 pl-3">
+        <div className="px-4  sm:px-6 md:px-8 bg-[#F8FBFF]">
+          <div className="pb-6">
             <RegionSummary
               title={decodedCity}
               description={regionInfo?.description}
@@ -184,7 +184,7 @@ const RegionDetailPage = () => {
             />
           </div>
 
-          <div className="px-4 pt-4">
+          <div className="pb-6">
             <h3 className="text-base font-semibold text-gray-800 mb-2">날씨</h3>
             {weatherLoading ? (
               <div className="flex items-center justify-center px-4 py-3 bg-white rounded-lg shadow">
@@ -232,7 +232,7 @@ const RegionDetailPage = () => {
             )}
           </div>
 
-          <div className="px-4 pt-4">
+          <div >
             <h3 className="text-base font-semibold text-gray-800 mb-2">즐길거리</h3>
             <div className="space-y-3">
               {places.length > 0 ? (
@@ -276,8 +276,9 @@ const RegionDetailPage = () => {
           </div>
         </div>
 
-        <div className="fixed bottom-0 left-0 w-full px-4 py-3 bg-white shadow-lg z-50">
-          <div className="max-w-sm mx-auto">
+
+        <div className="fixed bottom-0 left-0 w-full px-4 py-3 bg-white shadow-lg z-50 border-t">
+          <div className="mx-auto">
             <PrimaryButton className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm shadow">
               <CalendarPlus className="w-4 h-4" />
               이 지역으로 일정 만들기

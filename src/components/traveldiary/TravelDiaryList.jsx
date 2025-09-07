@@ -51,7 +51,7 @@ const TravelDiaryList = ({ title, showMore }) => {
 
   return (
     <div>
-      <div className="flex justify-between items-center px-2 mb-2">
+      <div className="flex justify-between items-center  mb-2">
         <h2 className="font-jalnongothic">{title}</h2>
            {showMore && (
           <button
@@ -64,7 +64,7 @@ const TravelDiaryList = ({ title, showMore }) => {
       </div>
 
       {/* 리스트 */}
-      <section className="flex flex-col gap-4 px-3 py-2">
+      <section className="flex flex-col gap-4  py-2">
         {(Array.isArray(diaries) ? diaries : []).slice(0, 5).map((diary) => (
           <div
             key={diary.id}
