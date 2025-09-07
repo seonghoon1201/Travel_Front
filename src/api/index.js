@@ -1,23 +1,15 @@
 // src/api/index.js
 
 // 인증/메일
-export {
-  checkEmail,
-  sendAuthCode,
-  verifyAuthCode,
-} from './auth/mail';
-
+export { checkEmail, sendAuthCode, verifyAuthCode } from './auth/mail';
 export { sendAuthCode as sendEmailCode } from './auth/mail';
 export { verifyAuthCode as verifyEmailToken } from './auth/mail';
 
 // 인증/회원
-export {
-  registerUser,
-  loginUser,
-  getKakaoLoginUrl,
-  kakaoCallback,
-  resetPassword,
-} from './auth/user';
+export { registerUser, loginUser, resetPassword } from './auth/user';
+
+// 카카오
+export { getKakaoLoginUrl, kakaoCallback } from './auth/kakao';
 
 // 그룹
 export { default as GroupAPI } from './group/group';
