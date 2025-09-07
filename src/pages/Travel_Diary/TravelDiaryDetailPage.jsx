@@ -49,11 +49,9 @@ const TravelDiaryDetail = () => {
                 if (found) {
                   setScheduleInfo(found);
                   
-                  // 스케줄 상세 정보 가져오기
                   try {
                     const scheduleRes = await getSchedule(found.scheduleId);
                     setScheduleDetail(scheduleRes);
-                    // 스토어에도 저장 (필요한 경우)
                     scheduleStore.setDetail(scheduleRes);
                   } catch (scheduleErr) {
                   }
@@ -91,19 +89,14 @@ const TravelDiaryDetail = () => {
     }
   };
 
-  // 스케줄 데이터를 days 형태로 변환 (scheduleStore의 getDays 메서드 사용하거나 직접 변환)
   const getDaysFromSchedule = () => {
     if (!scheduleDetail) return [];
     
-    // scheduleStore의 getDays 메서드를 사용할 수 있다면
     if (scheduleStore.getDays) {
       return scheduleStore.getDays();
     }
     
-    // 또는 직접 변환
-    // scheduleDetail의 구조에 따라 적절히 변환
-    // 예시: scheduleDetail.scheduleItems를 날짜별로 그룹화
-    return []; // 실제 구현 필요
+    return []; 
   };
 
   if (loading) {
@@ -146,7 +139,7 @@ const TravelDiaryDetail = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto">
+      <div className="w-full  mx-auto">
         <DiaryHeader />
         <div className="px-4">
 
