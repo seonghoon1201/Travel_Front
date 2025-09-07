@@ -110,7 +110,7 @@ const EditProfile = () => {
 
   return (
     <div className="bg-background min-h-screen flex w-full justify-center px-4">
-      <div className="w-full max-w-sm py-6 overflow-y-auto">
+      <div className="w-full  py-6 overflow-y-auto">
         <BackHeader title="프로필 편집" />
 
         <div className="flex flex-col items-center">
