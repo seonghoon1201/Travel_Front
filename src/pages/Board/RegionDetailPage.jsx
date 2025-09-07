@@ -173,7 +173,7 @@ const RegionDetailPage = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto">
+      <div className="w-full mx-auto">
         <BackHeader />
         <div className="w-full min-h-screen bg-[#F8FBFF]">
           <div className="pr-3 pl-3">
