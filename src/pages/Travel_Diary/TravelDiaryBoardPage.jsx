@@ -73,7 +73,7 @@ const TravelDiaryBoardPage = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto">
+      <div className="w-full  mx-auto">
         <HomeHeader />
 
         {/* 검색창 */}
