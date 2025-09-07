@@ -130,20 +130,37 @@ const LoginPage = () => {
             카카오로 이용하기
           </button>
 
-          <div className="mt-5 text-sm text-gray-500 flex justify-center space-x-4">
-            <button
-              className="hover:underline"
-              onClick={() => navigate('/find-password')}
+          <div className="relative mt-5 text-sm text-gray-500 h-6">
+            {/* 중앙 구분자: 항상 정확히 가운데 */}
+            <div className="pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 flex items-center">
+              <span className="text-gray-300">|</span>
+            </div>
+
+            {/* 왼쪽 텍스트: 가운데에서 왼쪽으로 붙이기 */}
+            <div
+              className="absolute top-1/2 -translate-y-1/2 pr-3 whitespace-nowrap"
+              style={{ right: '50%' }}
             >
-              비밀번호 찾기
-            </button>
-            <span className="text-gray-300">|</span>
-            <button
-              className="hover:underline"
-              onClick={() => navigate('/signup')}
+              <button
+                className="hover:underline"
+                onClick={() => navigate('/find-password')}
+              >
+                비밀번호 찾기
+              </button>
+            </div>
+
+            {/* 오른쪽 텍스트: 가운데에서 오른쪽으로 붙이기 */}
+            <div
+              className="absolute top-1/2 -translate-y-1/2 pl-3 whitespace-nowrap"
+              style={{ left: '50%' }}
             >
-              회원가입
-            </button>
+              <button
+                className="hover:underline"
+                onClick={() => navigate('/signup')}
+              >
+                회원가입
+              </button>
+            </div>
           </div>
         </div>
       </div>
