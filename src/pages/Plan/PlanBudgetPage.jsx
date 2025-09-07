@@ -9,7 +9,6 @@ import usePlanStore from '../../store/planStore';
 const PlanBudgetPage = () => {
   const navigate = useNavigate();
 
-  const locationIds = usePlanStore((s) => s.locationIds);
   const storePeople = usePlanStore((s) => s.people);
   const storeBudget = usePlanStore((s) => s.budget);
   const savePeople = usePlanStore((s) => s.setPeople);
