@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import CreateScheduleCard from './CreateScheduleCard';
 import MyTravelItem from './MyTravelItem';
 
 import useUserStore from '../../store/userStore';
@@ -13,36 +12,49 @@ const MyTravelSection = () => {
   const navigate = useNavigate(); 
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const data = await fetchMyTravel(accessToken);
+  const loadData = async () => {
+    try {
+      const data = await fetchMyTravel(accessToken);
 
-        // 오늘 날짜 기준 분류
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+      console.log('API 응답 데이터:', data);
 
-        const upcoming = [];
-        const past = [];
-
-        data.forEach((trip) => {
-          const start = new Date(trip.startDate);
-          start.setHours(0, 0, 0, 0);
-          (start >= today ? upcoming : past).push(trip);
+      // 여기서 데이터 구조 확인
+      if (Array.isArray(data)) {
+        data.forEach((trip, idx) => {
+          console.log(`trip[${idx}] keys:`, Object.keys(trip));
         });
-
-        setUpcomingTrips(upcoming);
-        setPastTrips(past);
-      } catch (error) {
-        console.error('내 여행 불러오기 실패:', error);
+      } else {
+        console.log('data는 배열이 아님:', data);
       }
-    };
 
-    loadData();
-  }, [accessToken]);
+      // 오늘 날짜 기준 분류
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const upcoming = [];
+      const past = [];
+
+      data.forEach((trip) => {
+        const start = new Date(trip.startDate);
+        start.setHours(0, 0, 0, 0);
+        (start >= today ? upcoming : past).push(trip);
+      });
+
+      setUpcomingTrips(upcoming);
+      setPastTrips(past);
+    } catch (error) {
+      console.error('내 여행 불러오기 실패:', error);
+    }
+  };
+
+  loadData();
+}, [accessToken]);
+
 
   const handleClickTrip = (scheduleId) => {
-    navigate(`/plan/schedule/result/${scheduleId}`);
-  };
+  console.log("➡️ 이동할 scheduleId:", scheduleId);
+  navigate(`/plan/schedule/result/${scheduleId}`);
+};
 
   return (
     <div className="bg-white">
@@ -54,14 +66,15 @@ const MyTravelSection = () => {
           <p className="text-gray-400 text-sm">예정된 여행이 없습니다.</p>
         ) : (
           upcomingTrips.map((trip) => (
-            <MyTravelItem
-              key={trip.scheduleId}
-              title={trip.scheduleName}
-              dateRange={`${trip.startDate} ~ ${trip.endDate}`}
-              companionCount={trip.groupName ? 1 : 0}
-              imageUrl={trip.imageUrl || '/default-travel.jpg'}
-              onClick={() => handleClickTrip(trip.scheduleId)}
-            />
+          <MyTravelItem
+            key={trip.scheduleId}
+            scheduleId={trip.scheduleId}   
+            title={trip.scheduleName}
+            dateRange={`${trip.startDate} ~ ${trip.endDate}`}
+            companionCount={trip.groupName ? 1 : 0}
+            imageUrl={trip.imageUrl || '/default-travel.jpg'}
+            onClick={() => handleClickTrip(trip.scheduleId)} 
+          />
           ))
         )}
 

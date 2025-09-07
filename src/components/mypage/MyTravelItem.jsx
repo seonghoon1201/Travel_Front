@@ -1,21 +1,20 @@
 import React, { useState } from 'react';
 import { Ellipsis, Trash2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 const MyTravelItem = ({
   scheduleId,
   title,
   dateRange,
   companionCount,
-  imageUrl, // 여행 일정 중 첫번째 장소 사진이 이상적
+  imageUrl, 
+  onClick, 
   onEdit,
   onDelete,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
 
   const handleToggle = (e) => {
-    e.stopPropagation(); // 카드 클릭 이벤트 막기
+    e.stopPropagation(); 
     setIsOpen((prev) => !prev);
   };
 
@@ -31,13 +30,9 @@ const MyTravelItem = ({
     onDelete?.(scheduleId);
   };
 
-  const handleCardClick = () => {
-    navigate(`/plan/schedule/result/${scheduleId}`);
-  };
-
   return (
     <div
-      onClick={handleCardClick}
+      onClick={onClick}  
       className="flex items-start pl-2 gap-2 py-2 relative cursor-pointer hover:bg-gray-50 rounded-md"
     >
       <img
@@ -63,9 +58,8 @@ const MyTravelItem = ({
       {isOpen && (
         <div
           className="absolute right-2 top-10 flex gap-3 bg-white shadow-md rounded px-3 py-2 border z-10"
-          onClick={(e) => e.stopPropagation()} // 메뉴 클릭 시 상세 이동 막기
+          onClick={(e) => e.stopPropagation()} 
         >
-
           <button
             onClick={handleDelete}
             className="p-1 hover:bg-gray-100 rounded"

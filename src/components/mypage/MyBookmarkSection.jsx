@@ -19,7 +19,7 @@ const MyBookmarkSection = () => {
             res.favorites
               .filter((f) => f.placeTitle && f.placeTitle.trim() !== '') // 제목 없는 건 제외
               .map((f) => ({
-                contentId: f.contentId, // ✅ 식별자 꼭 포함
+                contentId: f.contentId, 
                 destination: f.placeTitle,
                 category: f.regionCode || '기타',
                 location: f.regionCode || '기타',
@@ -28,7 +28,7 @@ const MyBookmarkSection = () => {
                 closetime: '',
                 tel: '',
                 imageUrl: f.placeImage || '/assets/default_place.jpg',
-                isFavorite: true, // ✅ 즐겨찾기 목록이므로 항상 true
+                isFavorite: true, 
               }))
           );
         }

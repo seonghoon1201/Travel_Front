@@ -34,21 +34,23 @@ const MyPage = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto ">
+      <div className="w-full mx-auto ">
         <BackHeader
           showRightButton={true}
           rightButtonText="프로필 편집"
           onRightButtonClick={() => navigate('/edit/profile')}
         />
-        <div></div>
 
         <ProfileSummary nickname={nickname} />
         <TabMenu activeTab={activeTab} setActiveTab={setActiveTab} />
 
         {/* 탭별 콘텐츠 렌더링 */}
-        {activeTab === 'myTrip' && <MyTravelSection />}
-        {activeTab === 'myDiary' && <MyDiarySection />}
-        {activeTab === 'myBookmark' && <MyBookmarkSection />}
+        <div className="w-full h-full bg-white">
+          {activeTab === 'myTrip' && <MyTravelSection />}
+          {activeTab === 'myDiary' && <MyDiarySection />}
+          {activeTab === 'myBookmark' && <MyBookmarkSection />}
+        </div>
+       
       </div>
     </DefaultLayout>
   );
