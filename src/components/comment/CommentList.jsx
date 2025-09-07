@@ -17,8 +17,7 @@ const CommentList = ({ boardId }) => {
   const [moreLoading, setMoreLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [hasNext, setHasNext] = useState(false);
-
-  // 댓글 섹션 ref 추가
+  const [totalCount, setTotalCount] = useState(0);
   const commentSectionRef = useRef(null);
 
   const { userId: currentUserId, nickname, profileImageUrl } = useUserStore();
@@ -40,58 +39,61 @@ const CommentList = ({ boardId }) => {
   });
 
   // 최초 로드
-  useEffect(() => {
-    const init = async () => {
-      if (!safeId) {
-        setComments([]);
-        setHasNext(false);
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      setPage(0);
-      const res = await getComments(safeId, 0, PAGE_SIZE);
-      const list = Array.isArray(res?.data?.comments)
-        ? res.data.comments.map(toItem)
-        : [];
-      list.sort(byNewest);
-      setComments(list);
-      setHasNext(Boolean(res?.data?.hasNext));
+  const loadInitialComments = async () => {
+    if (!safeId) {
+      setComments([]);
+      setHasNext(false);
+      setTotalCount(0);
       setLoading(false);
-    };
-    init();
-  }, [safeId]);
-
-  // 더보기
-  const loadMore = async () => {
-    if (!hasNext || moreLoading) return;
-    setMoreLoading(true);
-    const nextPage = page + 1;
-    const res = await getComments(safeId, nextPage, PAGE_SIZE);
-
-    const more = (res?.data?.comments || [])
-      .map(toItem)
-      .filter((c) => !commentMap.get(String(c.commentId)));
-
-    setComments((prev) => {
-      const merged = [...prev, ...more];
-      merged.sort(byNewest);
-      return merged;
-    });
-
+      return;
+    }
+    setLoading(true);
+    setPage(0);
+    const res = await getComments(safeId, 0, PAGE_SIZE);
+    const list = Array.isArray(res?.data?.comments)
+      ? res.data.comments.map(toItem)
+      : [];
+    list.sort(byNewest);
+    setComments(list);
     setHasNext(Boolean(res?.data?.hasNext));
-    setPage(nextPage);
-    setMoreLoading(false);
+    setTotalCount(res?.data?.totalCount ?? list.length); 
+    setLoading(false);
   };
 
-  // 맨 위로 스크롤
-  const scrollToTop = () => {
-    if (commentSectionRef.current) {
-      commentSectionRef.current.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'start' 
-      });
-    }
+  useEffect(() => {
+    loadInitialComments();
+  }, [safeId]);
+
+  // loadMore 함수 수정 부분
+const loadMore = async () => {
+  if (!hasNext || moreLoading) return;
+  setMoreLoading(true);
+  const nextPage = page + 1;
+  const res = await getComments(safeId, nextPage, PAGE_SIZE);
+
+  const more = (res?.data?.comments || [])
+    .map(toItem)
+    .filter((c) => !commentMap.get(String(c.commentId)));
+
+  setComments((prev) => {
+    const merged = [...prev, ...more];
+    merged.sort(byNewest);
+    return merged;
+  });
+
+  setHasNext(Boolean(res?.data?.hasNext));
+  setTotalCount((prev) => {
+    const currentLoaded = comments.length + more.length;
+    return res?.data?.hasNext ? Math.max(prev, currentLoaded) : currentLoaded;
+  });
+  setPage(nextPage);
+  setMoreLoading(false);
+};
+
+  const scrollToTopAndReset = async () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    await loadInitialComments();
   };
 
   // 작성
@@ -111,6 +113,7 @@ const CommentList = ({ boardId }) => {
       };
 
       setComments((prev) => [optimistic, ...prev].sort(byNewest));
+      setTotalCount(prev => prev + 1); 
 
       const res = await createComment({ boardId: safeId, content });
       const c = res?.data;
@@ -121,23 +124,24 @@ const CommentList = ({ boardId }) => {
           prev.map((x) => (x.commentId === tempId ? real : x)).sort(byNewest)
         );
       } else {
+       
         const sync = await getComments(safeId, 0, PAGE_SIZE);
         const synced = (sync?.data?.comments || []).map(toItem);
         synced.sort(byNewest);
         setComments(synced);
         setPage(0);
         setHasNext(Boolean(sync?.data?.hasNext));
+        setTotalCount(sync?.data?.totalCount ?? synced.length);
       }
     } catch (e) {
       console.error('댓글 생성 에러:', e);
       setComments((prev) =>
         prev.filter((x) => !String(x.commentId).startsWith('temp-'))
       );
-      alert(e?.message || '댓글 작성 실패');
+      setTotalCount(prev => Math.max(0, prev - 1)); 
     }
   };
 
-  // 삭제
   const handleDelete = async (commentId) => {
     try {
       const res = await deleteComment(commentId);
@@ -145,13 +149,13 @@ const CommentList = ({ boardId }) => {
         setComments((prev) =>
           prev.filter((c) => c.commentId !== commentId).sort(byNewest)
         );
+        setTotalCount(prev => Math.max(0, prev - 1));
       }
     } catch (e) {
       console.error('댓글 삭제 에러:', e);
     }
   };
 
-  // 수정
   const handleEdit = async (commentId, newContent) => {
     if (!newContent) return;
     const res = await updateComment(commentId, newContent);
@@ -183,7 +187,7 @@ const CommentList = ({ boardId }) => {
   return (
     <div className="mt-8" ref={commentSectionRef}>
       <h3 className="font-bold text-base mb-3">
-        댓글 {comments.length > 0 && `(${comments.length})`}
+        댓글 {totalCount > 0 && `(${totalCount})`}
       </h3>
 
       {comments.length === 0 ? (
@@ -213,7 +217,7 @@ const CommentList = ({ boardId }) => {
 
               {page > 0 && (
                 <button
-                  onClick={scrollToTop}
+                  onClick={scrollToTopAndReset}
                   className="px-3 py-1.5 rounded bg-primary hover:bg-blue-200 text-white text-sm font-medium"
                 >
                   ↑ 맨 위로
@@ -225,7 +229,7 @@ const CommentList = ({ boardId }) => {
         </>
       )}
 
-      <div className="pb-[2rem]"> 
+      <div className="pb-1"> 
         <CommentInput onSubmit={handleCreate} disabled={loading || moreLoading} />
       </div>
     </div>

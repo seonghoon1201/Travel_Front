@@ -59,28 +59,32 @@ const ScheduleSelectModal = ({
                 onChange={() => setTempSelected(t.scheduleId)}
                 disabled={t.isWritten} 
               />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className={`text-sm font-medium truncate ${
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                
+                <p
+                  className={`mt-[0.6rem] text-sm font-medium truncate ${
                     t.isWritten ? 'text-gray-500' : ''
-                  }`}>
-                    {t.scheduleName}
-                  </p>
-                  {t.isWritten && (
-                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
-                  )}
-                </div>
-                <p className={`text-xs ${
-                  t.isWritten ? 'text-gray-400' : 'text-gray-500'
-                }`}>
-                  {t.startDate} ~ {t.endDate}
+                  }`}
+                >
+                  {t.scheduleName}
+                  <br />
+                  <span className="text-xs text-gray-400">
+                    {t.startDate} ~ {t.endDate}
+                  </span>
                 </p>
-                {t.isWritten && (
-                  <p className="text-xs text-green-600 font-medium">
-                    일기 작성 완료
-                  </p>
-                )}
               </div>
+
+              {t.isWritten && (
+              <div className="flex items-center text-xs text-green-600 font-medium ">
+                <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                <span>일기 작성 완료</span>
+              </div>
+            )}
+
+            </div>
+
+
               <ChevronRight className={`w-4 h-4 ${
                 t.isWritten ? 'text-gray-300' : 'text-gray-400'
               }`} />
@@ -109,7 +113,7 @@ const ScheduleSelectModal = ({
               아직 등록된 여행 일정이 없습니다.
             </p>
             <button
-              onClick={() => (window.location.href = '/plan/create')}
+              onClick={() => (window.location.href = '/plan/location')}
               className="inline-flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-sky-500 text-white"
             >
               일정 만들기
@@ -125,7 +129,7 @@ const ScheduleSelectModal = ({
               새로운 여행 일정을 만들어보세요.
             </p>
             <button
-              onClick={() => (window.location.href = '/plan/create')}
+              onClick={() => (window.location.href = '/plan/location')}
               className="inline-flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-sky-500 text-white mt-4"
             >
               새 일정 만들기
@@ -136,8 +140,8 @@ const ScheduleSelectModal = ({
             <Section title="다가오는 여행" items={upcoming} />
             <Section title="지난 여행" items={past} />
 
-            <div className="mt-3 p-1 bg-blue-50 rounded-lg flex items-center">
-              <p className="text-xs text-blue-700">
+            <div className="mt-[1rem] p-[0.2rem] bg-blue-50 rounded-lg flex items-center">
+              <p className="pt-[0.4rem] text-xs text-blue-700">
                 💡 이미 일기를 작성한 일정은 선택할 수 없습니다.
               </p>
             </div>

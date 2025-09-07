@@ -3,7 +3,7 @@ import logo from '../../assets/logo.png';
 import { useNavigate } from 'react-router-dom';
 import { setItem } from '../../utils/localStorage';
 import PrimaryButton from '../../components/common/PrimaryButton';
-import axios from 'axios';
+import { loginUser, getKakaoLoginUrl } from '../../api';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import useUserStore from '../../store/userStore';
 
@@ -15,11 +15,10 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
 
   const handleKakaoLogin = () => {
-
     // 로컬
     //window.location.href = `${API_BASE_URL}/auth/kakao/login`;
     //  서버
-    window.location.href = `${process.env.REACT_APP_API_BASE_URL}/auth/kakao/login`;
+    window.location.href = getKakaoLoginUrl();
   };
 
   const handleLogin = async () => {
@@ -29,18 +28,13 @@ const LoginPage = () => {
     }
 
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/login`, {
-        email,
-        password,
-      });
-      // console.log(' 로그인 응답 전체:', res.data);
-
+      const data = await loginUser({ email, password });
       const {
         jwtDto: { accessToken, refreshToken },
         userNickname: nickname,
         userProfileImage: profileImageUrl,
         userRole,
-      } = res.data;
+      } = data;
 
       login({ accessToken, refreshToken, nickname, profileImageUrl, userRole }); // store 갱신
 
