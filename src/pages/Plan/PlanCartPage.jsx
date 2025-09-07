@@ -223,14 +223,20 @@ const PlanCartPage = () => {
   useEffect(() => {
     if (!codePair?.ldongRegnCd || !codePair?.ldongSignguCd || codeInvalid)
       return;
-
     (async () => {
       try {
-        await ensureCart({
-          ldongRegnCd: String(codePair.ldongRegnCd),
-          ldongSignguCd: String(codePair.ldongSignguCd),
-        });
-        await loadFromServer().catch(() => {});
+        // 1) cartId가 이미 있으면 우선 그걸로 동기화
+        const currentCartId = useCartStore.getState().cartId;
+        if (currentCartId) {
+          await loadFromServer().catch(() => {});
+        } else {
+          // 2) 없을 때만 ensureCart
+          await ensureCart({
+            ldongRegnCd: String(codePair.ldongRegnCd),
+            ldongSignguCd: String(codePair.ldongSignguCd),
+          });
+          await loadFromServer().catch(() => {});
+        }
       } catch {
         message.error('장바구니를 준비하지 못했어요.');
       } finally {
@@ -463,7 +469,11 @@ const PlanCartPage = () => {
 
   // ✅ 상세 페이지로 이동
   const goToDetail = useCallback(
-    (id) => navigate(`/board/place/${id}`),
+    (id) => {
+      // 플로우 유지 마커 (안전)
+      usePlanStore.getState().beginPlanFlow();
+      navigate(`/board/place/${id}`);
+    },
     [navigate]
   );
 
