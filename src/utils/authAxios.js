@@ -1,22 +1,25 @@
+// utils/authAxios.js
 import axios from 'axios';
 import { API_BASE_URL } from '../api/config';
 import useUserStore from '../store/userStore';
 
-const BASE_URL = API_BASE_URL || process.env.REACT_APP_API_BASE_URL || '';
+const BASE_URL = API_BASE_URL || '';
 
 const authAxios = axios.create({ baseURL: BASE_URL });
 
-// 공개 엔드포인트(Authorization 붙이면 안 되는 요청) ✅
-const PUBLIC_PATHS = [
+// 👉 토큰이 필요 없는 엔드포인트 목록
+const NO_AUTH_PATHS = [
+  '/auth/kakao/login',
+  '/auth/kakao/callback',
   '/user/login',
   '/user/register',
   '/user/password',
-  '/auth/kakao/callback',
   '/mail/send',
   '/mail/verify',
   '/mail/check-email',
 ];
 
+// ---- helpers ----
 const jwtRegex = /^[A-Za-z0-9\-_]+=*\.[A-Za-z0-9\-_]+=*\.[A-Za-z0-9\-_+=/]*$/;
 
 function normalizeBearer(raw) {
@@ -26,22 +29,18 @@ function normalizeBearer(raw) {
   return `Bearer ${stripped}`;
 }
 
-// ---- request interceptor ----
-authAxios.interceptors.request.use((config) => {
-  const url = config?.url || '';
-  const isPublic =
-    config.__skipAuth || PUBLIC_PATHS.some((p) => url.startsWith(p));
+let refreshPromise = null;
 
-  // 공개 요청이면 Authorization 제거
-  if (isPublic) {
+authAxios.interceptors.request.use((config) => {
+  const raw = useUserStore.getState().accessToken;
+  const bearer = normalizeBearer(raw);
+  // 공개 엔드포인트는 Authorization을 강제로 제거
+  const url = config?.url || '';
+  const isNoAuth = NO_AUTH_PATHS.some((p) => url.startsWith(p));
+  if (isNoAuth) {
     if (config.headers?.Authorization) delete config.headers.Authorization;
     return config;
   }
-
-  // 그 외엔 토큰 부착
-  const raw = useUserStore.getState().accessToken;
-  const bearer = normalizeBearer(raw);
-
   if (bearer) {
     config.headers = config.headers || {};
     config.headers.Authorization = bearer;
@@ -50,9 +49,6 @@ authAxios.interceptors.request.use((config) => {
   }
   return config;
 });
-
-// ---- response interceptor ----
-let refreshPromise = null;
 
 authAxios.interceptors.response.use(
   (res) => res,
@@ -82,8 +78,7 @@ authAxios.interceptors.response.use(
 
       const newRaw = data?.accessToken;
       const newBearer = normalizeBearer(newRaw);
-      if (!newBearer)
-        throw new Error('리프레시 응답에 accessToken 없음/형식 오류');
+      if (!newBearer) throw new Error('리프레시 응답에 accessToken 없음');
 
       if (typeof useUserStore.getState().login === 'function') {
         useUserStore.getState().login({ accessToken: newRaw, refreshToken });
@@ -98,6 +93,7 @@ authAxios.interceptors.response.use(
     } catch (e) {
       refreshPromise = null;
       useUserStore.getState().logout?.();
+      window.location.replace(`${BASE_URL}/auth/kakao/login`);
       return Promise.reject(e);
     }
   }
