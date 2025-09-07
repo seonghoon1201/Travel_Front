@@ -73,11 +73,11 @@ const TravelDiaryBoardPage = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full  mx-auto">
+      <div className="w-full mx-auto">
         <HomeHeader />
 
         {/* 검색창 */}
-        <div className="w-full mb-4 px-4">
+        <div className="w-full mb-4 sm:px-6 md:px-8">
           <SearchBar
             placeholder="일기 제목으로 검색"
             value={searchTerm}
@@ -86,7 +86,7 @@ const TravelDiaryBoardPage = () => {
         </div>
 
         {/* 상단 제목 + 글쓰기 */}
-        <div className="flex items-center justify-between px-6 ">
+        <div className="flex items-center justify-between  sm:px-6  md:px-8 pb-6">
           <div className="text-medium font-semibold">국내 실시간 여행일기</div>
           <button
             className="text-sm text-gray-500 flex items-center gap-1"
@@ -98,7 +98,7 @@ const TravelDiaryBoardPage = () => {
         </div>
 
         {/* 여행일기 리스트 */}
-        <div className="space-y-3 px-[1.2rem] pb-[1rem] pt-[1rem]">
+        <div className="space-y-3 sm:px-6 md:px-8 pb-6 ">
           {loading ? (
             <p className="text-gray-400 text-sm">로딩 중...</p>
           ) : filteredDiaries.length === 0 ? (
