@@ -46,13 +46,13 @@ const HomePage = () => {
   return (
     <>
       <DefaultLayout>
-        <div className="w-full max-w-sm mx-auto">
+        <div className="w-full mx-auto">
           <MainHeader isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
           <div className="mt-[1rem]">
 
             {isMenuOpen && <SideMenu onClose={() => setIsMenuOpen(false)} />}
 
-            <main className="w-full">
+            <main className="w-full px-4 sm:px-6 md:px-8">
               <CreateScheduleCard />
 
               <LocationSection

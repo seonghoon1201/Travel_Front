@@ -34,7 +34,7 @@ const MyPage = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto ">
+      <div className="w-full mx-auto ">
         <BackHeader
           showRightButton={true}
           rightButtonText="프로필 편집"
