@@ -109,40 +109,12 @@ const usePlanStore = create(
           selectedRegionImage: String(imageUrl || ''),
         }),
 
-      // ✅ 라우트 경계에서 호출: /plan/* 들어옴
+      // ✅ 플랜 시작(플로우 진입 표시)
       beginPlanFlow: () => set({ inPlanFlow: true, planSessionId: Date.now() }),
 
-      // ✅ 라우트 경계 언마운트 시 호출: /plan/* 벗어남 → 상태 정리
-      endPlanFlow: async () => {
-        try {
-          await useCartStore.getState().resetForNewPlan();
-        } catch (_) {}
-        set({
-          inPlanFlow: false,
-          planSessionId: null,
-          locationIds: [],
-          locationCodes: [],
-          startDate: null,
-          endDate: null,
-          companion: '',
-          styles: [],
-          transport: '',
-          invitees: [],
-          people: 1,
-          budget: 0,
-          cartItems: [],
-          departurePlace: '',
-          departureTime: '',
-          scheduleName: '',
-          groupId: '',
-          groupName: '',
-          scheduleType: 'GROUP',
-          scheduleStyle: '',
-          selectedRegionName: '',
-          selectedRegionImage: '',
-          // favorites 유지
-        });
-      },
+      // ❌ 자동 초기화 금지: /plan/* 벗어나도 여기서는 비우지 않음
+      //    (자세히 보기 등 외부 라우트로 이동해도 플로우 유지)
+      endPlanFlow: () => set({ inPlanFlow: false }),
 
       // ✅ 세션 시작: 카트/입력값을 비우되, 지역정보는 유지
       startNewPlanSession: async () => {
@@ -177,8 +149,8 @@ const usePlanStore = create(
         }));
       },
 
-      // ✅ 세션 종료: 플랜/카트/세션스토리지 전부 삭제 (플로우 이탈/로그아웃)
-      endPlanSession: async () => {
+      // ✅ 플랜 "완료": 일정 생성 성공 직후 호출 → 모든 것 정리
+      finishPlanning: async () => {
         await useCartStore
           .getState()
           .resetForNewPlan()
@@ -207,7 +179,43 @@ const usePlanStore = create(
           selectedRegionImage: '',
         });
         try {
-          sessionStorage.removeItem('plan-store-v2');
+          localStorage.removeItem('plan-store-v3');
+        } catch {}
+      },
+
+      // ✅ 플랜 "취소": 사용자가 명시적으로 새로 시작을 선택했을 때
+      cancelPlanning: async () => {
+        await useCartStore
+          .getState()
+          .resetForNewPlan()
+          .catch(() => {});
+        set({
+          inPlanFlow: false,
+          planSessionId: null,
+          locationIds: [],
+          locationCodes: [],
+          startDate: null,
+          endDate: null,
+          companion: '',
+          styles: [],
+          transport: '',
+          invitees: [],
+          people: 1,
+          budget: 0,
+          cartItems: [],
+          departurePlace: '',
+          departureTime: '',
+          scheduleName: '',
+          groupId: '',
+          groupName: '',
+          scheduleType: 'GROUP',
+          scheduleStyle: '',
+          favorites: [],
+          selectedRegionName: '',
+          selectedRegionImage: '',
+        });
+        try {
+          localStorage.removeItem('plan-store-v3');
         } catch {}
       },
 
@@ -332,15 +340,14 @@ const usePlanStore = create(
           selectedRegionImage: '',
         });
         try {
-          sessionStorage.removeItem('plan-store-v2');
+          localStorage.removeItem('plan-store-v3');
         } catch {}
       },
     }),
     {
-      name: 'plan-store-v2',
-      version: 2,
-      // ✅ 같은 탭 새로고침만 유지
-      storage: createJSONStorage(() => sessionStorage),
+      name: 'plan-store-v3',
+      version: 3,
+      storage: createJSONStorage(() => localStorage),
 
       // 꼭 필요한 필드만 저장
       partialize: (s) => ({

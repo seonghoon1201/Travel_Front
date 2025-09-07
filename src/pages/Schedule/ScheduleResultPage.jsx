@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate, createPortal } from 'react-router-dom';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import HomeHeader from '../../components/header/HomeHeader';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -14,6 +14,7 @@ import { message, Progress, Flex } from 'antd';
 
 const ScheduleResultPage = () => {
   const { scheduleId } = useParams();
+  const navigate = useNavigate();
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const scheduleStore = useScheduleStore();
@@ -128,9 +129,32 @@ const ScheduleResultPage = () => {
       ? `${detail.startDate} ~ ${detail.endDate}`
       : '';
 
+  // 결과 확정(완료) 버튼: 모든 계획/카트/로컬 저장 정리 후 홈으로
+  const finishAndExit = async () => {
+    try {
+      // 결과 화면 캐시도 지워주면 다음 스케줄에 꼬임 방지
+      await useScheduleStore.getState().clear();
+
+      // ✅ 여기서만 전체 정리 (로컬스토리지 포함)
+      await usePlanStore.getState().finishPlanning();
+    } finally {
+      navigate('/', { replace: true }); // 추후에 일정 확인 페이지로 바꾸기
+    }
+  };
+
+  // 새 일정 시작 버튼: 현재 진행 취소하고 /plan 플로우 처음으로
+  const startNewPlan = async () => {
+    try {
+      await useScheduleStore.getState().clear(); // 결과 캐시 정리
+      await usePlanStore.getState().cancelPlanning(); // ✅ 여기서만 전체 초기화
+    } finally {
+      navigate('/plan/location', { replace: true }); // 여행지 선택부터 다시
+    }
+  };
+
   return (
     <DefaultLayout>
-      <div className="w-full mx-auto px-4 sm:px-6 md:px-8">
+      <div className="w-full mx-auto px-4 sm:px-6 md:px-8 pb-28">
         <HomeHeader />
 
         {/* Header */}
@@ -224,6 +248,20 @@ const ScheduleResultPage = () => {
 
         {/* 편집 모달 */}
         {showEditModal && <EditModal onClose={() => setShowEditModal(false)} />}
+        {/* 하단 고정 버튼 바 */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
+          <div className="mx-auto w-full px-4 sm:px-6 md:px-8 py-3 flex gap-2">
+            <button
+              onClick={startNewPlan}
+              className="flex-1 rounded-xl border border-gray-300 py-2 text-sm"
+            >
+              새로운 일정 짜기
+            </button>
+            <PrimaryButton onClick={finishAndExit} className="flex-1">
+              내 일정에 추가하기
+            </PrimaryButton>
+          </div>
+        </div>
       </div>
     </DefaultLayout>
   );

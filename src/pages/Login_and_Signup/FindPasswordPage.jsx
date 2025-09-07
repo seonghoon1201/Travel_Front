@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { sendAuthCode } from '../../api';
 import BackHeader from '../../components/header/BackHeader';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import logo from '../../assets/logo.png';
@@ -18,7 +18,7 @@ const FindPasswordPage = () => {
     }
 
     try {
-      await axios.post(`${process.env.REACT_APP_API_URL}/mail/send`, { email });
+      await sendAuthCode({ email });
       alert('인증 코드가 이메일로 전송되었습니다.');
       navigate('/find-password/verify', { state: { email } });
     } catch (error) {

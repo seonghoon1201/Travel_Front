@@ -76,14 +76,14 @@ const PlanCartPage = () => {
   const [syncing, setSyncing] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // map refs
+  // 지도
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const kakaoRef = useRef(null);
   const markersRef = useRef([]);
   const infoWindowRef = useRef(null);
 
-  // 정규화/검증
+  // 지역 코드 정규화/검증
   const canonPair = useCallback(
     (o = {}) => ({
       ldongRegnCd: String(o.ldongRegnCd ?? o.lDongRegnCd ?? ''),
@@ -99,23 +99,22 @@ const PlanCartPage = () => {
     []
   );
 
-  // ✅ 여행 일수(포함) 계산
+  // 여행 일수(포함)
   const tripDays = useMemo(() => {
     if (!startDate || !endDate) return null;
     const s = new Date(String(startDate));
     const e = new Date(String(endDate));
     if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return null;
-    const diff = Math.floor((e - s) / 86400000) + 1; // inclusive
+    const diff = Math.floor((e - s) / 86400000) + 1;
     return diff > 0 ? diff : null;
   }, [startDate, endDate]);
 
-  // ✅ 최대/최소 한도 (NEW)
+  // 최소/최대 개수
   const cartLimit = useMemo(() => (tripDays ? tripDays * 5 : null), [tripDays]);
-  const cartMin = useMemo(() => (tripDays ? tripDays * 2 : null), [tripDays]); // ✅ NEW
-  const isLimitReached = cartLimit != null && cartItems.length >= cartLimit;
-  const isMinMet = cartMin != null ? cartItems.length >= cartMin : false; // ✅ NEW
+  const cartMin = useMemo(() => (tripDays ? tripDays * 2 : null), [tripDays]);
+  const isMinMet = cartMin != null ? cartItems.length >= cartMin : false;
   const overBy = cartLimit != null ? cartItems.length - cartLimit : 0;
-  const underBy = cartMin != null ? Math.max(0, cartMin - cartItems.length) : 0; // ✅ NEW
+  const underBy = cartMin != null ? Math.max(0, cartMin - cartItems.length) : 0;
 
   // 예산 계산
   useEffect(() => {
@@ -190,43 +189,6 @@ const PlanCartPage = () => {
         });
         const content = Array.isArray(data?.content) ? data.content : [];
 
-        const pickRegion = (item) => {
-          const direct =
-            item?.sigungu || item?.sigunguName || item?.region || '';
-          if (direct) return String(direct);
-          const addr = `${item?.address ?? ''} ${item?.address2 ?? ''}`.trim();
-          if (!addr) return '';
-          const tokens = addr.split(/\s+/);
-          if (tokens.length >= 2) return tokens[1];
-          if (tokens.length >= 1) return tokens[0];
-          return '';
-        };
-
-        const pickImage = (c) =>
-          c?.firstImage ||
-          c?.firstimage ||
-          c?.firstImage2 ||
-          c?.firstimage2 ||
-          '';
-
-        const rowsAll = content.map((c) => ({
-          region: pickRegion(c),
-          title: c?.title || '',
-          imageUrl: pickImage(c),
-          hasImage: !!pickImage(c),
-        }));
-
-        console.groupCollapsed('[places/region/theme] 전체 항목(이미지 유/무)');
-        console.table(rowsAll);
-        console.groupEnd();
-
-        const missing = rowsAll.filter((r) => !r.hasImage);
-        if (missing.length) {
-          console.warn(
-            `이미지 없는 항목 ${missing.length}건:`,
-            missing.map((m) => m.title)
-          );
-        }
         const mapped = content.map((item) => {
           const imageUrl = item.firstImage || item.firstimage || '';
           return {
@@ -257,18 +219,24 @@ const PlanCartPage = () => {
     [activeCategory, codePair, codeInvalid]
   );
 
-  // 코드/카테고리 변경 시 준비 → 동기화 → 첫 페이지
+  // 준비 → 동기화 → 첫 페이지
   useEffect(() => {
     if (!codePair?.ldongRegnCd || !codePair?.ldongSignguCd || codeInvalid)
       return;
-
     (async () => {
       try {
-        await ensureCart({
-          ldongRegnCd: String(codePair.ldongRegnCd),
-          ldongSignguCd: String(codePair.ldongSignguCd),
-        });
-        await loadFromServer().catch(() => {});
+        // 1) cartId가 이미 있으면 우선 그걸로 동기화
+        const currentCartId = useCartStore.getState().cartId;
+        if (currentCartId) {
+          await loadFromServer().catch(() => {});
+        } else {
+          // 2) 없을 때만 ensureCart
+          await ensureCart({
+            ldongRegnCd: String(codePair.ldongRegnCd),
+            ldongSignguCd: String(codePair.ldongSignguCd),
+          });
+          await loadFromServer().catch(() => {});
+        }
       } catch {
         message.error('장바구니를 준비하지 못했어요.');
       } finally {
@@ -287,7 +255,7 @@ const PlanCartPage = () => {
     loadPage,
   ]);
 
-  // Kakao Map 초기화
+  // 카카오맵 초기화
   useEffect(() => {
     let disposed = false;
     (async () => {
@@ -318,6 +286,7 @@ const PlanCartPage = () => {
     };
   }, []);
 
+  // 포인트 메모이즈
   const points = useMemo(
     () =>
       apiItems
@@ -338,13 +307,13 @@ const PlanCartPage = () => {
     [apiItems]
   );
 
+  // 마커 렌더
   const renderMarkers = useCallback(() => {
     const map = mapRef.current;
     const kakao = kakaoRef.current;
     if (!map || !kakao) return;
 
     const { maps } = kakao;
-    // clear
     if (markersRef.current.length) {
       markersRef.current.forEach((m) => m.setMap(null));
       markersRef.current = [];
@@ -378,7 +347,7 @@ const PlanCartPage = () => {
     renderMarkers();
   }, [renderMarkers]);
 
-  // 리스트 항목 클릭 → 지도 팬 & 인포윈도우
+  // 리스트 클릭 시 지도 이동
   const panToItem = useCallback((item) => {
     if (!item?.location || !mapRef.current || !kakaoRef.current) return;
     const { maps } = kakaoRef.current;
@@ -397,14 +366,13 @@ const PlanCartPage = () => {
     );
   }, []);
 
-  // 장바구니 담기/빼기
+  // 카트 담기/빼기
   const handleCartClick = useCallback(
     async (place) => {
       const exists = isInCart(place.contentId);
       if (exists) {
         await removeByContentId(place.contentId);
       } else {
-        // ✅ 최대 한도 검사 (최소 조건과는 무관)
         if (cartLimit != null && cartItems.length >= cartLimit) {
           message.warning(
             `이번 여행은 총 ${tripDays}일이라 카트는 최대 ${cartLimit}개(일×5)까지 담을 수 있어요.`
@@ -420,7 +388,6 @@ const PlanCartPage = () => {
 
   const handleAddToCart = useCallback(
     async (placeWithPrice) => {
-      // ✅ 레이스 가드(최대 한도)
       if (
         cartLimit != null &&
         useCartStore.getState().items.length >= cartLimit
@@ -438,15 +405,16 @@ const PlanCartPage = () => {
     [addToCart, cartLimit]
   );
 
+  // 예산 게이지
   const percentUsed =
     budget > 0 ? Math.min(100, ((budget - remainingBudget) / budget) * 100) : 0;
 
+  // 자동 일정으로 이동
   const syncCartThenGo = useCallback(async () => {
     if (!cartItems.length) {
       message.warning('장바구니가 비어있어요.');
       return;
     }
-    // ✅ 최소/최대 조건 체크 (NEW)
     if (cartMin != null && cartItems.length < cartMin) {
       message.warning(
         `이번 여행은 총 ${tripDays}일이라 자동 일정은 최소 ${cartMin}개(일×2) 이상 담아야 가능해요. 현재 ${cartItems.length}개로 ${underBy}개 더 담아 주세요.`
@@ -478,6 +446,7 @@ const PlanCartPage = () => {
     navigate,
   ]);
 
+  // 타이틀용 지역명
   const [titleRegion, setTitleRegion] = useState(null);
   useEffect(() => {
     (async () => {
@@ -493,10 +462,20 @@ const PlanCartPage = () => {
     })();
   }, [locationIds]);
 
-  // ✅ 버튼 활성화 여부 (NEW)
+  // 자동 일정 버튼 비활성 조건
   const disableAutoPlan =
     (cartLimit != null && cartItems.length > cartLimit) ||
     (cartMin != null && cartItems.length < cartMin);
+
+  // ✅ 상세 페이지로 이동
+  const goToDetail = useCallback(
+    (id) => {
+      // 플로우 유지 마커 (안전)
+      usePlanStore.getState().beginPlanFlow();
+      navigate(`/board/place/${id}`);
+    },
+    [navigate]
+  );
 
   return (
     <DefaultLayout>
@@ -567,7 +546,7 @@ const PlanCartPage = () => {
             </Tooltip>
           </div>
 
-          {/* ✅ 최소/최대 한도 안내 박스 (REDESIGN) */}
+          {/* 안내 박스 */}
           <div className="mt-3">
             {cartLimit == null || cartMin == null ? (
               <div className="text-[12px] text-gray-600 bg-gray-50 border border-gray-200 rounded-xl p-3">
@@ -578,7 +557,6 @@ const PlanCartPage = () => {
             ) : (
               (() => {
                 const status = overBy > 0 ? 'over' : !isMinMet ? 'under' : 'ok';
-
                 const styles = {
                   over: {
                     wrap: 'bg-red-50 border-red-200 text-red-700',
@@ -619,7 +597,8 @@ const PlanCartPage = () => {
                     hint: (
                       <>
                         자동 일정을 바로 만들 수 있어요. 최대{' '}
-                        <b>{cartLimit}개</b>까지 담을 수 있습니다.
+                        <b>{cartLimit}개</b>
+                        까지 담을 수 있습니다.
                       </>
                     ),
                   },
@@ -637,8 +616,6 @@ const PlanCartPage = () => {
                         <div className="font-semibold text-[13px] leading-5">
                           {styles.title}
                         </div>
-
-                        {/* 칩: 최소 / 현재 / 최대 */}
                         <div
                           className={`mt-2 inline-flex flex-wrap items-center gap-2 rounded-lg px-2 py-2 ${styles.chipWrap}`}
                         >
@@ -666,25 +643,9 @@ const PlanCartPage = () => {
                             최대 <b>{cartLimit}</b>개
                           </span>
                         </div>
-
-                        {/* 설명/가이드 */}
                         <p className="mt-2 text-[12px] leading-6">
                           {styles.hint}
                         </p>
-
-                        {/* 추가 힌트 (under/over일 때만) */}
-                        {status === 'under' && (
-                          <p className="mt-1 text-[11px] opacity-90">
-                            팁:맛집/관광을 골고루 담으면 더 자연스러운 일정이
-                            만들어져요.
-                          </p>
-                        )}
-                        {status === 'over' && (
-                          <p className="mt-1 text-[11px] opacity-90">
-                            팁: 비슷한 위치의 장소를 줄이거나, 하루당 5개 이내로
-                            맞춰보세요.
-                          </p>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -715,12 +676,22 @@ const PlanCartPage = () => {
                         <img
                           src={item.imageUrl}
                           alt={item.name}
-                          className="w-14 h-14 rounded-md object-cover"
+                          className="w-14 h-14 rounded-md object-cover cursor-pointer"
                           loading="lazy"
                           onError={() => markBroken(String(item.contentId))}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            goToDetail(String(item.contentId));
+                          }}
                         />
                       ) : (
-                        <div className="w-14 h-14 rounded-md bg-gray-200 flex items-center justify-center text-[10px] text-gray-500">
+                        <div
+                          className="w-14 h-14 rounded-md bg-gray-200 flex items-center justify-center text-[10px] text-gray-500 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            goToDetail(String(item.contentId));
+                          }}
+                        >
                           No Image
                         </div>
                       )}
@@ -732,7 +703,13 @@ const PlanCartPage = () => {
                       />
                     </div>
                     <div>
-                      <div className="text-sm font-bold text-gray-800">
+                      <div
+                        className="text-sm font-bold text-gray-800 hover:underline cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          goToDetail(String(item.contentId));
+                        }}
+                      >
                         {item.name}
                       </div>
                       <div className="text-xs text-gray-500">
@@ -750,16 +727,29 @@ const PlanCartPage = () => {
                       )}
                     </div>
                   </div>
-                  <CartButton
-                    isAdded={isAdded}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCartClick({
-                        ...item,
-                        contentId: String(item.contentId),
-                      });
-                    }}
-                  />
+
+                  {/* 오른쪽 버튼: 자세히 보기 + 카트 버튼 */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      className="text-xs px-2 py-1 rounded-md border border-blue-200 text-blue-600 hover:bg-blue-50 transition"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        goToDetail(String(item.contentId));
+                      }}
+                    >
+                      자세히 보기
+                    </button>
+                    <CartButton
+                      isAdded={isAdded}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCartClick({
+                          ...item,
+                          contentId: String(item.contentId),
+                        });
+                      }}
+                    />
+                  </div>
                 </div>
               );
             })}
@@ -788,7 +778,7 @@ const PlanCartPage = () => {
         </div>
       </div>
 
-      {/* 하단 고정 바 */}
+      {/* 하단 바 */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
         <div className="mx-auto w-full px-4 sm:px-6 md:px-8 py-3 flex gap-2">
           <button
@@ -801,7 +791,7 @@ const PlanCartPage = () => {
           <PrimaryButton
             onClick={syncCartThenGo}
             className="flex-1"
-            disabled={disableAutoPlan} // ✅ NEW: 최소/최대 충족 시에만 활성화
+            disabled={disableAutoPlan}
           >
             자동 일정 짜기
           </PrimaryButton>
@@ -832,25 +822,45 @@ const PlanCartPage = () => {
                   <img
                     src={it.imageUrl || FALLBACK_IMG}
                     alt={it.name}
-                    className="w-12 h-12 rounded-md object-cover"
+                    className="w-12 h-12 rounded-md object-cover cursor-pointer"
                     onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      goToDetail(String(it.contentId));
+                    }}
                   />
                   <div>
-                    <div className="text-sm font-semibold">{it.name}</div>
+                    <div
+                      className="text-sm font-semibold hover:underline cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        goToDetail(String(it.contentId));
+                      }}
+                    >
+                      {it.name}
+                    </div>
                     <div className="text-xs text-gray-500">{it.address}</div>
                     <div className="text-xs text-gray-500">
                       ₩{Number(it.price || 0).toLocaleString()}
                     </div>
                   </div>
                 </div>
-                <button
-                  className="text-xs text-red-500"
-                  onClick={async () => {
-                    await removeByContentId(String(it.contentId));
-                  }}
-                >
-                  제거
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    className="text-xs text-blue-600 border border-blue-200 px-2 py-1 rounded-md hover:bg-blue-50"
+                    onClick={() => goToDetail(String(it.contentId))}
+                  >
+                    자세히
+                  </button>
+                  <button
+                    className="text-xs text-red-500"
+                    onClick={async () => {
+                      await removeByContentId(String(it.contentId));
+                    }}
+                  >
+                    제거
+                  </button>
+                </div>
               </div>
             ))}
             <button

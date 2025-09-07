@@ -1,35 +1,31 @@
-import React, { useState } from "react";
-import { KeyRound } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
-import BackHeader from "../../components/header/BackHeader";
-import PrimaryButton from "../../components/common/PrimaryButton";
-import DefaultLayout from "../../layouts/DefaultLayout";
+import React, { useState } from 'react';
+import { KeyRound } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { verifyAuthCode } from '../../api';
+import BackHeader from '../../components/header/BackHeader';
+import PrimaryButton from '../../components/common/PrimaryButton';
+import DefaultLayout from '../../layouts/DefaultLayout';
 
 const VerifyCodePage = () => {
   const navigate = useNavigate();
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState('');
   const location = useLocation();
   const email = location.state?.email;
 
   const handleSubmit = async () => {
     if (!code) {
-      alert("인증 코드를 입력해주세요.");
+      alert('인증 코드를 입력해주세요.');
       return;
     }
 
     try {
-      await axios.post(`${process.env.REACT_APP_API_URL}/mail/verify`, {
-        token: code,
-      });
+      await verifyAuthCode({ token: code.trim() });
 
-      alert("인증이 완료되었습니다.");
-        navigate('/reset-password', { state: { email } });
+      alert('인증이 완료되었습니다.');
+      navigate('/reset-password', { state: { email } });
     } catch (error) {
-      console.error("인증 실패:", error);
-      alert(
-        error?.response?.data?.message || "인증 코드가 유효하지 않습니다."
-      );
+      console.error('인증 실패:', error);
+      alert(error?.response?.data?.message || '인증 코드가 유효하지 않습니다.');
     }
   };
 

@@ -195,7 +195,7 @@ const useCartStore = create(
       clearPersisted: () => {
         set({ cartId: null, lastCodes: null, items: [], loading: false });
         try {
-          sessionStorage.removeItem('cart-v2');
+          localStorage.removeItem('cart-v3');
         } catch {}
       },
 
@@ -209,8 +209,8 @@ const useCartStore = create(
         ),
     }),
     {
-      name: 'cart-v2',
-      storage: createJSONStorage(() => sessionStorage),
+      name: 'cart-v3',
+      storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({
         cartId: s.cartId,
         lastCodes: s.lastCodes,
