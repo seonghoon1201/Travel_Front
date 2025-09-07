@@ -12,7 +12,7 @@ const CreateScheduleCard = () => {
   return (
     <div
       onClick={handleClick}
-      className="m-3 p-4 mb-6 rounded-xl bg-[#DDF1FB] border border-blue-100 hover:shadow-md transition cursor-pointer flex items-center gap-4"
+      className=" p-4 mb-6 rounded-xl bg-[#DDF1FB] border border-blue-100 hover:shadow-md transition cursor-pointer flex items-center gap-4"
     >
       <div className="w-10 h-10 rounded-full bg-white border border-blue-300 flex items-center justify-center text-xl font-bold shadow-sm">
         <CalendarPlus />

@@ -52,7 +52,7 @@ const HomePage = () => {
 
             {isMenuOpen && <SideMenu onClose={() => setIsMenuOpen(false)} />}
 
-            <main className="w-full">
+            <main className="w-full px-4 sm:px-6 md:px-8">
               <CreateScheduleCard />
 
               <LocationSection
