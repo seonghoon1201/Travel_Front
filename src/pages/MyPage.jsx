@@ -45,11 +45,10 @@ const MyPage = () => {
         <TabMenu activeTab={activeTab} setActiveTab={setActiveTab} />
 
         {/* 탭별 콘텐츠 렌더링 */}
-        <div className="w-full h-full bg-white">
           {activeTab === 'myTrip' && <MyTravelSection />}
           {activeTab === 'myDiary' && <MyDiarySection />}
           {activeTab === 'myBookmark' && <MyBookmarkSection />}
-        </div>
+
        
       </div>
     </DefaultLayout>

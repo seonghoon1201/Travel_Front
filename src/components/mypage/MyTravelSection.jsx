@@ -52,14 +52,12 @@ const MyTravelSection = () => {
 
 
   const handleClickTrip = (scheduleId) => {
-  console.log("➡️ 이동할 scheduleId:", scheduleId);
   navigate(`/plan/schedule/result/${scheduleId}`);
 };
 
   return (
-    <div className="bg-white">
-      <div className="px-4 pt-2 m-2">
-        <p className="text-sm font-semibold text-gray-600 mb-3 m-2">
+      <div className="px-4 pt-2 m-2 ">
+        <p className="text-sm font-semibold text-gray-600 mb-3 pt-2">
           다가오는 여행
         </p>
         {upcomingTrips.length === 0 ? (
@@ -78,7 +76,7 @@ const MyTravelSection = () => {
           ))
         )}
 
-        <p className="text-sm font-semibold text-gray-600 mt-4 mb-3 m-2">
+        <p className="text-sm font-semibold text-gray-600 mt-4 mb-3 pt-10">
           지난 여행
         </p>
         {pastTrips.length === 0 ? (
@@ -96,7 +94,7 @@ const MyTravelSection = () => {
           ))
         )}
       </div>
-    </div>
+  
   );
 };
 
