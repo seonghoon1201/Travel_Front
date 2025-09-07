@@ -137,8 +137,8 @@ const RegionDetailPage = () => {
               location: item.address || '',
               opentime: item.openTime || '-',
               closetime: item.closeTime || '-',
-              tel: item.tel || '-',
-              imageUrl: item.firstImage || '/images/default_place.jpg',
+              tel: item.tel || '정보 없음',
+              imageUrl: item.firstImage ,
             });
           }
 
