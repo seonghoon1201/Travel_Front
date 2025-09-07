@@ -398,8 +398,16 @@ const PlanCartPage = () => {
         setIsModalOpen(false);
         return;
       }
-      const price = Number(placeWithPrice.price ?? placeWithPrice.cost ?? 0);
-      await addToCart({ ...placeWithPrice, price, cost: price });
+      const raw = placeWithPrice?.price ?? placeWithPrice?.cost ?? 0;
+      let priceNum = Number(raw);
+      if (!Number.isFinite(priceNum)) priceNum = 0;
+      if (priceNum < 0) priceNum = 0;
+
+      await addToCart({
+        ...placeWithPrice,
+        price: priceNum,
+        cost: priceNum,
+      });
       setIsModalOpen(false);
     },
     [addToCart, cartLimit]
@@ -773,6 +781,7 @@ const PlanCartPage = () => {
               onClose={() => setIsModalOpen(false)}
               onSubmit={handleAddToCart}
               place={selectedPlace}
+              allowZeroPrice
             />
           )}
         </div>
