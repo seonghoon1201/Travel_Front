@@ -141,7 +141,7 @@ const TravelDiaryDetail = () => {
     <DefaultLayout>
       <div className="w-full  mx-auto">
         <DiaryHeader />
-        <div className="px-4">
+        <div className=" sm:px-6  md:px-8">
 
         <div className="bg-white rounded-xl shadow-md p-6 w-full ">
           <div className="flex items-center justify-between pb-3 border-b-2">
