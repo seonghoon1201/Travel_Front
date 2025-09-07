@@ -154,7 +154,7 @@ const WriteTravelDiary = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto">
+      <div className="w-full mx-auto">
         <BackHeader 
         title='여행일기'/>
         <div className="px-4 pb-[calc(env(safe-area-inset-bottom)+80px)]">
@@ -256,7 +256,7 @@ const WriteTravelDiary = () => {
           )}
         </div>
 
-        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-sm z-40 bg-white/90 backdrop-blur border-t">
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-40 bg-white/90 backdrop-blur border-t">
           <div className="px-4 py-3">
             <PrimaryButton
               className="w-full py-3 text-sm rounded-xl shadow"

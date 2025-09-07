@@ -4,12 +4,12 @@ const DEFAULT_IMAGE = '/images/default_place.jpg';
 
 const RegionSummary = ({ title, description = '', regionImage = '' }) => {
   return (
-    <div className="bg-white px-4 pt-6 pb-4 rounded-xl shadow">
+    <div className="bg-white pb-4 rounded-xl shadow">
       {regionImage ? (
         <img
           src={regionImage}
           alt={`${title} 대표 이미지`}
-          className="w-full h-48 object-cover rounded-lg mb-4"
+          className="w-full h-48 object-cover rounded-lg mb-4 "
           onError={(e) => {
             e.currentTarget.src = DEFAULT_IMAGE;
           }}
@@ -20,9 +20,9 @@ const RegionSummary = ({ title, description = '', regionImage = '' }) => {
         </div>
       )}
 
-      <h2 className="text-xl font-bold text-gray-800">{title}</h2>
+      <h2 className="px-4  text-xl font-bold text-gray-800">{title}</h2>
 
-      <p className="mt-2 text-sm text-gray-600 whitespace-pre-line leading-relaxed">
+      <p className="px-4  mt-2 text-sm text-gray-600 whitespace-pre-line leading-relaxed">
         {description || '설명이 아직 없습니다.'}
       </p>
     </div>
