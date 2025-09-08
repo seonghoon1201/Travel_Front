@@ -7,7 +7,7 @@ export const fetchMyTravel = async (accessToken) => {
   const res = await axios.get(`${API_BASE_URL}/schedule`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
-  return res.data;
+  return res.data; 
 };
 
 // 내 여행일기 불러오기
