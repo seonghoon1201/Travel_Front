@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import BookmarkItem from './BookmarkItem';
 import CategoryButtonSection from './CategoryButtonSection';
 import { getFavorites } from '../../api/favorite/getFavorites';
+import { toggleFavorite } from '../../api/favorite/toggleFavorite';
 
 const MyBookmarkSection = () => {
   const [activeCategory, setActiveCategory] = useState('전체');
@@ -11,36 +12,53 @@ const MyBookmarkSection = () => {
 
   // 최초 로드 시 즐겨찾기 불러오기
   useEffect(() => {
-    const fetchFavorites = async () => {
-      try {
-        const res = await getFavorites();
-        if (res?.favorites) {
-          setBookmarks(
-            res.favorites
-              .filter((f) => f.placeTitle && f.placeTitle.trim() !== '') // 제목 없는 건 제외
-              .map((f) => ({
-                contentId: f.contentId, 
-                destination: f.placeTitle,
-                category: f.regionCode || '기타',
-                location: f.regionCode || '기타',
-                address: f.placeAddress || '',
-                opentime: '',
-                closetime: '',
-                tel: '',
-                imageUrl: f.placeImage || '/assets/default_place.jpg',
-                isFavorite: true, 
-              }))
-          );
-        }
-      } catch (err) {
-        console.error('즐겨찾기 불러오기 실패:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchFavorites();
   }, []);
+
+  const fetchFavorites = async () => {
+    try {
+      setLoading(true);
+      const res = await getFavorites();
+      if (res?.favorites) {
+        setBookmarks(
+          res.favorites
+            .filter((f) => f.placeTitle && f.placeTitle.trim() !== '') // 제목 없는 건 제외
+            .map((f) => ({
+              contentId: f.contentId, 
+              destination: f.placeTitle,
+              category: f.regionCode || '기타',
+              location: f.regionCode || '기타',
+              address: f.placeAddress || '',
+              opentime: '',
+              closetime: '',
+              tel: '',
+              imageUrl: f.placeImage || '/assets/default_place.jpg',
+              isFavorite: true, 
+            }))
+        );
+      }
+    } catch (err) {
+      console.error('즐겨찾기 불러오기 실패:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 즐겨찾기 토글 함수
+  const handleToggleFavorite = async (contentId) => {
+    try {
+      const result = await toggleFavorite(contentId);
+      return result;
+    } catch (err) {
+      console.error('즐겨찾기 토글 실패:', err);
+      throw err;
+    }
+  };
+
+  // 북마크 목록에서 제거하는 함수
+  const handleRemoveBookmark = (contentId) => {
+    setBookmarks(prev => prev.filter(bookmark => bookmark.contentId !== contentId));
+  };
 
   // 카테고리 필터링
   const filteredBookmarks =
@@ -73,6 +91,8 @@ const MyBookmarkSection = () => {
             tel={bookmark.tel}
             imageUrl={bookmark.imageUrl}
             isFavorite={bookmark.isFavorite}
+            toggleFavorite={handleToggleFavorite} // 토글 함수 전달
+            onRemove={handleRemoveBookmark} // 제거 함수 전달
           />
         ))
       ) : (

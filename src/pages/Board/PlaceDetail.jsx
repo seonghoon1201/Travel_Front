@@ -4,30 +4,12 @@ import { useParams } from 'react-router-dom';
 import KakaoMap from '../../components/map/KakaoMap';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
+import Toast from '../../components/common/Toast';
 
 import { getTourDetail } from '../../api/tour/getTourDetail';
 import { getFavorites } from '../../api/favorite/getFavorites'; 
 import { toggleFavorite } from '../../api/favorite/toggleFavorite'; 
 
-// Toast 컴포넌트
-const Toast = ({ message, type, onClose }) => {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose();
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  const bgColor = type === 'error' ? 'bg-red-500' : 'bg-green-500';
-
-  return (
-    <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 ${bgColor} text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-bounce`}>
-      {message}
-    </div>
-  );
-};
-
-// Toast hook
 const useToast = () => {
   const [toast, setToast] = useState(null);
 
@@ -35,16 +17,14 @@ const useToast = () => {
     setToast({ message, type, duration });
   };
 
-  const hideToast = () => {
-    setToast(null);
-  };
+  const hideToast = () => setToast(null);
 
   const ToastComponent = toast ? (
-    <Toast 
-      message={toast.message} 
-      type={toast.type} 
+    <Toast
+      message={toast.message}
+      type={toast.type}
       duration={toast.duration}
-      onClose={hideToast} 
+      onClose={hideToast}
     />
   ) : null;
 
@@ -57,6 +37,8 @@ const PlaceDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
+
+
   const { showToast, ToastComponent } = useToast();
 
   const extractHref = (html) => {
@@ -101,22 +83,22 @@ const PlaceDetail = () => {
   }, [contentId]);
 
   const handleToggleFavorite = async () => {
-    try {
-      const res = await toggleFavorite(contentId);
-      setIsSaved(res.favorite);
-      setPlace((prev) => (prev ? { ...prev, favorite: res.favorite } : prev));
-      
-      // toast 알림으로 변경
-      showToast(
-        res.favorite ? '즐겨찾기에 추가되었습니다!' : '즐겨찾기에서 제거되었습니다!',
-        'success'
-      );
-    } catch (err) {
-      console.error('즐겨찾기 토글 실패:', err);
-      // alert 대신 toast 사용
-      showToast('즐겨찾기 처리에 실패했습니다.', 'error');
+  try {
+    const res = await toggleFavorite(contentId);
+    setIsSaved(res.favorite);
+    setPlace((prev) => (prev ? { ...prev, favorite: res.favorite } : prev));
+
+    if (res.favorite) {
+      showToast('즐겨찾기에 추가되었습니다!', 'success');
+    } else {
+      showToast('즐겨찾기에서 제거되었습니다!', 'info');
     }
-  };
+  } catch (err) {
+    console.error('즐겨찾기 토글 실패:', err);
+    showToast('즐겨찾기 처리에 실패했습니다.', 'error');
+  }
+};
+
 
   const handleFindRoute = () => {
     if (place && place.latitude && place.longitude) {
