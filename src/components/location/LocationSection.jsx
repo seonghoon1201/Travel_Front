@@ -82,7 +82,7 @@ const LocationSection = ({ navigateTo = '/board/hot', limit = 10 }) => {
       ) : (
         <div className="flex gap-2 sm:gap-3 overflow-x-auto  mt-2 scrollbar-hide">
           {places.slice(0, 10).map((item, idx) => (
-            <div
+            <div 
               key={idx}
               className="flex-shrink-0 w-16 sm:w-20 md:w-24 text-center cursor-pointer"
               onClick={() => handleClick(
