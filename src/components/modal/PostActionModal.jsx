@@ -2,15 +2,18 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Ellipsis } from 'lucide-react';
 import { deleteDiary } from '../../api/board/deleteDiary';
-import useUserStore from '../../store/userStore'; // 로그인 유저 정보 가져오기
+import useUserStore from '../../store/userStore';
+import ConfirmModal from '../modal/ConfirmModal';
+import { useToast } from '../../utils/useToast';
 
 const PostActionModal = ({ id, writerNickname }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false); // ✅ 삭제 확인 모달
   const menuRef = useRef(null);
   const navigate = useNavigate();
 
-  // 현재 로그인 유저 닉네임
   const currentUserNickname = useUserStore((state) => state.nickname);
+  const { showSuccess, showError, showInfo } = useToast();
 
   const toggleMenu = () => setIsOpen((prev) => !prev);
   const closeMenu = () => setIsOpen(false);
@@ -26,21 +29,20 @@ const PostActionModal = ({ id, writerNickname }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // 삭제 핸들러
-  const handleDelete = async () => {
-    if (window.confirm('정말 삭제하시겠습니까?')) {
-      try {
-        await deleteDiary(id);
-        alert('삭제 완료되었습니다.');
-        navigate('/board/travel/diary');
-      } catch (err) {
-        alert('삭제에 실패했습니다.');
-      }
+  // 삭제 실행
+  const confirmDelete = async () => {
+    try {
+      await deleteDiary(id);
+      showSuccess('삭제 완료되었습니다.'); // ✅ toast
+      navigate('/board/travel/diary');
+    } catch (err) {
+      showError('삭제에 실패했습니다.'); // ✅ toast
+    } finally {
+      setShowConfirm(false);
+      closeMenu();
     }
-    closeMenu();
   };
 
-  // 작성자 여부 확인
   const isWriter = currentUserNickname === writerNickname;
 
   return (
@@ -54,7 +56,7 @@ const PostActionModal = ({ id, writerNickname }) => {
           {isWriter ? (
             <>
               <button
-                onClick={handleDelete}
+                onClick={() => setShowConfirm(true)}
                 className="w-full px-4 py-2 text-sm hover:bg-gray-100"
               >
                 삭제하기
@@ -72,7 +74,7 @@ const PostActionModal = ({ id, writerNickname }) => {
           ) : (
             <button
               onClick={() => {
-                alert('신고');
+                showInfo('신고가 접수되었습니다.'); // ✅ toast
                 closeMenu();
               }}
               className="w-full px-4 py-2 text-sm hover:bg-gray-100"
@@ -82,6 +84,18 @@ const PostActionModal = ({ id, writerNickname }) => {
           )}
         </div>
       )}
+
+      {/* ✅ 삭제 확인 모달 */}
+      <ConfirmModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={confirmDelete}
+        title="게시글 삭제"
+        message="정말 삭제하시겠습니까?"
+        confirmText="삭제"
+        cancelText="취소"
+        confirmButtonClass="bg-red-500 hover:bg-red-600"
+      />
     </div>
   );
 };
