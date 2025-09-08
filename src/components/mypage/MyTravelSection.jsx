@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import MyTravelItem from './MyTravelItem';
 import useUserStore from '../../store/userStore';
 import { fetchMyTravel } from '../../api/user/userContentApi';
-import  groupApi  from '../../api/group/group'; 
+import groupApi from '../../api/group/group';
 
 const MyTravelSection = () => {
   const [upcomingTrips, setUpcomingTrips] = useState([]);
@@ -28,19 +28,26 @@ const MyTravelSection = () => {
           const start = new Date(trip.startDate);
           start.setHours(0, 0, 0, 0);
 
-          let companionCount = 1; 
+          // 그룹 인원 수 가져오기
+          let companionCount = 1;
           if (trip.groupId) {
             try {
               const res = await groupApi.count(trip.groupId);
-              companionCount = res; 
+              companionCount = res;
             } catch (err) {
               console.error(`그룹 인원 수 불러오기 실패 (${trip.groupId}):`, err);
             }
           }
 
+          const safeImage =
+            (trip.regionImage && String(trip.regionImage).trim()) ||
+            (trip.imageUrl && String(trip.imageUrl).trim()) ||
+            '/default-travel.jpg';
+
           const enrichedTrip = {
             ...trip,
             companionCount,
+            imageUrl: safeImage,
           };
 
           if (start >= today) {
@@ -82,7 +89,7 @@ const MyTravelSection = () => {
             title={trip.scheduleName}
             dateRange={`${trip.startDate} ~ ${trip.endDate}`}
             companionCount={trip.companionCount}
-            imageUrl={trip.imageUrl || '/default-travel.jpg'}
+            imageUrl={trip.imageUrl}
             onClick={() => handleClickTrip(trip.scheduleId)}
           />
         ))
@@ -101,7 +108,7 @@ const MyTravelSection = () => {
             title={trip.scheduleName}
             dateRange={`${trip.startDate} ~ ${trip.endDate}`}
             companionCount={trip.companionCount}
-            imageUrl={trip.imageUrl || '/default-travel.jpg'}
+            imageUrl={trip.imageUrl}
             onClick={() => handleClickTrip(trip.scheduleId)}
           />
         ))
