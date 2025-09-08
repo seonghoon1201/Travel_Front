@@ -32,7 +32,7 @@ const MyTravelItem = ({
 
   return (
     <div
-      onClick={onClick}  
+      onClick={() => onClick?.(scheduleId)}  
       className="flex items-start pl-2 gap-2 py-2 relative cursor-pointer hover:bg-gray-50 rounded-md"
     >
       <img
