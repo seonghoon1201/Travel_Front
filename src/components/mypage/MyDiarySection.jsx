@@ -69,7 +69,7 @@ const MyDiarySection = () => {
 
   return (
     <div className="px-4 sm:px-6 md:px-8 pt-2 m-2 relative">
-      <p className="text-sm font-semibold text-gray-600 mb-3">내 여행 일기</p>
+      <p className="text-sm font-semibold text-gray-600 mb-3 pt-2">내 여행 일기</p>
 
       {diaries.length === 0 ? (
         <p className="text-gray-400 text-sm">작성한 여행일기가 없습니다.</p>
@@ -93,7 +93,7 @@ const MyDiarySection = () => {
       {/* 여행일기 쓰러가기 플로팅 버튼 */}
       <button
         onClick={handleWriteDiary}
-        className="fixed bottom-6 right-6 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-4 shadow-lg transition-colors"
+        className="fixed bottom-6 right-6 bg-primary hover:bg-blue-600 text-white rounded-full p-4 shadow-lg transition-colors"
       >
         <Pencil className="w-5 h-5" />
       </button>
