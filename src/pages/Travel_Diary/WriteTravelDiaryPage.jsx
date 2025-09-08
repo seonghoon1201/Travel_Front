@@ -296,7 +296,7 @@ const WriteTravelDiary = () => {
         </div>
       </div>
 
-      {/* ✅ 일정 보기 모달 */}
+      {/*  일정 보기 모달 */}
       <DaySelectorModal
         isOpen={showDaySelector}
         onClose={() => setShowDaySelector(false)}
