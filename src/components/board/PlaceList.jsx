@@ -35,7 +35,6 @@ const PlaceList = ({
       aria-label={`${safeTitle} 상세보기`}
     >
       {/* 썸네일 */}
-      {/* 썸네일 */}
       <div className="w-24 h-24 flex-shrink-0">
         {safeImg ? (
           <img
@@ -56,7 +55,7 @@ const PlaceList = ({
             No Image
           </div>
         )}
-      </div>`
+      </div>
 
       {/* 정보 영역 */}
       <div className="flex flex-col justify-between flex-1 min-w-0 mt-[0.2rem] mb-[0.4rem]">

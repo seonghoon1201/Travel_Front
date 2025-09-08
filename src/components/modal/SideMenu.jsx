@@ -109,7 +109,7 @@ const SideMenu = ({ onClose }) => {
                   onClick={() => handleTabClick('myBookmark')}
                 >
                   <Heart className="w-6 h-6" />
-                  <span>내 저장</span>
+                  <span>즐겨찾기</span>
                 </div>
               </div>
 
@@ -127,12 +127,12 @@ const SideMenu = ({ onClose }) => {
                 >
                   마이페이지 <span>&gt;</span>
                 </li>
-                <li
+                {/* <li
                   className="flex justify-between items-center border-b pb-3"
                   onClick={() => goTo('/tools')}
                 >
                   여행 도구 <span>&gt;</span>
-                </li>
+                </li> */}
                 <li
                   className="flex justify-between items-center border-b pb-3 text-red-500"
                   onClick={handleLogout}
