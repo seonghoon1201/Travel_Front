@@ -1,16 +1,14 @@
 // src/components/bookmark/MyBookmarkSection.jsx
 import React, { useEffect, useState } from 'react';
 import BookmarkItem from './BookmarkItem';
-import CategoryButtonSection from './CategoryButtonSection';
 import { getFavorites } from '../../api/favorite/getFavorites';
 import { toggleFavorite } from '../../api/favorite/toggleFavorite';
 
 const MyBookmarkSection = () => {
-  const [activeCategory, setActiveCategory] = useState('전체');
   const [bookmarks, setBookmarks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
 
-  // 최초 로드 시 즐겨찾기 불러오기
   useEffect(() => {
     fetchFavorites();
   }, []);
@@ -24,18 +22,17 @@ const MyBookmarkSection = () => {
           res.favorites
             .filter((f) => f.placeTitle && f.placeTitle.trim() !== '') // 제목 없는 건 제외
             .map((f) => ({
-              contentId: f.contentId, 
+              contentId: f.contentId,
               destination: f.placeTitle,
-              category: f.regionCode || '기타',
-              location: f.regionCode || '기타',
               address: f.placeAddress || '',
               opentime: '',
               closetime: '',
               tel: '',
               imageUrl: f.placeImage || '/assets/default_place.jpg',
-              isFavorite: true, 
+              isFavorite: true,
             }))
         );
+         setTotalCount(res.totalCount || 0);
       }
     } catch (err) {
       console.error('즐겨찾기 불러오기 실패:', err);
@@ -57,14 +54,11 @@ const MyBookmarkSection = () => {
 
   // 북마크 목록에서 제거하는 함수
   const handleRemoveBookmark = (contentId) => {
-    setBookmarks(prev => prev.filter(bookmark => bookmark.contentId !== contentId));
+    setBookmarks((prev) =>
+      prev.filter((bookmark) => bookmark.contentId !== contentId)
+    );
+    setTotalCount((prev) => prev - 1);
   };
-
-  // 카테고리 필터링
-  const filteredBookmarks =
-    activeCategory === '전체'
-      ? bookmarks
-      : bookmarks.filter((item) => item.category === activeCategory);
 
   if (loading) {
     return <div className="p-4 text-center text-gray-400">불러오는 중...</div>;
@@ -72,27 +66,24 @@ const MyBookmarkSection = () => {
 
   return (
     <div className="p-4 space-y-4 sm:px-6 md:px-8">
-      <CategoryButtonSection
-        activeCategory={activeCategory}
-        setActiveCategory={setActiveCategory}
-      />
-
-      {filteredBookmarks.length > 0 ? (
-        filteredBookmarks.map((bookmark) => (
+       <div className="text-sm text-gray-600 font-medium">
+        총 즐겨찾기: {totalCount}개
+      </div>
+      
+      {bookmarks.length > 0 ? (
+        bookmarks.map((bookmark) => (
           <BookmarkItem
-            key={bookmark.contentId} 
+            key={bookmark.contentId}
             contentId={bookmark.contentId}
             destination={bookmark.destination}
-            category={bookmark.category}
-            location={bookmark.location}
             address={bookmark.address}
             opentime={bookmark.opentime}
             closetime={bookmark.closetime}
             tel={bookmark.tel}
             imageUrl={bookmark.imageUrl}
             isFavorite={bookmark.isFavorite}
-            toggleFavorite={handleToggleFavorite} // 토글 함수 전달
-            onRemove={handleRemoveBookmark} // 제거 함수 전달
+            toggleFavorite={handleToggleFavorite}
+            onRemove={handleRemoveBookmark}
           />
         ))
       ) : (

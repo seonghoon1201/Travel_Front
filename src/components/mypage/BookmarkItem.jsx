@@ -60,7 +60,7 @@ const BookmarkItem = ({
         if (onRemove) {
           setTimeout(() => {
             onRemove(contentId);
-          }, 1000); // toast 보여준 후 제거
+          }, 1000); 
         }
       }
     } catch (err) {
