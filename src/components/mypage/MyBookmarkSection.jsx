@@ -66,10 +66,10 @@ const MyBookmarkSection = () => {
 
   return (
     <div className="p-4 space-y-4 sm:px-6 md:px-8">
-       <div className="text-sm text-gray-600 font-medium">
+       <div className="text-sm font-semibold text-gray-600 mb-3">
         총 즐겨찾기: {totalCount}개
       </div>
-      
+
       {bookmarks.length > 0 ? (
         bookmarks.map((bookmark) => (
           <BookmarkItem
