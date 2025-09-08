@@ -9,8 +9,8 @@ import KakaoMap from '../../components/map/KakaoMap';
 import useScheduleStore from '../../store/scheduleStore';
 import useCartStore from '../../store/cartStore';
 import usePlanStore from '../../store/planStore';
-import { getSchedule } from '../../api';
-import { message, Progress, Flex } from 'antd';
+import { getSchedule, deleteSchedule } from '../../api';
+import { message, Progress, Flex, Modal } from 'antd';
 
 const ScheduleResultPage = () => {
   const { scheduleId } = useParams();
@@ -142,14 +142,47 @@ const ScheduleResultPage = () => {
     }
   };
 
-  // 새 일정 시작 버튼: 현재 진행 취소하고 /plan 플로우 처음으로
-  const startNewPlan = async () => {
-    try {
-      await useScheduleStore.getState().clear(); // 결과 캐시 정리
-      await usePlanStore.getState().cancelPlanning(); // ✅ 여기서만 전체 초기화
-    } finally {
-      navigate('/plan/location', { replace: true }); // 여행지 선택부터 다시
-    }
+  // 일정 다시 짜기: 서버 일정 삭제 확인 후, 로컬 초기화하고 처음부터 시작
+  const retryPlanWithDelete = () => {
+    Modal.confirm({
+      title: '일정을 다시 짤까요?',
+      content:
+        '현재 생성된 일정이 삭제되고 처음부터 다시 만들게 됩니다. 계속하시겠어요?',
+      okText: '예, 다시 짜기',
+      cancelText: '취소',
+      okButtonProps: {
+        type: 'primary',
+        className:
+          '!text-white !bg-primary !border-primary hover:!bg-primary/90 ' +
+          'focus:!bg-primary/90 active:!bg-primary',
+      },
+      cancelButtonProps: {
+        className:
+          '!text-gray-700 !border-gray-300 hover:!border-gray-400 ' +
+          'focus:!border-gray-400',
+      },
+      async onOk() {
+        try {
+          const id = String(
+            scheduleId || detail?.scheduleId || detail?.id || ''
+          );
+          if (!id) throw new Error('삭제할 scheduleId를 찾지 못했습니다.');
+          await deleteSchedule(id); // ✅ 서버 일정 삭제
+          await useScheduleStore.getState().clear(); // 결과 캐시 정리
+          await usePlanStore.getState().cancelPlanning(); // 로컬/스토어 전체 초기화
+          message.success('일정을 삭제했어요. 처음부터 다시 시작합니다.');
+          navigate('/plan/location', { replace: true });
+        } catch (e) {
+          console.error(
+            '[ScheduleResultPage] delete failed',
+            e?.response?.data || e
+          );
+          message.error(
+            e?.response?.data?.message || '일정 삭제에 실패했어요.'
+          );
+        }
+      },
+    });
   };
 
   return (
@@ -252,10 +285,10 @@ const ScheduleResultPage = () => {
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
           <div className="mx-auto w-full px-4 sm:px-6 md:px-8 py-3 flex gap-2">
             <button
-              onClick={startNewPlan}
+              onClick={retryPlanWithDelete}
               className="flex-1 rounded-xl border border-gray-300 py-2 text-sm"
             >
-              새로운 일정 짜기
+              일정 다시 짜기
             </button>
             <PrimaryButton onClick={finishAndExit} className="flex-1">
               내 일정에 추가하기
