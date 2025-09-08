@@ -9,12 +9,55 @@ import { getTourDetail } from '../../api/tour/getTourDetail';
 import { getFavorites } from '../../api/favorite/getFavorites'; 
 import { toggleFavorite } from '../../api/favorite/toggleFavorite'; 
 
+// Toast 컴포넌트
+const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const bgColor = type === 'error' ? 'bg-red-500' : 'bg-green-500';
+
+  return (
+    <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 ${bgColor} text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-bounce`}>
+      {message}
+    </div>
+  );
+};
+
+// Toast hook
+const useToast = () => {
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = 'success', duration = 3000) => {
+    setToast({ message, type, duration });
+  };
+
+  const hideToast = () => {
+    setToast(null);
+  };
+
+  const ToastComponent = toast ? (
+    <Toast 
+      message={toast.message} 
+      type={toast.type} 
+      duration={toast.duration}
+      onClose={hideToast} 
+    />
+  ) : null;
+
+  return { showToast, ToastComponent };
+};
+
 const PlaceDetail = () => {
   const { contentId } = useParams();
   const [place, setPlace] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
+  const { showToast, ToastComponent } = useToast();
 
   const extractHref = (html) => {
     const match = html.match(/href="([^"]+)"/);
@@ -22,49 +65,56 @@ const PlaceDetail = () => {
   };
 
   useEffect(() => {
-  const fetchPlaceDetail = async () => {
-    if (!contentId) {
-      setError('잘못된 접근입니다.');
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    const result = await getTourDetail(contentId);
-
-    if (result.success) {
-      setPlace(result.data);
-      setError(null);
-
-      try {
-        const favRes = await getFavorites();
-        if (Array.isArray(favRes?.favorites)) {
-          const exists = favRes.favorites.some(
-            (f) => String(f.contentId) === String(contentId)
-          );
-          setIsSaved(exists);
-        }
-      } catch (err) {
-        console.error('즐겨찾기 목록 확인 실패:', err);
+    const fetchPlaceDetail = async () => {
+      if (!contentId) {
+        setError('잘못된 접근입니다.');
+        setLoading(false);
+        return;
       }
-    } else {
-      setError(result.error || '데이터를 불러올 수 없습니다.');
-      setPlace(null);
-    }
-    setLoading(false);
-  };
 
-  fetchPlaceDetail();
-}, [contentId]);
+      setLoading(true);
+      const result = await getTourDetail(contentId);
+
+      if (result.success) {
+        setPlace(result.data);
+        setError(null);
+
+        try {
+          const favRes = await getFavorites();
+          if (Array.isArray(favRes?.favorites)) {
+            const exists = favRes.favorites.some(
+              (f) => String(f.contentId) === String(contentId)
+            );
+            setIsSaved(exists);
+          }
+        } catch (err) {
+          console.error('즐겨찾기 목록 확인 실패:', err);
+        }
+      } else {
+        setError(result.error || '데이터를 불러올 수 없습니다.');
+        setPlace(null);
+      }
+      setLoading(false);
+    };
+
+    fetchPlaceDetail();
+  }, [contentId]);
 
   const handleToggleFavorite = async () => {
     try {
       const res = await toggleFavorite(contentId);
       setIsSaved(res.favorite);
       setPlace((prev) => (prev ? { ...prev, favorite: res.favorite } : prev));
+      
+      // toast 알림으로 변경
+      showToast(
+        res.favorite ? '즐겨찾기에 추가되었습니다!' : '즐겨찾기에서 제거되었습니다!',
+        'success'
+      );
     } catch (err) {
       console.error('즐겨찾기 토글 실패:', err);
-      alert('즐겨찾기 처리에 실패했습니다.');
+      // alert 대신 toast 사용
+      showToast('즐겨찾기 처리에 실패했습니다.', 'error');
     }
   };
 
@@ -72,6 +122,9 @@ const PlaceDetail = () => {
     if (place && place.latitude && place.longitude) {
       const kakaoUrl = `https://map.kakao.com/link/to/${place.title},${place.latitude},${place.longitude}`;
       window.open(kakaoUrl, '_blank');
+      showToast('카카오맵으로 이동합니다!', 'success');
+    } else {
+      showToast('위치 정보가 없어 길찾기를 할 수 없습니다.', 'error');
     }
   };
 
@@ -84,6 +137,7 @@ const PlaceDetail = () => {
             <div className="text-gray-500">로딩 중...</div>
           </div>
         </div>
+        {ToastComponent}
       </DefaultLayout>
     );
   }
@@ -95,6 +149,7 @@ const PlaceDetail = () => {
         <div className="flex justify-center items-center h-64">
           <div className="text-red-500">{error || '데이터를 찾을 수 없습니다.'}</div>
         </div>
+        {ToastComponent}
       </DefaultLayout>
     );
   }
@@ -193,6 +248,7 @@ const PlaceDetail = () => {
           </div>
         </div>
       </div>
+      {ToastComponent}
     </DefaultLayout>
   );
 };
