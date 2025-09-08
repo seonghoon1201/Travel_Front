@@ -9,8 +9,9 @@ import PrimaryButton from '../../components/common/PrimaryButton';
 import { getDiaryDetail } from '../../api/board/getDiaryDetail';
 import { updateDiary } from '../../api/board/updateDiary';
 import { uploadProfileImage } from '../../api/file/uploadProfileImage';
+import { useToast } from '../../utils/useToast';
 
-
+import Toast from '../../components/common/Toast';
 
 const UpdateTravelDiaryPage = () => {
   const { boardId } = useParams();
@@ -21,12 +22,12 @@ const UpdateTravelDiaryPage = () => {
   const [tags, setTags] = useState([]);
   const [inputValue, setInputValue] = useState('');
 
-  // 이미지 상태
-  const [existingImageUrls, setExistingImageUrls] = useState([]); // 서버 저장된 이미지
-  const [selectedFiles, setSelectedFiles] = useState([]); // 새로 추가한 파일
-  const [previewUrls, setPreviewUrls] = useState([]); // 로컬 미리보기 URL
-  
-  // 기존 데이터 불러오기
+  const [existingImageUrls, setExistingImageUrls] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [previewUrls, setPreviewUrls] = useState([]);
+
+  const { toast, showError, showInfo, showSuccess, hideToast } = useToast();
+
   useEffect(() => {
     const fetchDiary = async () => {
       const res = await getDiaryDetail(boardId);
@@ -49,7 +50,7 @@ const UpdateTravelDiaryPage = () => {
   const addTag = () => {
     const trimmed = inputValue.trim();
     if (tags.length >= 10) {
-      alert('태그는 최대 10개까지만 추가할 수 있어요!');
+      showInfo('태그는 최대 10개까지만 추가할 수 있어요!');
       return;
     }
     if (trimmed && !tags.includes(trimmed)) {
@@ -98,7 +99,7 @@ const UpdateTravelDiaryPage = () => {
 
   const handleUpdate = async () => {
     if (!title.trim() || !content.trim()) {
-      alert('제목과 내용을 입력해주세요.');
+      showError('제목과 내용을 입력해주세요.');
       return;
     }
 
@@ -108,7 +109,7 @@ const UpdateTravelDiaryPage = () => {
         const results = await Promise.all(selectedFiles.map((f) => uploadProfileImage(f)));
         const failed = results.find((r) => !r?.success);
         if (failed) {
-          alert('이미지 업로드 중 일부 실패');
+          showError('이미지 업로드 중 일부 실패했습니다.');
           return;
         }
         newUploadedUrls = results.map((r) => r.imageUrl);
@@ -124,17 +125,20 @@ const UpdateTravelDiaryPage = () => {
       });
 
       if (result?.success) {
-        alert('수정 완료!');
+        showSuccess('수정이 완료되었습니다!');
+        setTimeout(() => {
         navigate(`/board/travel/diary/${boardId}`);
+      }, 1200);
+
       } else {
-        alert(`수정 실패: ${result?.error ?? '원인 미상'}`);
+        showError(`수정 실패: ${result?.error ?? '원인 미상'}`);
       }
     } catch (err) {
-      alert('오류 발생: ' + err.message);
+      showError('오류 발생: ' + err.message);
     }
   };
 
-  // 통합된 이미지 목록 생성
+  // 통합된 이미지 목록
   const combinedPreviews = [
     ...existingImageUrls.map((url) => ({ type: 'server', url })),
     ...previewUrls.map((url, idx) => ({ type: 'local', url, idx })),
@@ -157,6 +161,7 @@ const UpdateTravelDiaryPage = () => {
               />
             </div>
 
+            {/* 태그 입력 */}
             <div className="border border-gray-200 rounded-lg p-2 flex flex-wrap gap-2 items-start">
               {tags.map((tag) => (
                 <span
@@ -241,18 +246,23 @@ const UpdateTravelDiaryPage = () => {
             {/* 하단 고정 수정 버튼 바 */}
             <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
               <div className="mx-auto max-w-sm px-4 py-3">
-                <PrimaryButton
-                  onClick={handleUpdate}
-                  className="w-full"
-                >
+                <PrimaryButton onClick={handleUpdate} className="w-full">
                   수정 완료
                 </PrimaryButton>
               </div>
             </div>
-
           </div>
         </div>
       </div>
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          duration={toast.duration}
+          onClose={hideToast}
+        />
+      )}
     </DefaultLayout>
   );
 };

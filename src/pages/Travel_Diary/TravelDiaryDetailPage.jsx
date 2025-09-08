@@ -83,9 +83,9 @@ const TravelDiaryDetail = () => {
 
   const handleDaySelect = (dayIndex) => {
     if (dayIndex === 'all') {
-      navigate(`/plan/schedule/result/${scheduleInfo.scheduleId}`);
+      navigate(`/schedule/view/${scheduleInfo.scheduleId}`);
     } else {
-      navigate(`/plan/schedule/result/${scheduleInfo.scheduleId}?day=${dayIndex}`);
+      navigate(`/schedule/view/${scheduleInfo.scheduleId}?day=${dayIndex}`);
     }
   };
 
