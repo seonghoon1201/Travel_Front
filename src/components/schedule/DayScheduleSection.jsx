@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Input, InputNumber, Modal, message } from 'antd';
 import PlanCard from './PlanCard';
@@ -38,6 +39,8 @@ const DayScheduleSection = ({ day, dayIndex }) => {
     endTime: '',
   });
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     setPlans(day.plans);
     setCheckedMap({});
@@ -45,6 +48,16 @@ const DayScheduleSection = ({ day, dayIndex }) => {
 
   const toggleCheck = (planId) => {
     setCheckedMap((prev) => ({ ...prev, [planId]: !prev[planId] }));
+  };
+
+  // PlaceDetail 로 이동 (바텀시트의 '자세히 보기'에서 호출)
+  const goPlaceDetail = (plan) => {
+    const cid = String(plan?.contentId || '').trim();
+    if (!cid)
+      return message.warning(
+        'contentId가 없어 상세 페이지로 이동할 수 없어요.'
+      );
+    navigate(`/place/detail/${encodeURIComponent(cid)}`);
   };
 
   // === Reorder: 드래그 끝 ===
@@ -259,6 +272,7 @@ const DayScheduleSection = ({ day, dayIndex }) => {
               {plans.map((plan, idx) => {
                 const normalizedPlan = {
                   ...plan,
+                  contentId: String(plan?.contentId ?? plan?.id ?? ''),
                   category: (plan?.tema ?? plan?.category ?? '').toString(),
                   region: (plan?.regionName ?? plan?.region ?? '').toString(),
                   metaLabel: [plan?.tema, plan?.regionName]
@@ -266,15 +280,6 @@ const DayScheduleSection = ({ day, dayIndex }) => {
                     .filter(Boolean)
                     .join(' | '),
                 };
-
-                const dragHandle = (dragProps) => (
-                  <div
-                    {...dragProps}
-                    className="cursor-grab active:cursor-grabbing"
-                  >
-                    {/* 빈 노드: EditPlanCard 안에서 핸들러 바인딩하는 경우 그대로 전달 */}
-                  </div>
-                );
 
                 return (
                   <Draggable
@@ -287,7 +292,9 @@ const DayScheduleSection = ({ day, dayIndex }) => {
                         ref={provided2.innerRef}
                         {...provided2.draggableProps}
                         className="flex items-center gap-2 w-full"
-                        onClick={() => openEdit(normalizedPlan)}
+                        onClick={() =>
+                          isEditing ? openEdit(normalizedPlan) : null
+                        }
                       >
                         {isEditing ? (
                           <div className="w-full">
@@ -307,6 +314,7 @@ const DayScheduleSection = ({ day, dayIndex }) => {
                               plan={normalizedPlan}
                               index={idx}
                               isLast={idx === plans.length - 1}
+                              onDetail={goPlaceDetail}
                             />
                           </div>
                         )}

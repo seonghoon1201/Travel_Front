@@ -13,7 +13,6 @@ const PlanCard = ({ plan, index, isLast }) => {
   const colorList = ['#5E87EB', '#F97316', '#10B981', '#EC4899', '#FACC15'];
   const color = colorList[index % colorList.length];
 
-  
   const badgeNumber = index + 1;
 
   // ✅ 메타 라벨: tema | regionName (DayScheduleSection에서 metaLabel을 넘기면 우선)
@@ -91,8 +90,9 @@ const PlanCard = ({ plan, index, isLast }) => {
         <PlaceDetailModal
           place={{
             ...plan,
-            mapX: plan.lng,
-            mapY: plan.lat,
+            // 백엔드가 내려주는 mapX/mapY 최우선 사용
+            mapX: plan.mapX ?? plan.lng,
+            mapY: plan.mapY ?? plan.lat,
           }}
           onClose={() => setShowModal(false)}
         />
