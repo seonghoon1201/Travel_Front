@@ -16,8 +16,8 @@ const PlaceList = ({
   const safeTitle = (destination && String(destination).trim()) || '이름 미상';
   const safeLocation = (location && String(location).trim()) || '지역 정보 없음';
   const safeTel = (tel && String(tel).trim()) || '-';
-  const safeImg = (imageUrl && String(imageUrl).trim()) || DEFAULT_PLACE_IMG;
-
+  const safeImg = (imageUrl && String(imageUrl).trim()) || null;
+  
   const handleClick = useCallback(() => {
     if (!safeContentId) return; 
     navigate(`/place/detail/${safeContentId}`);
@@ -35,17 +35,28 @@ const PlaceList = ({
       aria-label={`${safeTitle} 상세보기`}
     >
       {/* 썸네일 */}
+      {/* 썸네일 */}
       <div className="w-24 h-24 flex-shrink-0">
-        <img
-          src={safeImg}
-          alt={`${safeTitle} 이미지`}
-          className="w-full h-full object-cover rounded-md"
-          loading="lazy"
-          onError={(e) => {
-            e.currentTarget.src = DEFAULT_PLACE_IMG;
-          }}
-        />
-      </div>
+        {safeImg ? (
+          <img
+            src={safeImg}
+            alt={`${safeTitle} 이미지`}
+            className="w-full h-full object-cover rounded-md"
+            loading="lazy"
+            onError={(e) => {
+              e.currentTarget.parentElement.innerHTML = `
+                <div class="w-full h-full rounded-md bg-gray-200 flex items-center justify-center text-[10px] text-gray-500">
+                  No Image
+                </div>
+              `;
+            }}
+          />
+        ) : (
+          <div className="w-full h-full rounded-md bg-gray-200 flex items-center justify-center text-[10px] text-gray-500">
+            No Image
+          </div>
+        )}
+      </div>`
 
       {/* 정보 영역 */}
       <div className="flex flex-col justify-between flex-1 min-w-0 mt-[0.2rem] mb-[0.4rem]">

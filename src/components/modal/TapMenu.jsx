@@ -4,7 +4,7 @@ const TabMenu = ({ activeTab, setActiveTab }) => {
   const tabs = [
     { key: 'myTrip', label: '내 여행' },
     { key: 'myDiary', label: '여행 일기' },
-    { key: 'myBookmark', label: '내 저장' },
+    { key: 'myBookmark', label: '즐겨찾기' },
   ];
 
   return (

@@ -55,7 +55,8 @@ const PlanCartPage = () => {
   } = useCartStore();
 
   const [activeCategory, setActiveCategory] = useState('관광');
-  const [remainingBudget, setRemainingBudget] = useState(budget);
+  const safeBudget = Number(budget || 0);
+  const [remainingBudget, setRemainingBudget] = useState(safeBudget);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
 
@@ -122,7 +123,7 @@ const PlanCartPage = () => {
       (sum, item) => sum + (Number(item.price) || 0),
       0
     );
-    setRemainingBudget(budget - used);
+    setRemainingBudget(Number(budget || 0) - used);
   }, [cartItems, budget]);
 
   // 지역코드 정규화/보강
@@ -414,8 +415,11 @@ const PlanCartPage = () => {
   );
 
   // 예산 게이지
+  const baseBudget = Number(budget || 0);
   const percentUsed =
-    budget > 0 ? Math.min(100, ((budget - remainingBudget) / budget) * 100) : 0;
+    baseBudget > 0
+      ? Math.min(100, ((baseBudget - remainingBudget) / baseBudget) * 100)
+      : 0;
 
   // 자동 일정으로 이동
   const syncCartThenGo = useCallback(async () => {
@@ -454,6 +458,89 @@ const PlanCartPage = () => {
     navigate,
   ]);
 
+  function CartStatusChips({ cartMin, cartLimit, count }) {
+    if (cartLimit == null || cartMin == null) {
+      return (
+        <div className="mt-3 text-[12px] text-gray-600 bg-gray-50 border border-gray-200 rounded-xl p-3 text-center">
+          여행 날짜를 선택하면 카트 <b>최소/최대</b> 개수 제한이 적용됩니다.
+          <span className="ml-1">(최소: 일×2, 최대: 일×5)</span>
+        </div>
+      );
+    }
+
+    const isMinMet = count >= cartMin;
+    const overBy = count - cartLimit;
+    const status = overBy > 0 ? 'over' : !isMinMet ? 'under' : 'ok';
+
+    const theme = {
+      over: {
+        wrap: 'bg-red-50 border-red-200 text-red-700',
+        chip: 'border-red-200',
+        icon: <XCircle size={16} className="text-red-600" />,
+        label: (
+          <>
+            최대 <b>{cartLimit}</b>개 초과 <b>{overBy}</b>개 제거 필요
+          </>
+        ),
+        currentBg: 'bg-red-100/70',
+      },
+      under: {
+        wrap: 'bg-amber-50 border-amber-200 text-amber-800',
+        chip: 'border-amber-200',
+        icon: <AlertTriangle size={16} className="text-amber-600" />,
+        label: (
+          <>
+            최소 <b>{cartMin}</b>개 미만 <b>{cartMin - count}</b>개 더 담기
+          </>
+        ),
+        currentBg: 'bg-amber-100/70',
+      },
+      ok: {
+        wrap: 'bg-blue-50 border-blue-200 text-blue-700',
+        chip: 'border-blue-200',
+        icon: <Info size={16} className="text-blue-600" />,
+        label: (
+          <>
+            조건 충족! 최대 <b>{cartLimit}</b>개까지 가능
+          </>
+        ),
+        currentBg: 'bg-blue-100/70',
+      },
+    }[status];
+
+    return (
+      <div
+        className={`mt-3 rounded-xl border px-3 py-2 shadow-[0_1px_0_rgba(0,0,0,0.02)] ${theme.wrap}`}
+        role="status"
+        aria-live="polite"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1 text-[12px] font-medium">
+            {theme.icon}
+            <span>{theme.label}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span
+              className={`text-[11px] px-2 py-1 rounded-md border ${theme.chip}`}
+            >
+              최소 <b>{cartMin}</b>
+            </span>
+            <span
+              className={`text-[11px] px-2 py-1 rounded-md border ${theme.chip} ${theme.currentBg}`}
+            >
+              현재 <b>{count}</b>
+            </span>
+            <span
+              className={`text-[11px] px-2 py-1 rounded-md border ${theme.chip}`}
+            >
+              최대 <b>{cartLimit}</b>
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // 타이틀용 지역명
   const [titleRegion, setTitleRegion] = useState(null);
   useEffect(() => {
@@ -480,7 +567,7 @@ const PlanCartPage = () => {
     (id) => {
       // 플로우 유지 마커 (안전)
       usePlanStore.getState().beginPlanFlow();
-      navigate(`/board/place/${id}`);
+      navigate(`/place/detail/${id}`);
     },
     [navigate]
   );
@@ -554,113 +641,12 @@ const PlanCartPage = () => {
             </Tooltip>
           </div>
 
-          {/* 안내 박스 */}
-          <div className="mt-3">
-            {cartLimit == null || cartMin == null ? (
-              <div className="text-[12px] text-gray-600 bg-gray-50 border border-gray-200 rounded-xl p-3">
-                여행 날짜를 선택하면 카트 <b>최소/최대</b> 개수 제한이
-                적용됩니다.
-                <span className="ml-1">(최소: 일×2, 최대: 일×5)</span>
-              </div>
-            ) : (
-              (() => {
-                const status = overBy > 0 ? 'over' : !isMinMet ? 'under' : 'ok';
-                const styles = {
-                  over: {
-                    wrap: 'bg-red-50 border-red-200 text-red-700',
-                    chipWrap: 'bg-white/70',
-                    chip: 'border-red-200',
-                    icon: <XCircle size={18} className="text-red-600" />,
-                    title: '최대 개수 초과',
-                    hint: (
-                      <>
-                        카트가 제한(<b>{cartLimit}개</b>)을{' '}
-                        <b>{cartItems.length - cartLimit}개</b> 초과했어요. 일부
-                        항목을 제거해 주세요.
-                      </>
-                    ),
-                  },
-                  under: {
-                    wrap: 'bg-amber-50 border-amber-200 text-amber-800',
-                    chipWrap: 'bg-white/70',
-                    chip: 'border-amber-200',
-                    icon: (
-                      <AlertTriangle size={18} className="text-amber-600" />
-                    ),
-                    title: '최소 개수 미충족',
-                    hint: (
-                      <>
-                        자동 일정을 위해 최소 <b>{cartMin}개</b> 필요해요. 현재{' '}
-                        <b>{cartItems.length}개</b>로 <b>{underBy}개</b> 더
-                        담아주세요.
-                      </>
-                    ),
-                  },
-                  ok: {
-                    wrap: 'bg-blue-50 border-blue-200 text-blue-700',
-                    chipWrap: 'bg-white/70',
-                    chip: 'border-blue-200',
-                    icon: <Info size={18} className="text-blue-600" />,
-                    title: '요건 충족!',
-                    hint: (
-                      <>
-                        자동 일정을 바로 만들 수 있어요. 최대{' '}
-                        <b>{cartLimit}개</b>
-                        까지 담을 수 있습니다.
-                      </>
-                    ),
-                  },
-                }[status];
-
-                return (
-                  <div
-                    className={`rounded-xl border p-3 md:p-4 shadow-[0_1px_0_rgba(0,0,0,0.02)] ${styles.wrap}`}
-                    role="alert"
-                    aria-live="polite"
-                  >
-                    <div className="flex items-start gap-2">
-                      <div className="shrink-0 mt-0.5">{styles.icon}</div>
-                      <div className="grow">
-                        <div className="font-semibold text-[13px] leading-5">
-                          {styles.title}
-                        </div>
-                        <div
-                          className={`mt-2 inline-flex flex-wrap items-center gap-2 rounded-lg px-2 py-2 ${styles.chipWrap}`}
-                        >
-                          <span
-                            className={`text-[11px] px-2 py-1 rounded-md border ${styles.chip}`}
-                          >
-                            최소 <b>{cartMin}</b>개
-                          </span>
-                          <span
-                            className={`text-[11px] px-2 py-1 rounded-md border ${
-                              styles.chip
-                            } ${
-                              status === 'ok'
-                                ? 'bg-blue-100/70'
-                                : status === 'under'
-                                ? 'bg-amber-100/70'
-                                : 'bg-red-100/70'
-                            }`}
-                          >
-                            현재 <b>{cartItems.length}</b>개
-                          </span>
-                          <span
-                            className={`text-[11px] px-2 py-1 rounded-md border ${styles.chip}`}
-                          >
-                            최대 <b>{cartLimit}</b>개
-                          </span>
-                        </div>
-                        <p className="mt-2 text-[12px] leading-6">
-                          {styles.hint}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()
-            )}
-          </div>
+          {/* 카트 최소/현재/최대 상태 칩 */}
+          <CartStatusChips
+            cartMin={cartMin}
+            cartLimit={cartLimit}
+            count={cartItems.length}
+          />
 
           {/* 목록 */}
           <div className="mt-4 space-y-4">
