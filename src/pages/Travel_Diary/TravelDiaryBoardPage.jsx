@@ -19,7 +19,7 @@ const TravelDiaryBoardPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [diaries, setDiaries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sortType, setSortType] = useState('latest'); // 'latest' | 'popular'
+  const [sortType, setSortType] = useState('latest'); 
   const [showSortDropdown, setShowSortDropdown] = useState(false);
 
   const [selectOpen, setSelectOpen] = useState(false);
@@ -37,7 +37,6 @@ const TravelDiaryBoardPage = () => {
   const fetchDiaries = async () => {
     setLoading(true);
     try {
-      // 정렬 타입에 따라 다른 방식으로 데이터 가져오기
       const res = await getDiary(0, 20);
       if (res.success) {
         const formatted = res.data.map((item) => {
@@ -54,7 +53,7 @@ const TravelDiaryBoardPage = () => {
             userNickname: item.userNickname,
             userProfileImage: item.userProfileImage,
             createdAt: item.createdAt,
-            count: item.count || 0, // 조회수나 좋아요 수 (인기도 지표)
+            count: item.count || 0, 
             tags: item.tag ? item.tag.split(',') : [], 
             imageUrl,
           };
