@@ -52,7 +52,6 @@ const PlaceDetailModal = ({ place, onClose }) => {
 
         {/* 정보 */}
         <div className="text-sm text-gray-500 mb-4">
-          <p className="mb-1">영업시간 | {place?.hours || '정보 없음'}</p>
           <p className="mb-1">{place?.address || '주소 정보 없음'}</p>
         </div>
 
