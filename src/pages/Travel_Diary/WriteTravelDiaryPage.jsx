@@ -10,7 +10,9 @@ import useUserStore from '../../store/userStore';
 import { writeDiary } from '../../api';
 import { uploadProfileImage } from '../../api';
 import { fetchMyTravel } from '../../api/user/userContentApi';
-import { getSchedule } from '../../api';
+
+import { getSchedule } from '../../api/';
+
 import { useToast } from '../../utils/useToast';
 import Toast from '../../components/common/Toast';
 import DaySelectorModal from '../../components/modal/DaySelectorModal';
@@ -37,8 +39,8 @@ const WriteTravelDiary = () => {
   // 일정 정보
   const [selectedScheduleId, setSelectedScheduleId] = useState(null);
   const [selectedScheduleLabel, setSelectedScheduleLabel] = useState('');
-  const [scheduleInfo, setScheduleInfo] = useState(null); 
-  const [scheduleDays, setScheduleDays] = useState([]);   
+  const [scheduleInfo, setScheduleInfo] = useState(null);
+  const [scheduleDays, setScheduleDays] = useState([]);
   const [showDaySelector, setShowDaySelector] = useState(false);
 
   // Toast
@@ -57,14 +59,14 @@ const WriteTravelDiary = () => {
           : null;
         if (found) setSelectedScheduleLabel(found.scheduleName || '');
 
-
         const detail = await getSchedule(scheduleId);
         if (detail) {
           setScheduleInfo(detail);
 
           const grouped = detail.scheduleItems.reduce((acc, item) => {
             const dayIdx = item.dayNumber - 1;
-            if (!acc[dayIdx]) acc[dayIdx] = { dayNumber: item.dayNumber, plans: [] };
+            if (!acc[dayIdx])
+              acc[dayIdx] = { dayNumber: item.dayNumber, plans: [] };
             acc[dayIdx].plans.push(item);
             return acc;
           }, []);
@@ -77,7 +79,6 @@ const WriteTravelDiary = () => {
     };
     load();
   }, [scheduleId, accessToken]);
-
 
   const addTag = () => {
     const trimmed = inputValue.trim();
@@ -129,7 +130,9 @@ const WriteTravelDiary = () => {
       return;
     }
     if (!selectedScheduleId) {
-      showError('연결된 일정이 없습니다. 일정 선택 후 작성 페이지로 들어오세요.');
+      showError(
+        '연결된 일정이 없습니다. 일정 선택 후 작성 페이지로 들어오세요.'
+      );
       return;
     }
 
