@@ -1,4 +1,3 @@
-// src/pages/Schedule/ScheduleViewPage.jsx
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import DefaultLayout from '../../layouts/DefaultLayout';
@@ -18,7 +17,6 @@ const ScheduleViewPage = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
 
-  // ✅ zustand selector로 필요한 값만 꺼내오기
   const detail = useScheduleStore((s) => s.detail);
   const setDetail = useScheduleStore((s) => s.setDetail);
   const setPlaceIndex = useScheduleStore((s) => s.setPlaceIndex);
@@ -27,16 +25,12 @@ const ScheduleViewPage = () => {
   const planBudget = usePlanStore((s) => s.budget ?? 0);
   const budget = detail?.budget ?? planBudget;
 
-  // ----------------------------
-  // 서버에서 일정 새로고침
-  // ----------------------------
   useEffect(() => {
     (async () => {
       if (String(detail?.scheduleId ?? detail?.id) === String(scheduleId)) return;
 
       try {
         const res = await getSchedule(scheduleId);
-        console.log('[ScheduleViewPage] getSchedule response →', res);
         setDetail(res);
       } catch (e) {
         console.error('[ScheduleViewPage] reload fail', e?.response?.data || e);
@@ -45,9 +39,6 @@ const ScheduleViewPage = () => {
     })();
   }, [scheduleId, detail?.scheduleId, detail?.id, setDetail]);
 
-  // ----------------------------
-  // placeIndex 구성
-  // ----------------------------
   useEffect(() => {
     if (!detail || !Array.isArray(detail?.scheduleItems)) return;
 
@@ -69,9 +60,7 @@ const ScheduleViewPage = () => {
     setPlaceIndex(idx);
   }, [detail, setPlaceIndex]);
 
-  // ----------------------------
-  // days 및 파생 데이터
-  // ----------------------------
+
   const days = getDays();
 
   useEffect(() => {
@@ -123,9 +112,7 @@ const ScheduleViewPage = () => {
       ? `${detail.startDate} ~ ${detail.endDate}`
       : '';
 
-  // ----------------------------
-  // 렌더링
-  // ----------------------------
+
   return (
     <DefaultLayout>
       <div className="w-full mx-auto px-4 sm:px-6 md:px-8 pb-16">
