@@ -117,39 +117,9 @@ const TravelDiaryBoardPage = () => {
           />
         </div>
 
-        {/* 상단 제목 + 정렬 + 글쓰기 */}
-        <div className="flex items-center justify-between px-4 sm:px-6 md:px-8 pb-4">
-          <div className="flex items-center gap-4">
-            <div className="text-medium font-semibold">국내 실시간 여행일기</div>
-            
-            {/* 정렬 드롭다운 */}
-            <div className="relative">
-              <button
-                className="flex items-center gap-1 text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-1.5 hover:bg-gray-50"
-                onClick={() => setShowSortDropdown(!showSortDropdown)}
-              >
-                {sortOptions.find(option => option.value === sortType)?.label}
-                <ChevronDown className="w-4 h-4" />
-              </button>
-              
-              {showSortDropdown && (
-                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-24">
-                  {sortOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${
-                        sortType === option.value ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
-                      }`}
-                      onClick={() => handleSortChange(option.value)}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
+        {/* 제목 + 글쓰기 버튼 */}
+        <div className="px-4 sm:px-6 md:px-8 flex items-center justify-between pb-1">
+          <h2 className="text-lg font-semibold">국내 실시간 여행일기</h2>
           <button
             className="text-sm text-gray-500 flex items-center gap-1"
             onClick={openScheduleModal}
@@ -158,6 +128,39 @@ const TravelDiaryBoardPage = () => {
             여행 일기 쓰러가기
           </button>
         </div>
+
+        {/* 정렬 드롭다운 + 안내 */}
+        <div className="flex items-center gap-3 px-4 sm:px-6 md:px-8 pb-4">
+          <div className="relative">
+            <button
+              className="flex items-center gap-1 text-sm text-gray-600 border border-gray-300 rounded-lg px-2.5 py-1 hover:bg-gray-50"
+              onClick={() => setShowSortDropdown(!showSortDropdown)}
+            >
+              {sortOptions.find(option => option.value === sortType)?.label}
+              <ChevronDown className="w-4 h-4" />
+            </button>
+            {showSortDropdown && (
+              <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-24">
+                {sortOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${
+                      sortType === option.value ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
+                    }`}
+                    onClick={() => handleSortChange(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <p className="text-xs text-gray-400">최신순/인기순으로 조회해요!</p>
+        </div>
+
+
+
 
         {/* 여행일기 리스트 */}
         <div className="space-y-3 px-4 sm:px-6 md:px-8 pb-6">
@@ -176,6 +179,7 @@ const TravelDiaryBoardPage = () => {
                 period={diary.period}
                 tags={diary.tags}
                 imageUrl={diary.imageUrl}
+                count = {diary.count}
               />
             ))
           )}
