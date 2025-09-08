@@ -52,8 +52,8 @@ const MyDiarySection = () => {
   };
 
   return (
-    <div className="bg-white px-4 pt-2 m-2 relative min-h-[200px]">
-      <p className="text-sm font-semibold text-gray-600 mb-3 m-2">내 여행 일기</p>
+    <div className=" px-4 sm:px-6 md:px-8 pt-2 m-2 relative ">
+      <p className="text-sm font-semibold text-gray-600 mb-3 ">내 여행 일기</p>
 
       {diaries.length === 0 ? (
         <p className="text-gray-400 text-sm">작성한 여행일기가 없습니다.</p>

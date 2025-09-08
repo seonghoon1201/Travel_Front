@@ -40,15 +40,16 @@ const MyPage = () => {
           rightButtonText="프로필 편집"
           onRightButtonClick={() => navigate('/edit/profile')}
         />
-        <div></div>
 
         <ProfileSummary nickname={nickname} />
         <TabMenu activeTab={activeTab} setActiveTab={setActiveTab} />
 
         {/* 탭별 콘텐츠 렌더링 */}
-        {activeTab === 'myTrip' && <MyTravelSection />}
-        {activeTab === 'myDiary' && <MyDiarySection />}
-        {activeTab === 'myBookmark' && <MyBookmarkSection />}
+          {activeTab === 'myTrip' && <MyTravelSection />}
+          {activeTab === 'myDiary' && <MyDiarySection />}
+          {activeTab === 'myBookmark' && <MyBookmarkSection />}
+
+       
       </div>
     </DefaultLayout>
   );

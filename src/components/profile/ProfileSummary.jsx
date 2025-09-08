@@ -8,7 +8,7 @@ const ProfileSummary = () => {
   const profileImageUrl = useUserStore((state) => state.profileImageUrl);
 
   return (
-    <div className="flex flex-col items-center justify-center py-3 bg-white">
+    <div className="flex flex-col items-center justify-center py-3">
       <img
         src={profileImageUrl ? profileImageUrl : defaultImage}
         alt="프로필"

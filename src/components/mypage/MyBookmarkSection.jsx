@@ -1,73 +1,94 @@
-import React, { useState } from 'react';
+// src/components/bookmark/MyBookmarkSection.jsx
+import React, { useEffect, useState } from 'react';
 import BookmarkItem from './BookmarkItem';
-import CategoryButtonSection from './CategoryButtonSection';
+import { getFavorites } from '../../api/favorite/getFavorites';
+import { toggleFavorite } from '../../api/favorite/toggleFavorite';
 
 const MyBookmarkSection = () => {
-  const [activeCategory, setActiveCategory] = useState('전체');
+  const [bookmarks, setBookmarks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
 
-  const bookmarks = [
-    {
-      destination: '섭지코지',
-      category: '힐링',
-      location: '제주',
-      address: '제주특별자치도 서귀포시 성산읍 섭지코지로 95',
-      opentime: '09:30',
-      closetime: '18:00',
-      tel: '1833-7001',
-      imageUrl: '/assets/jeju_sample.jpg',
-    },
-    {
-      destination: '성산일출봉',
-      category: '힐링',
-      location: '제주',
-      address: '제주특별자치도 서귀포시 성산읍 일출로 284-12',
-      opentime: '07:00',
-      closetime: '20:00',
-      tel: '064-783-0959',
-      imageUrl: '/assets/jeju_sample.jpg',
-    },
-    {
-      destination: '강릉서핑',
-      category: '레저',
-      location: '강릉',
-      address: '강원특별자치도 강릉시 해변로 100',
-      opentime: '08:00',
-      closetime: '19:00',
-      tel: '033-123-4567',
-      imageUrl: '/assets/gangneung_sample.jpg',
-    },
-  ];
+  useEffect(() => {
+    fetchFavorites();
+  }, []);
 
-  // 카테고리 필터링
-  const filteredBookmarks =
-    activeCategory === '전체'
-      ? bookmarks
-      : bookmarks.filter((item) => item.category === activeCategory);
+  const fetchFavorites = async () => {
+    try {
+      setLoading(true);
+      const res = await getFavorites();
+      if (res?.favorites) {
+        setBookmarks(
+          res.favorites
+            .filter((f) => f.placeTitle && f.placeTitle.trim() !== '') // 제목 없는 건 제외
+            .map((f) => ({
+              contentId: f.contentId,
+              destination: f.placeTitle,
+              address: f.placeAddress || '',
+              opentime: '',
+              closetime: '',
+              tel: '',
+              imageUrl: f.placeImage || '/assets/default_place.jpg',
+              isFavorite: true,
+            }))
+        );
+         setTotalCount(res.totalCount || 0);
+      }
+    } catch (err) {
+      console.error('즐겨찾기 불러오기 실패:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 즐겨찾기 토글 함수
+  const handleToggleFavorite = async (contentId) => {
+    try {
+      const result = await toggleFavorite(contentId);
+      return result;
+    } catch (err) {
+      console.error('즐겨찾기 토글 실패:', err);
+      throw err;
+    }
+  };
+
+  // 북마크 목록에서 제거하는 함수
+  const handleRemoveBookmark = (contentId) => {
+    setBookmarks((prev) =>
+      prev.filter((bookmark) => bookmark.contentId !== contentId)
+    );
+    setTotalCount((prev) => prev - 1);
+  };
+
+  if (loading) {
+    return <div className="p-4 text-center text-gray-400">불러오는 중...</div>;
+  }
 
   return (
-    <div className="p-4 space-y-4">
-      <CategoryButtonSection
-        activeCategory={activeCategory}
-        setActiveCategory={setActiveCategory}
-      />
+    <div className="p-4 space-y-4 sm:px-6 md:px-8">
+       <div className="text-sm font-semibold text-gray-600 mb-3">
+        총 즐겨찾기: {totalCount}개
+      </div>
 
-      {filteredBookmarks.length > 0 ? (
-        filteredBookmarks.map((bookmark, index) => (
+      {bookmarks.length > 0 ? (
+        bookmarks.map((bookmark) => (
           <BookmarkItem
-            key={index}
+            key={bookmark.contentId}
+            contentId={bookmark.contentId}
             destination={bookmark.destination}
-            category={bookmark.category}
-            location={bookmark.location}
             address={bookmark.address}
             opentime={bookmark.opentime}
             closetime={bookmark.closetime}
             tel={bookmark.tel}
             imageUrl={bookmark.imageUrl}
+            isFavorite={bookmark.isFavorite}
+            toggleFavorite={handleToggleFavorite}
+            onRemove={handleRemoveBookmark}
           />
         ))
       ) : (
         <p className="text-center text-gray-400 text-sm">
-          저장된 여행이 없습니다.
+          즐겨찾기한 장소가 없습니다.
         </p>
       )}
     </div>
