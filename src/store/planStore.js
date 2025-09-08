@@ -60,18 +60,8 @@ const usePlanStore = create(
       setLocationCodes: (codes) =>
         set({
           locationCodes: (Array.isArray(codes) ? codes : []).map((o = {}) => {
-            const regn =
-              o.ldongRegnCd ??
-              o.ldongRegnCd ??
-              o.lDongRegnCd ??
-              o.ldongRegnCd ??
-              '';
-            const sign =
-              o.ldongSignguCd ??
-              o.ldongSignguCd ??
-              o.lDongSignguCd ??
-              o.ldongSignguCd ??
-              '';
+            const regn = o.ldongRegnCd ?? o.lDongRegnCd ?? '';
+            const sign = o.ldongSignguCd ?? o.lDongSignguCd ?? '';
             return {
               ldongRegnCd:
                 regn !== null && regn !== undefined ? String(regn) : '',
@@ -86,8 +76,12 @@ const usePlanStore = create(
       setStyles: (values) => set({ styles: values }),
       setTransport: (v) => set({ transport: v }),
       setInvitees: (list) => set({ invitees: list }),
-      setPeople: (v) => set({ people: v }),
-      setBudget: (v) => set({ budget: v }),
+      setPeople: (v) => set({ people: Math.max(1, Number(v) || 1) }),
+      setBudget: (v) => {
+        const next = Math.max(0, Number.isFinite(+v) ? +v : 0);
+        console.log('[planStore.setBudget] input:', v, '→ saved:', next);
+        set({ budget: next });
+      },
 
       // (구) 로컬 카트 — 호환 유지용
       setCartItems: (items) => set({ cartItems: items }),
