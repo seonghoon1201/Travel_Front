@@ -52,7 +52,7 @@ const TravelDiaryList = ({ title, showMore }) => {
   return (
     <div>
       <div className="flex justify-between items-center  mb-2">
-        <h2 className="font-jalnangothic">{title}</h2>
+        <h2 className="font-jalnongothic">{title}</h2>
            {showMore && (
           <button
             className="font-pretendard text-sm text-blue-500 border rounded-full px-2 py-0.5"

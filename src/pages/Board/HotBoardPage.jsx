@@ -55,10 +55,10 @@ const HotBoard = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto ">
+      <div className="w-full  mx-auto ">
         <BackHeader />
-        <div className="pl-[1rem] pr-[1rem]">
-          <div className="w-full mb-4">
+        <div className="px-4 sm:px-6 md:px-8">
+          <div className=" mb-4">
             <SearchBar
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

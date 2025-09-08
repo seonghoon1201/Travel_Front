@@ -18,10 +18,3 @@ export const fetchMyDiaries = async (accessToken) => {
   return res.data;
 };
 
-// 내 저장 불러오기
-// export const fetchMyBookmark = async (accessToken) => {
-//   const res = await axios.get(`${API_BASE_URL}/관련 엔드포인트`, {
-//     headers: { Authorization: `Bearer ${accessToken}` },
-//   });
-//   return res.data;
-// };
