@@ -43,7 +43,10 @@ const MyTravelItem = ({
       <div className="flex-1 min-w-0">
         <p className="font-bold truncate">{title} 여행</p>
         <p className="text-sm text-gray-500 truncate">
-          {dateRange}, {companionCount}명과 함께
+          {dateRange},{' '}
+          {companionCount <= 1
+            ? '나 홀로 여행'
+            : `${companionCount}명과 함께`}
         </p>
       </div>
 

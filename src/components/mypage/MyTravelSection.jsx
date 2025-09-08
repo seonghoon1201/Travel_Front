@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import MyTravelItem from './MyTravelItem';
+import { useNavigate } from 'react-router-dom';
 
+import MyTravelItem from './MyTravelItem';
 import useUserStore from '../../store/userStore';
 import { fetchMyTravel } from '../../api/user/userContentApi';
-import { useNavigate } from 'react-router-dom';
+import  groupApi  from '../../api/group/group'; 
 
 const MyTravelSection = () => {
   const [upcomingTrips, setUpcomingTrips] = useState([]);
@@ -15,7 +16,6 @@ const MyTravelSection = () => {
     const loadData = async () => {
       try {
         const data = await fetchMyTravel(accessToken);
-
         const list = Array.isArray(data) ? data : data?.schedules || [];
 
         const today = new Date();
@@ -24,11 +24,31 @@ const MyTravelSection = () => {
         const upcoming = [];
         const past = [];
 
-        list.forEach((trip) => {
+        for (const trip of list) {
           const start = new Date(trip.startDate);
           start.setHours(0, 0, 0, 0);
-          (start >= today ? upcoming : past).push(trip);
-        });
+
+          let companionCount = 1; 
+          if (trip.groupId) {
+            try {
+              const res = await groupApi.count(trip.groupId);
+              companionCount = res; 
+            } catch (err) {
+              console.error(`그룹 인원 수 불러오기 실패 (${trip.groupId}):`, err);
+            }
+          }
+
+          const enrichedTrip = {
+            ...trip,
+            companionCount,
+          };
+
+          if (start >= today) {
+            upcoming.push(enrichedTrip);
+          } else {
+            past.push(enrichedTrip);
+          }
+        }
 
         setUpcomingTrips(upcoming);
         setPastTrips(past);
@@ -40,7 +60,6 @@ const MyTravelSection = () => {
     if (accessToken) loadData();
   }, [accessToken]);
 
-  // ✅ useCallback으로 메모이제이션
   const handleClickTrip = useCallback(
     (scheduleId) => {
       navigate(`/schedule/view/${scheduleId}`);
@@ -62,9 +81,9 @@ const MyTravelSection = () => {
             scheduleId={trip.scheduleId}
             title={trip.scheduleName}
             dateRange={`${trip.startDate} ~ ${trip.endDate}`}
-            companionCount={trip.groupName ? 1 : 0}
+            companionCount={trip.companionCount}
             imageUrl={trip.imageUrl || '/default-travel.jpg'}
-            onClick={handleClickTrip} // ✅ 안정된 함수 전달
+            onClick={() => handleClickTrip(trip.scheduleId)}
           />
         ))
       )}
@@ -81,9 +100,9 @@ const MyTravelSection = () => {
             scheduleId={trip.scheduleId}
             title={trip.scheduleName}
             dateRange={`${trip.startDate} ~ ${trip.endDate}`}
-            companionCount={trip.groupName ? 1 : 0}
+            companionCount={trip.companionCount}
             imageUrl={trip.imageUrl || '/default-travel.jpg'}
-            onClick={handleClickTrip} // ✅ 동일하게 처리
+            onClick={() => handleClickTrip(trip.scheduleId)}
           />
         ))
       )}
