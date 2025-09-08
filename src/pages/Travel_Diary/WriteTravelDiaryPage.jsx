@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { X, CalendarDays } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import DefaultLayout from '../../layouts/DefaultLayout';
@@ -10,8 +10,10 @@ import useUserStore from '../../store/userStore';
 import { writeDiary } from '../../api';
 import { uploadProfileImage } from '../../api';
 import { fetchMyTravel } from '../../api/user/userContentApi';
+import { getSchedule } from '../../api/schedule/getSchedule';  
 import { useToast } from '../../utils/useToast';
 import Toast from '../../components/common/Toast';
+import DaySelectorModal from '../../components/modal/DaySelectorModal';
 
 const WriteTravelDiary = () => {
   const navigate = useNavigate();
@@ -32,14 +34,17 @@ const WriteTravelDiary = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
 
-  // 일정 표시
+  // 일정 정보
   const [selectedScheduleId, setSelectedScheduleId] = useState(null);
   const [selectedScheduleLabel, setSelectedScheduleLabel] = useState('');
+  const [scheduleInfo, setScheduleInfo] = useState(null); 
+  const [scheduleDays, setScheduleDays] = useState([]);   
+  const [showDaySelector, setShowDaySelector] = useState(false);
 
   // Toast
   const { toast, showError, showInfo, showSuccess, hideToast } = useToast();
 
-  // 진입 시 일정 세팅 + 이름만 조회
+  // 진입 시 일정 세팅
   useEffect(() => {
     if (!scheduleId) return;
     setSelectedScheduleId(scheduleId);
@@ -51,15 +56,29 @@ const WriteTravelDiary = () => {
           ? trips.find((t) => t.scheduleId === scheduleId)
           : null;
         if (found) setSelectedScheduleLabel(found.scheduleName || '');
+
+
+        const detail = await getSchedule(scheduleId);
+        if (detail) {
+          setScheduleInfo(detail);
+
+          const grouped = detail.scheduleItems.reduce((acc, item) => {
+            const dayIdx = item.dayNumber - 1;
+            if (!acc[dayIdx]) acc[dayIdx] = { dayNumber: item.dayNumber, plans: [] };
+            acc[dayIdx].plans.push(item);
+            return acc;
+          }, []);
+          setScheduleDays(grouped);
+        }
       } catch (e) {
-        console.error('내 일정 불러오기 실패:', e);
-        showError('내 일정 정보를 불러올 수 없습니다.');
+        console.error('일정 불러오기 실패:', e);
+        showError('일정 정보를 불러올 수 없습니다.');
       }
     };
     load();
-  }, [scheduleId, accessToken, showError]);
+  }, [scheduleId, accessToken]);
 
-  // 태그
+
   const addTag = () => {
     const trimmed = inputValue.trim();
     if (!trimmed) return;
@@ -84,13 +103,11 @@ const WriteTravelDiary = () => {
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
-
     const nextFiles = [...selectedFiles, ...files];
     const nextPreviews = [
       ...previewUrls,
       ...files.map((f) => URL.createObjectURL(f)),
     ];
-
     setSelectedFiles(nextFiles);
     setPreviewUrls(nextPreviews);
   };
@@ -118,7 +135,6 @@ const WriteTravelDiary = () => {
 
     try {
       let imageUrls = [...existingImageUrls];
-
       if (selectedFiles.length > 0) {
         const results = await Promise.all(
           selectedFiles.map((f) => uploadProfileImage(f))
@@ -140,21 +156,14 @@ const WriteTravelDiary = () => {
       };
 
       const result = await writeDiary(payload);
-
       if (result?.success && result?.boardId) {
         previewUrls.forEach((u) => URL.revokeObjectURL(u));
         showSuccess('여행일기가 작성되었습니다!');
         setTimeout(() => {
           navigate(`/board/travel/diary/${result.boardId}`);
         }, 1200);
-        
       } else {
-        console.error('작성 결과:', result);
-        showError(
-          `작성 실패: ${
-            result?.error?.message ?? result?.error ?? '원인 미상(응답에 boardId 없음)'
-          }`
-        );
+        showError(`작성 실패: ${result?.error ?? '원인 미상'}`);
       }
     } catch (err) {
       showError('오류 발생: ' + (err?.message ?? String(err)));
@@ -168,11 +177,20 @@ const WriteTravelDiary = () => {
         <div className="px-4 pb-[calc(env(safe-area-inset-bottom)+80px)]">
           <div className="bg-white rounded-xl shadow-md p-4  space-y-4">
             {/* 연결된 일정 표시 */}
-            <div className="min-h-[28px]">
+            <div className="flex items-center justify-between min-h-[28px]">
               {selectedScheduleId ? (
-                <span className="inline-flex items-center gap-2 text-xs px-2 py-1 rounded-full bg-sky-100 text-sky-700">
-                  연결된 일정: {selectedScheduleLabel || '알 수 없는 일정'}
-                </span>
+                <>
+                  <span className="inline-flex items-center gap-2 text-xs px-2 py-1 rounded-full bg-sky-100 text-sky-700">
+                    연결된 일정: {selectedScheduleLabel || '알 수 없는 일정'}
+                  </span>
+                  <button
+                    onClick={() => setShowDaySelector(true)}
+                    className="text-xs text-blue-500 hover:underline flex items-center gap-1"
+                  >
+                    <CalendarDays className="w-3 h-3" />
+                    일정 보기 →
+                  </button>
+                </>
               ) : (
                 <span className="text-xs text-red-400">
                   일정 정보가 없습니다.
@@ -191,7 +209,7 @@ const WriteTravelDiary = () => {
               />
             </div>
 
-            {/* 태그 입력 */}
+            {/* 태그 */}
             <div className="border border-gray-200 rounded-lg p-2 flex flex-wrap gap-2 items-start">
               {tags.map((tag) => (
                 <span
@@ -264,6 +282,7 @@ const WriteTravelDiary = () => {
             )}
           </div>
 
+          {/* 작성 버튼 */}
           <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-40 bg-white/90 backdrop-blur border-t">
             <div className="px-4 py-3">
               <PrimaryButton
@@ -277,7 +296,15 @@ const WriteTravelDiary = () => {
         </div>
       </div>
 
-      {/* ✅ Toast */}
+      {/* ✅ 일정 보기 모달 */}
+      <DaySelectorModal
+        isOpen={showDaySelector}
+        onClose={() => setShowDaySelector(false)}
+        scheduleInfo={scheduleInfo}
+        days={scheduleDays}
+        onDaySelect={() => {}}
+      />
+
       {toast && (
         <Toast
           message={toast.message}
