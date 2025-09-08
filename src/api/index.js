@@ -45,9 +45,12 @@ export { default as CartAPI } from './cart/cart';
 export { getPlacesByRegionTheme } from './place/getPlacesByTheme';
 
 // 스케줄
-export { createSchedule } from './schedule/createSchedule';
-export { optimizeSchedule } from './schedule/optimizeSchedule';
-export { getSchedule } from './schedule/getSchedule';
+export {
+  createSchedule,
+  optimizeSchedule,
+  getSchedule,
+  deleteSchedule,
+} from './schedule/schedule';
 
 // 스케줄 아이템 (명시적)
 export { createScheduleItem } from './scheduleItem/scheduleItems';
