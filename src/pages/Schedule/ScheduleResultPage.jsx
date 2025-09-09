@@ -1,3 +1,4 @@
+// src/pages/plan/ScheduleResultPage.jsx
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DefaultLayout from '../../layouts/DefaultLayout';
@@ -15,10 +16,17 @@ import { message, Progress, Flex, Modal } from 'antd';
 const ScheduleResultPage = () => {
   const { scheduleId } = useParams();
   const navigate = useNavigate();
+
+  // ✅ zustand: 필요한 조각만 셀렉터로
+  const detail = useScheduleStore((s) => s.detail);
+  const placeIndex = useScheduleStore((s) => s.placeIndex);
+  const setDetail = useScheduleStore((s) => s.setDetail);
+  const setPlaceIndex = useScheduleStore((s) => s.setPlaceIndex);
+  const clearScheduleStore = useScheduleStore((s) => s.clear);
+  const getDays = useScheduleStore((s) => s.getDays);
+
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
-  const scheduleStore = useScheduleStore();
-  const detail = scheduleStore.detail;
 
   // ✅ 예산: 응답(detail.budget) 우선, 없으면 PlanStore
   const planBudget = usePlanStore((s) => s.budget ?? 0);
@@ -32,20 +40,19 @@ const ScheduleResultPage = () => {
       try {
         const res = await getSchedule(scheduleId);
         console.log('[ScheduleResultPage] getSchedule response →', res);
-        scheduleStore.setDetail(res);
+        setDetail(res); // ✅ 액션만 의존성에
       } catch (e) {
         console.error('[ScheduleResult] reload fail', e?.response?.data || e);
         message.error('일정 정보를 불러오지 못했어요.');
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scheduleId]);
+    // 의존성: URL의 scheduleId와 setDetail만
+  }, [scheduleId, setDetail, detail?.scheduleId, detail?.id]);
 
-  // ✅ placeIndex 보강
+  // ✅ placeIndex 보강 (한 번만)
   useEffect(() => {
     if (!detail || !Array.isArray(detail?.scheduleItems)) return;
-    const currentIndex = scheduleStore.placeIndex || {};
-    if (Object.keys(currentIndex).length > 0) return;
+    if (placeIndex && Object.keys(placeIndex).length > 0) return;
 
     const { items: cartItems = [] } = useCartStore.getState();
     const idxFromCart = {};
@@ -71,11 +78,11 @@ const ScheduleResultPage = () => {
       }
     });
 
-    scheduleStore.setPlaceIndex(idxMerged);
-  }, [detail, scheduleStore]);
+    setPlaceIndex(idxMerged);
+  }, [detail, placeIndex, setPlaceIndex]);
 
   // days 변환
-  const days = scheduleStore.getDays();
+  const days = getDays();
 
   // ✅ index 가드
   useEffect(() => {
@@ -104,7 +111,7 @@ const ScheduleResultPage = () => {
     return Math.min(100, (totalCost / budget) * 100);
   }, [budget, totalCost]);
 
-  // ✅ 선택 Day의 마커: 백엔드 order를 그대로 숫자로 표시
+  // ✅ 선택 Day의 마커
   const selectedMarkers = useMemo(() => {
     if (!days[selectedDayIndex]) return [];
     return days[selectedDayIndex].plans
@@ -112,12 +119,11 @@ const ScheduleResultPage = () => {
       .map((p, i) => ({
         lat: p.lat,
         lng: p.lng,
-        order: i + 1, // ✅ 당일 리스트 순서대로 1..N
+        order: i + 1,
         title: p.title || p.name || `#${i + 1}`,
       }));
   }, [days, selectedDayIndex]);
 
-  // 폴리라인 경로
   const path = useMemo(
     () => selectedMarkers.map((m) => ({ lat: m.lat, lng: m.lng })),
     [selectedMarkers]
@@ -129,20 +135,17 @@ const ScheduleResultPage = () => {
       ? `${detail.startDate} ~ ${detail.endDate}`
       : '';
 
-  // 결과 확정(완료) 버튼: 모든 계획/카트/로컬 저장 정리 후 홈으로
+  // 결과 확정(완료)
   const finishAndExit = async () => {
     try {
-      // 결과 화면 캐시도 지워주면 다음 스케줄에 꼬임 방지
-      await useScheduleStore.getState().clear();
-
-      // ✅ 여기서만 전체 정리 (로컬스토리지 포함)
+      await clearScheduleStore();
       await usePlanStore.getState().finishPlanning();
     } finally {
       navigate('/mypage', { replace: true });
     }
   };
 
-  // 일정 다시 짜기: 서버 일정 삭제 확인 후, 로컬 초기화하고 처음부터 시작
+  // 일정 다시 짜기 (삭제 → 초기화 → 처음으로)
   const retryPlanWithDelete = () => {
     Modal.confirm({
       title: '일정을 다시 짤까요?',
@@ -150,6 +153,7 @@ const ScheduleResultPage = () => {
         '현재 생성된 일정이 삭제되고 처음부터 다시 만들게 됩니다. 계속하시겠어요?',
       okText: '예, 다시 짜기',
       cancelText: '취소',
+      // ✅ 버튼 가독성 고정
       okButtonProps: {
         type: 'primary',
         className:
@@ -167,9 +171,9 @@ const ScheduleResultPage = () => {
             scheduleId || detail?.scheduleId || detail?.id || ''
           );
           if (!id) throw new Error('삭제할 scheduleId를 찾지 못했습니다.');
-          await deleteSchedule(id); // ✅ 서버 일정 삭제
-          await useScheduleStore.getState().clear(); // 결과 캐시 정리
-          await usePlanStore.getState().cancelPlanning(); // 로컬/스토어 전체 초기화
+          await deleteSchedule(id);
+          await clearScheduleStore();
+          await usePlanStore.getState().cancelPlanning();
           message.success('일정을 삭제했어요. 처음부터 다시 시작합니다.');
           navigate('/plan/location', { replace: true });
         } catch (e) {
@@ -281,6 +285,7 @@ const ScheduleResultPage = () => {
 
         {/* 편집 모달 */}
         {showEditModal && <EditModal onClose={() => setShowEditModal(false)} />}
+
         {/* 하단 고정 버튼 바 */}
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
           <div className="mx-auto w-full px-4 sm:px-6 md:px-8 py-3 flex gap-2">

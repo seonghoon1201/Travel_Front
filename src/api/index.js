@@ -27,6 +27,7 @@ export { uploadProfileImage } from './file/uploadProfileImage';
 // 투어
 export { searchTours } from './tour/searchTour';
 export { searchTours as searchTour } from './tour/searchTour';
+export { getTourDetail } from './tour/getTourDetail';
 
 // 유저 컨텐츠
 export { fetchMyDiaries, fetchMyTravel } from './user/userContentApi';

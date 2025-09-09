@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import DefaultLayout from '../../layouts/DefaultLayout';
-import HomeHeader from '../../components/header/HomeHeader';
+import BackHeader from '../../components/header/BackHeader';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import DayScheduleSection from '../../components/schedule/DayScheduleSection';
 import EditModal from '../../components/schedule/EditModal';
@@ -10,6 +10,8 @@ import useScheduleStore from '../../store/scheduleStore';
 import usePlanStore from '../../store/planStore';
 import { getSchedule } from '../../api';
 import { message, Progress, Flex } from 'antd';
+
+const toNum = (v) => (typeof v === 'number' ? v : Number(v));
 
 const ScheduleViewPage = () => {
   const { scheduleId } = useParams();
@@ -27,8 +29,8 @@ const ScheduleViewPage = () => {
 
   useEffect(() => {
     (async () => {
-      if (String(detail?.scheduleId ?? detail?.id) === String(scheduleId)) return;
-
+      if (String(detail?.scheduleId ?? detail?.id) === String(scheduleId))
+        return;
       try {
         const res = await getSchedule(scheduleId);
         setDetail(res);
@@ -47,19 +49,22 @@ const ScheduleViewPage = () => {
       const key = String(it.contentId ?? '');
       if (!key) return;
 
+      // ✅ 백엔드 latitude/longitude 우선 사용
+      const lat = toNum(it.latitude ?? it.lat ?? it.mapY);
+      const lng = toNum(it.longitude ?? it.lng ?? it.mapX);
+
       idx[key] = {
         name: it.title || it.name || key,
         title: it.title || it.name || key,
         imageUrl: it.imageUrl || it.firstImage || it.firstimage || '',
-        lat: typeof it.lat === 'number' ? it.lat : Number(it.mapY ?? it.lat),
-        lng: typeof it.lng === 'number' ? it.lng : Number(it.mapX ?? it.lng),
+        lat: Number.isNaN(lat) ? undefined : lat,
+        lng: Number.isNaN(lng) ? undefined : lng,
         address: it.address || it.addr1 || '',
       };
     });
 
     setPlaceIndex(idx);
   }, [detail, setPlaceIndex]);
-
 
   const days = getDays();
 
@@ -89,17 +94,36 @@ const ScheduleViewPage = () => {
     return Math.min(100, (totalCost / budget) * 100);
   }, [budget, totalCost]);
 
+  // ✅ 마커 생성: lat/lng || latitude/longitude || mapY/mapX 순으로 안전 파싱
   const selectedMarkers = useMemo(() => {
-    if (!days[selectedDayIndex]) return [];
-    return days[selectedDayIndex].plans
-      .filter((p) => typeof p.lat === 'number' && typeof p.lng === 'number')
-      .map((p, i) => ({
-        lat: p.lat,
-        lng: p.lng,
-        order: i + 1,
-        title: p.title || p.name || `#${i + 1}`,
-      }));
-  }, [days, selectedDayIndex]);
+    // 1) 우선 days에서 시도
+    const d = days[selectedDayIndex];
+    let list = d?.plans ?? [];
+
+    // 2) 좌표가 없다면 scheduleItems에서 dayNumber로 폴백
+    if ((!list || list.length === 0) && Array.isArray(detail?.scheduleItems)) {
+      list = detail.scheduleItems.filter(
+        (it) => Number(it.dayNumber) === selectedDayIndex + 1
+      );
+    }
+
+    // 3) 안전 파싱 (latitude/longitude → lat/lng)
+    const markers = [];
+    (list || []).forEach((p, i) => {
+      const lat = toNum(p.lat ?? p.latitude ?? p.mapY);
+      const lng = toNum(p.lng ?? p.longitude ?? p.mapX);
+      if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+        markers.push({
+          lat,
+          lng,
+          order: i + 1,
+          title: p.title || p.name || `#${i + 1}`,
+        });
+      }
+    });
+
+    return markers;
+  }, [days, detail, selectedDayIndex]);
 
   const path = useMemo(
     () => selectedMarkers.map((m) => ({ lat: m.lat, lng: m.lng })),
@@ -112,12 +136,10 @@ const ScheduleViewPage = () => {
       ? `${detail.startDate} ~ ${detail.endDate}`
       : '';
 
-
   return (
     <DefaultLayout>
+      <BackHeader />
       <div className="w-full mx-auto px-4 sm:px-6 md:px-8 pb-16">
-        <HomeHeader />
-
         {/* Header */}
         <div className="flex justify-between items-center mb-1">
           <h1 className="text-xl font-bold">{title}</h1>
@@ -188,6 +210,7 @@ const ScheduleViewPage = () => {
         {/* 지도 */}
         <div className="w-full h-48 rounded-lg mb-6 overflow-hidden">
           <KakaoMap
+            key={`${selectedDayIndex}-${selectedMarkers.length}`} // ← 마커 변동 시 리렌더 보장
             markers={selectedMarkers}
             useCustomOverlay
             drawPath
@@ -196,7 +219,6 @@ const ScheduleViewPage = () => {
             fitPadding={60}
           />
         </div>
-
         {/* 선택한 날짜 일정 */}
         {days[selectedDayIndex] && (
           <DayScheduleSection
