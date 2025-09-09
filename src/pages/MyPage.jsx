@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 import DefaultLayout from '../layouts/DefaultLayout';
-import BackHeader from '../components/header/BackHeader';
+import HomeHeader from '../components/header/HomeHeader';
 import ProfileSummary from '../components/profile/ProfileSummary';
 import TabMenu from '../components/modal/TapMenu';
 import MyTravelSection from '../components/mypage/MyTravelSection';
@@ -35,7 +35,7 @@ const MyPage = () => {
   return (
     <DefaultLayout>
       <div className="w-full mx-auto ">
-        <BackHeader
+        <HomeHeader
           showRightButton={true}
           rightButtonText="프로필 편집"
           onRightButtonClick={() => navigate('/edit/profile')}

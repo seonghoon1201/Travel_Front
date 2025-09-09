@@ -123,7 +123,7 @@ const EditProfile = () => {
   };
 
   return (
-    <div className="bg-background min-h-screen flex w-full justify-center px-4">
+    <div className="bg-background min-h-screen flex w-full justify-center ">
       {toast && (
         <Toast
           message={toast.message}
@@ -133,7 +133,7 @@ const EditProfile = () => {
         />
       )}
 
-      <div className="w-full py-6 overflow-y-auto">
+      <div className="w-full ">
         <BackHeader title="프로필 편집" />
 
         <div className="px-4 sm:px-6 md:px-8 flex flex-col items-center">

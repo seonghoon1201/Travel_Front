@@ -16,3 +16,8 @@ export async function resetPassword({ email, password }) {
   const { data } = await http.patch('/user/password', { email, password });
   return data;
 }
+
+export async function deleteUser() {
+  const { data } = await http.delete('/user/delete'); 
+  return data; 
+}
