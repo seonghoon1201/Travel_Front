@@ -4,66 +4,71 @@ import { useNavigate } from 'react-router-dom';
 import MyTravelItem from './MyTravelItem';
 import useUserStore from '../../store/userStore';
 import { fetchMyTravel } from '../../api/user/userContentApi';
+import { deleteSchedule } from '../../api/schedule/schedule'; 
 import groupApi from '../../api/group/group';
+import { useToast } from '../../utils/useToast';
 
 const MyTravelSection = () => {
   const [upcomingTrips, setUpcomingTrips] = useState([]);
   const [pastTrips, setPastTrips] = useState([]);
   const accessToken = useUserStore((state) => state.accessToken);
+  const { showSuccess, showError, showInfo, showWarning } = useToast();
+
+
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const data = await fetchMyTravel(accessToken);
-        const list = Array.isArray(data) ? data : data?.schedules || [];
+  const loadData = async () => {
+    try {
+      const data = await fetchMyTravel(accessToken);
+      const list = Array.isArray(data) ? data : data?.schedules || [];
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-        const upcoming = [];
-        const past = [];
+      const upcoming = [];
+      const past = [];
 
-        for (const trip of list) {
-          const start = new Date(trip.startDate);
-          start.setHours(0, 0, 0, 0);
+      for (const trip of list) {
+        const start = new Date(trip.startDate);
+        start.setHours(0, 0, 0, 0);
 
-          // 그룹 인원 수 가져오기
-          let companionCount = 1;
-          if (trip.groupId) {
-            try {
-              const res = await groupApi.count(trip.groupId);
-              companionCount = res;
-            } catch (err) {
-              console.error(`그룹 인원 수 불러오기 실패 (${trip.groupId}):`, err);
-            }
-          }
-
-          const safeImage =
-            (trip.regionImage && String(trip.regionImage).trim()) ||
-            (trip.imageUrl && String(trip.imageUrl).trim()) ||
-            '/default-travel.jpg';
-
-          const enrichedTrip = {
-            ...trip,
-            companionCount,
-            imageUrl: safeImage,
-          };
-
-          if (start >= today) {
-            upcoming.push(enrichedTrip);
-          } else {
-            past.push(enrichedTrip);
+        // 그룹 인원 수 가져오기
+        let companionCount = 1;
+        if (trip.groupId) {
+          try {
+            const res = await groupApi.count(trip.groupId);
+            companionCount = res;
+          } catch (err) {
+            console.error(`그룹 인원 수 불러오기 실패 (${trip.groupId}):`, err);
           }
         }
 
-        setUpcomingTrips(upcoming);
-        setPastTrips(past);
-      } catch (error) {
-        console.error('내 여행 불러오기 실패:', error);
-      }
-    };
+        const safeImage =
+          (trip.regionImage && String(trip.regionImage).trim()) ||
+          (trip.imageUrl && String(trip.imageUrl).trim()) ||
+          '/default-travel.jpg';
 
+        const enrichedTrip = {
+          ...trip,
+          companionCount,
+          imageUrl: safeImage,
+        };
+
+        if (start >= today) {
+          upcoming.push(enrichedTrip);
+        } else {
+          past.push(enrichedTrip);
+        }
+      }
+
+      setUpcomingTrips(upcoming);
+      setPastTrips(past);
+    } catch (error) {
+      console.error('내 여행 불러오기 실패:', error);
+    }
+  };
+
+  useEffect(() => {
     if (accessToken) loadData();
   }, [accessToken]);
 
@@ -73,6 +78,22 @@ const MyTravelSection = () => {
     },
     [navigate]
   );
+
+  const handleDeleteTrip = useCallback(async (scheduleId) => {
+    if (!window.confirm('정말 이 일정을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      await deleteSchedule(scheduleId);
+      await loadData();
+      
+      showSuccess('일정이 삭제되었습니다.');
+    } catch (error) {
+      console.error('일정 삭제 실패:', error);
+      showWarning('일정 삭제에 실패했습니다.');
+    }
+  }, [accessToken]);
 
   return (
     <div className="px-4 pt-2 m-2 sm:px-6 md:px-8">
@@ -91,6 +112,7 @@ const MyTravelSection = () => {
             companionCount={trip.companionCount}
             imageUrl={trip.imageUrl}
             onClick={() => handleClickTrip(trip.scheduleId)}
+            onDelete={handleDeleteTrip} 
           />
         ))
       )}
@@ -110,6 +132,7 @@ const MyTravelSection = () => {
             companionCount={trip.companionCount}
             imageUrl={trip.imageUrl}
             onClick={() => handleClickTrip(trip.scheduleId)}
+            onDelete={handleDeleteTrip} 
           />
         ))
       )}
