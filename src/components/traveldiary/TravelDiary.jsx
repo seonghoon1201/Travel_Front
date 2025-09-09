@@ -12,6 +12,7 @@ const TravelDiary = ({
   imageUrl,
   variant = 'default',
   count = 0,
+  hideCount = false, 
 }) => {
   const navigate = useNavigate();
 
@@ -43,11 +44,12 @@ const TravelDiary = ({
           </div>
         )}
 
-        {/* ✅ 조회수 표시 */}
-        <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-          <Eye className="w-3 h-3" />
-          {count}
-        </div>
+        {!hideCount && (
+          <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+            <Eye className="w-3 h-3" />
+            {count}
+          </div>
+        )}
       </div>
 
       {/* 본문 */}

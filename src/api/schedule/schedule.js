@@ -21,6 +21,12 @@ export async function optimizeSchedule(scheduleId) {
   return data;
 }
 
+// 백엔드: PUT /schedule/update
+export async function updateScheduleAll(payload) {
+  const { data } = await http.put('/schedule/update', payload);
+  return data ?? null;
+}
+
 /** 일정 삭제 (Swagger 스펙: DELETE /schedule/delete, body: { scheduleId }) */
 export async function deleteSchedule(scheduleId) {
   if (!scheduleId) throw new Error('scheduleId가 필요합니다.');
