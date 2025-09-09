@@ -3,6 +3,7 @@ import HomePage from '../pages/HomePage';
 import SearchPage from '../pages/SearchPage';
 import Splash from '../pages/Splash';
 import LoginPage from '../pages/Login_and_Signup/LoginPage';
+import GuidePage from '../pages/GuidePage';
 import SignUpPage from '../pages/Login_and_Signup/SignUpPage';
 import KakaoCallbackPage from '../pages/Login_and_Signup/KakaoCallbackPage';
 import FindPasswordPage from '../pages/Login_and_Signup/FindPasswordPage';
@@ -47,6 +48,7 @@ const AppRoutes = () => (
 
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignUpPage />} />
+      <Route path="/guide" element={<GuidePage />} />
 
       <Route path="/find-password" element={<FindPasswordPage />} />
       <Route path="/find-password/verify" element={<VerifyCodePage />} />
