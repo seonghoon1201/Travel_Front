@@ -113,7 +113,7 @@ const PlaceDetail = () => {
   if (loading) {
     return (
       <DefaultLayout>
-        <div className="w-full max-w-sm mx-auto">
+        <div className="w-full mx-auto">
           <BackHeader />
           <div className="flex justify-center items-center h-64">
             <div className="text-gray-500">로딩 중...</div>
@@ -141,7 +141,7 @@ const PlaceDetail = () => {
       <div className="w-full mx-auto">
         <BackHeader />
 
-        <div className="pr-4 pl-4">
+        <div className="px-4 sm:px-6 md:px-8">
           {/* 제목 & 지역 */}
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-xl font-bold">{place.title || '제목 없음'}</h1>
@@ -224,7 +224,7 @@ const PlaceDetail = () => {
           {/* 추가 정보들 */}
           <div className="border-t pt-4 space-y-4">
             <div>
-              <h3 className="font-medium text-sm mb-1">카테고리</h3>
+              <p className="font-medium text-sm mb-1"><strong>카테고리</strong></p>
               <p className="text-sm text-gray-600">{place.theme || '정보 없음'}</p>
             </div>
           </div>

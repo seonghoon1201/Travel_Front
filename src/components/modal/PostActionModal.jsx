@@ -8,7 +8,7 @@ import { useToast } from '../../utils/useToast';
 
 const PostActionModal = ({ id, writerNickname }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false); // ✅ 삭제 확인 모달
+  const [showConfirm, setShowConfirm] = useState(false); 
   const menuRef = useRef(null);
   const navigate = useNavigate();
 
@@ -33,10 +33,10 @@ const PostActionModal = ({ id, writerNickname }) => {
   const confirmDelete = async () => {
     try {
       await deleteDiary(id);
-      showSuccess('삭제 완료되었습니다.'); // ✅ toast
+      showSuccess('삭제 완료되었습니다.'); 
       navigate('/board/travel/diary');
     } catch (err) {
-      showError('삭제에 실패했습니다.'); // ✅ toast
+      showError('삭제에 실패했습니다.'); 
     } finally {
       setShowConfirm(false);
       closeMenu();
