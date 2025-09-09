@@ -12,6 +12,7 @@ const TravelDiary = ({
   imageUrl,
   variant = 'default',
   count = 0,
+  hideCount = false, // 🔥 새로 추가된 props
 }) => {
   const navigate = useNavigate();
 
@@ -43,11 +44,13 @@ const TravelDiary = ({
           </div>
         )}
 
-        {/* ✅ 조회수 표시 */}
-        <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-          <Eye className="w-3 h-3" />
-          {count}
-        </div>
+        {/* 🔥 조회수 표시 - hideCount가 false일 때만 표시 */}
+        {!hideCount && (
+          <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+            <Eye className="w-3 h-3" />
+            {count}
+          </div>
+        )}
       </div>
 
       {/* 본문 */}
