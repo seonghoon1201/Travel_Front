@@ -1,3 +1,4 @@
+// src/pages/schedule/ScheduleViewPage.jsx
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import DefaultLayout from '../../layouts/DefaultLayout';
@@ -9,7 +10,7 @@ import KakaoMap from '../../components/map/KakaoMap';
 import useScheduleStore from '../../store/scheduleStore';
 import usePlanStore from '../../store/planStore';
 import { getSchedule } from '../../api';
-import { message, Progress, Flex } from 'antd';
+import { message, Progress, Flex, Spin } from 'antd'; // ← Spin 추가
 
 const toNum = (v) => (typeof v === 'number' ? v : Number(v));
 
@@ -18,6 +19,7 @@ const ScheduleViewPage = () => {
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+  const [loading, setLoading] = useState(true); // ← 로딩 상태
 
   const detail = useScheduleStore((s) => s.detail);
   const setDetail = useScheduleStore((s) => s.setDetail);
@@ -29,14 +31,19 @@ const ScheduleViewPage = () => {
 
   useEffect(() => {
     (async () => {
-      if (String(detail?.scheduleId ?? detail?.id) === String(scheduleId))
-        return;
       try {
+        if (String(detail?.scheduleId ?? detail?.id) === String(scheduleId)) {
+          setLoading(false);
+          return;
+        }
+        setLoading(true); // ← 시작
         const res = await getSchedule(scheduleId);
         setDetail(res);
       } catch (e) {
         console.error('[ScheduleViewPage] reload fail', e?.response?.data || e);
         message.error('일정 정보를 불러오지 못했어요.');
+      } finally {
+        setLoading(false); // ← 종료
       }
     })();
   }, [scheduleId, detail?.scheduleId, detail?.id, setDetail]);
@@ -49,7 +56,6 @@ const ScheduleViewPage = () => {
       const key = String(it.contentId ?? '');
       if (!key) return;
 
-      // ✅ 백엔드 latitude/longitude 우선 사용
       const lat = toNum(it.latitude ?? it.lat ?? it.mapY);
       const lng = toNum(it.longitude ?? it.lng ?? it.mapX);
 
@@ -94,20 +100,17 @@ const ScheduleViewPage = () => {
     return Math.min(100, (totalCost / budget) * 100);
   }, [budget, totalCost]);
 
-  // ✅ 마커 생성: lat/lng || latitude/longitude || mapY/mapX 순으로 안전 파싱
+  // 마커 생성
   const selectedMarkers = useMemo(() => {
-    // 1) 우선 days에서 시도
     const d = days[selectedDayIndex];
     let list = d?.plans ?? [];
 
-    // 2) 좌표가 없다면 scheduleItems에서 dayNumber로 폴백
     if ((!list || list.length === 0) && Array.isArray(detail?.scheduleItems)) {
       list = detail.scheduleItems.filter(
         (it) => Number(it.dayNumber) === selectedDayIndex + 1
       );
     }
 
-    // 3) 안전 파싱 (latitude/longitude → lat/lng)
     const markers = [];
     (list || []).forEach((p, i) => {
       const lat = toNum(p.lat ?? p.latitude ?? p.mapY);
@@ -125,16 +128,14 @@ const ScheduleViewPage = () => {
     return markers;
   }, [days, detail, selectedDayIndex]);
 
-  const path = useMemo(
-    () => selectedMarkers.map((m) => ({ lat: m.lat, lng: m.lng })),
-    [selectedMarkers]
-  );
-
   const title = detail?.scheduleName || '여행 일정';
   const dateRange =
     detail?.startDate && detail?.endDate
       ? `${detail.startDate} ~ ${detail.endDate}`
       : '';
+
+  // 지도 준비 여부: API 로딩 끝 + 마커가 하나 이상
+  const isMapReady = !loading && selectedMarkers.length > 0;
 
   return (
     <DefaultLayout>
@@ -208,17 +209,21 @@ const ScheduleViewPage = () => {
         </div>
 
         {/* 지도 */}
-        <div className="w-full h-48 rounded-lg mb-6 overflow-hidden">
-          <KakaoMap
-            key={`${selectedDayIndex}-${selectedMarkers.length}`} // ← 마커 변동 시 리렌더 보장
-            markers={selectedMarkers}
-            useCustomOverlay
-            drawPath
-            path={path}
-            fitToMarkers
-            fitPadding={60}
-          />
+        <div className="w-full h-48 rounded-lg mb-6 overflow-hidden bg-gray-50 flex items-center justify-center">
+          {isMapReady ? (
+            <KakaoMap
+              key={`${selectedDayIndex}-${selectedMarkers.length}`}
+              markers={selectedMarkers}
+              useCustomOverlay
+              fitToMarkers
+              fitPadding={60}
+              className="w-full h-48 rounded-lg"
+            />
+          ) : (
+            <Spin tip="지도를 준비 중..." />
+          )}
         </div>
+
         {/* 선택한 날짜 일정 */}
         {days[selectedDayIndex] && (
           <DayScheduleSection

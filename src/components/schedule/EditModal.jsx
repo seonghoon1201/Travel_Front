@@ -33,7 +33,6 @@ const EditModal = ({ onClose }) => {
     groupId: detail?.groupId ?? null,
     startPlace: detail?.startPlace ?? '',
     scheduleType: detail?.scheduleType ?? null,
-    scheduleStyle: detail?.scheduleStyle ?? null,
   };
 
   // ----- 서브 모달: 제목 -----
