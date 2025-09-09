@@ -85,6 +85,7 @@ const MyDiarySection = () => {
               content={diary.content}
               createdAt={diary.createdAt}
               imageUrl={diary.imageUrl}
+              hideCount={true} 
             />
           ))}
         </div>
