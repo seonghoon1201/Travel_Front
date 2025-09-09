@@ -241,7 +241,6 @@ const DayScheduleSection = ({ day, dayIndex }) => {
     <div className="w-full mb-6">
       {/* 상단 */}
       <div className="flex items-center mb-2">
-        <p className="text-sm text-[#9CA3AF] mr-2">day {dayIndex + 1}</p>
         <p className="text-sm font-medium">{day.date}</p>
         <div className="ml-auto flex items-center gap-3">
           {isEditing && (
