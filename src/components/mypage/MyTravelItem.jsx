@@ -36,7 +36,7 @@ const MyTravelItem = ({
       onClick={() => onClick?.(scheduleId)}
       className="flex items-start gap-2 py-2 relative cursor-pointer hover:bg-gray-50 rounded-md"
     >
-      {imageUrl && !imageError ? (
+      {imageUrl && imageUrl.trim() && !imageError ? (
         <img
           src={imageUrl}
           alt="trip"
