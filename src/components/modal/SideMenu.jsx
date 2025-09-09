@@ -52,11 +52,9 @@ const SideMenu = ({ onClose }) => {
     navigate('/login');
   };
 
-  // ❗ 탈퇴 모달 오픈
   const openDelete = useCallback(() => setOpenDeleteModal(true), []);
   const closeDelete = useCallback(() => setOpenDeleteModal(false), []);
 
-  // ✅ 탈퇴 확정
   const confirmDelete = useCallback(async () => {
     try {
       setDeleting(true);
@@ -134,6 +132,12 @@ const SideMenu = ({ onClose }) => {
                   <li className="flex justify-between items-center border-b pb-3" onClick={() => goTo('/mypage')}>
                     마이페이지 <span>&gt;</span>
                   </li>
+                   <li
+                      className="flex justify-between items-center border-b pb-3"
+                      onClick={() => goTo('/guide')}
+                    >
+                      서비스 이용 안내 <span>&gt;</span>
+                    </li>
                   <li className="flex justify-between items-center border-b pb-3 text-red-500" onClick={handleLogout}>
                     로그아웃 <span>&gt;</span>
                   </li>
@@ -158,7 +162,6 @@ const SideMenu = ({ onClose }) => {
         </div>
       </div>
 
-      {/* 🔔 탈퇴 모달 */}
       <DeleteAccountModal
         open={openDeleteModal}
         onClose={closeDelete}
