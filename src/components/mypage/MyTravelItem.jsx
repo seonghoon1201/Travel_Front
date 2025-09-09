@@ -12,6 +12,7 @@ const MyTravelItem = ({
   onDelete,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const handleToggle = (e) => {
     e.stopPropagation();
@@ -35,30 +36,21 @@ const MyTravelItem = ({
       onClick={() => onClick?.(scheduleId)}
       className="flex items-start gap-2 py-2 relative cursor-pointer hover:bg-gray-50 rounded-md"
     >
-      {imageUrl ? (
+      {imageUrl && imageUrl.trim() && !imageError ? (
         <img
           src={imageUrl}
           alt="trip"
-          className="w-16 h-16 rounded-md object-cover flex-shrink-0"
-          onError={(e) => {
-            e.currentTarget.onerror = null;
-            e.currentTarget.style.display = 'none';
-            e.currentTarget.insertAdjacentHTML(
-              'afterend',
-              `<div class="w-14 h-14 flex items-center justify-center bg-gray-200 text-[10px] text-gray-500 rounded-md">
-                 No Image
-               </div>`
-            );
-          }}
+          className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-md object-cover flex-shrink-0"
+          onError={() => setImageError(true)}
         />
       ) : (
-        <div className="w-16 h-16 flex items-center justify-center bg-gray-200 text-[10px] text-gray-500 rounded-md">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 flex items-center justify-center bg-gray-200 text-[10px] text-gray-500 rounded-md flex-shrink-0">
           No Image
         </div>
       )}
 
       <div className="flex-1 min-w-0">
-        <p className="font-bold truncate">{title} </p>
+        <p className="font-bold truncate">{title}</p>
         <p className="text-sm text-gray-500 truncate">
           {dateRange},{' '}
           {companionCount <= 1 ? '나 홀로 여행' : `${companionCount}명과 함께`}
