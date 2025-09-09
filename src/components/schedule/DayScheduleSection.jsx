@@ -12,7 +12,7 @@ import {
   updateScheduleItem,
   deleteScheduleItem,
 } from '../../api';
-import { getSchedule } from '../../api'; // ← 생성 후 동기화용
+import { getSchedule } from '../../api';
 
 const toNum = (v) => (typeof v === 'number' ? v : Number(v));
 

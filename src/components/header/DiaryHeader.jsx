@@ -1,3 +1,4 @@
+// src/components/header/DiaryHeader.jsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -11,12 +12,13 @@ const DiaryHeader = ({
   const navigate = useNavigate();
 
   return (
-    <header className="flex items-center px-4 sm:px-6 md:px-8 py-3 mb-6 mt-6">
-      {/* 왼쪽: 다이어리로 돌아가기 버튼 */}
+    <header className="flex items-center px-4 sm:px-6 md:px-8 py-2 mt-2 mb-3">
+      {/* 왼쪽: 뒤로가기 버튼 */}
       <div className="flex-1 flex justify-start">
-        <button 
-          onClick={() => navigate('/board/travel/diary')}
-          className="flex items-center justify-center w-10 h-10"
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center justify-center w-9 h-9"
+          aria-label="뒤로가기"
         >
           <ArrowLeft className="w-5 h-5 text-black" />
         </button>
@@ -24,7 +26,7 @@ const DiaryHeader = ({
 
       {/* 가운데: 제목 */}
       <div className="flex-1 flex justify-center">
-        <h1 className="font-noonnu text-2xl font-extrabold">
+        <h1 className="font-noonnu text-lg sm:text-xl font-extrabold text-center whitespace-nowrap">
           {title}
         </h1>
       </div>
@@ -34,7 +36,7 @@ const DiaryHeader = ({
         {showRightButton && (
           <button
             onClick={onRightButtonClick}
-            className="text-sm text-blue-500"
+            className="text-xs sm:text-sm text-blue-500"
           >
             {rightButtonText}
           </button>

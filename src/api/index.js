@@ -51,6 +51,7 @@ export {
   optimizeSchedule,
   getSchedule,
   deleteSchedule,
+  updateScheduleAll
 } from './schedule/schedule';
 
 // 스케줄 아이템 (명시적)
