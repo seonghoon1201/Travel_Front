@@ -1,18 +1,17 @@
 import React from 'react';
-import profileDefault from '../../assets/profile_default.png';
 import { useNavigate } from 'react-router-dom';
+import { Eye } from 'lucide-react';
 
 const TravelDiary = ({
   id,
   boardId,
   title,
-  userProfileImage = '',
   userNickname,
   period,
   tags = [],
   imageUrl,
   variant = 'default',
-  showAvatarInCompact = false,
+  count = 0,
 }) => {
   const navigate = useNavigate();
 
@@ -22,11 +21,6 @@ const TravelDiary = ({
   const isCompact = variant === 'compact';
   const coverH = isCompact ? 'h-[120px]' : 'h-40';
 
-  const safeProfileSrc =
-    userProfileImage && String(userProfileImage).trim().length > 0
-      ? userProfileImage
-      : profileDefault;
-
   return (
     <div
       onClick={handleClick}
@@ -34,6 +28,7 @@ const TravelDiary = ({
         isCompact ? 'w-[160px] min-w-[160px]' : 'w-full'
       }`}
     >
+      {/* 이미지 + 조회수 뱃지 */}
       <div className={`relative w-full ${coverH}`}>
         {imageUrl ? (
           <img
@@ -43,27 +38,24 @@ const TravelDiary = ({
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full bg-gray-300" />
+          <div className="w-full h-full bg-gray-300 flex items-center justify-center text-sm text-gray-500">
+            No Image
+          </div>
         )}
 
-        {(!isCompact || showAvatarInCompact) && (
-          <img
-            src={safeProfileSrc}
-            onError={(e) => {
-              if (e.currentTarget.src !== profileDefault) {
-                e.currentTarget.src = profileDefault;
-              }
-            }}
-            alt="profile"
-            className="absolute -bottom-6 left-4 z-10 w-12 h-12 rounded-full object-cover border-2 border-white shadow bg-gray-200"
-            loading="lazy"
-          />
-        )}
+        {/* ✅ 조회수 표시 */}
+        <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+          <Eye className="w-3 h-3" />
+          {count}
+        </div>
       </div>
 
-      <div className={`p-4 ${!isCompact || showAvatarInCompact ? 'pt-7' : ''}`}>
+      {/* 본문 */}
+      <div className={`p-4`}>
         <div className="flex items-center gap-2 mb-1">
-          <h2 className={`font-semibold ${isCompact ? 'truncate' : ''}`}>{title}</h2>
+          <h2 className={`font-semibold ${isCompact ? 'truncate' : ''}`}>
+            {title}
+          </h2>
         </div>
 
         {!isCompact && (
