@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { CalendarPlus } from 'lucide-react';
+import { message } from 'antd';
 
 import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
@@ -11,10 +12,13 @@ import PrimaryButton from '../../components/common/PrimaryButton';
 import { getWeather } from '../../api/weather/getWeather';
 import { getPlacesByRegion } from '../../api/place/getPlacesByRegion';
 import { getHotRegions } from '../../api/region/getHotRegions';
+import useUserStore from '../../store/userStore';
 
 const RegionDetailPage = () => {
   const { city } = useParams();
   const decodedCity = city ? decodeURIComponent(city) : '';
+  const accessToken = useUserStore((s) => s.accessToken);
+  const [messageApi, contextHolder] = message.useMessage();
 
   const locationHook = useLocation();
   const state = locationHook.state || {};
@@ -44,6 +48,20 @@ const RegionDetailPage = () => {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const idSetRef = useRef(new Set());
+
+   const handleCreateSchedule = () => {
+    if (!accessToken) {
+      messageApi.warning(
+        <>
+          많은 즐길거리를 보고 싶다면 <br />
+          로그인 및 회원가입 해주세요!
+        </>
+      );
+      return;
+    }
+    // 로그인 되어 있다면 일정 만들기 페이지로 이동
+    // navigate('/plan/location');  // 필요시 추가
+  };
 
   useEffect(() => {
     const loadRegionInfo = async () => {
@@ -173,6 +191,7 @@ const RegionDetailPage = () => {
 
   return (
     <DefaultLayout>
+      {contextHolder}
       <div className="w-full mx-auto">
         <BackHeader />
         <div className="px-4  sm:px-6 md:px-8 bg-[#F8FBFF]">
@@ -279,7 +298,9 @@ const RegionDetailPage = () => {
 
         <div className="fixed bottom-0 left-0 w-full px-4 py-3 bg-white shadow-lg z-50 border-t">
           <div className="mx-auto">
-            <PrimaryButton className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm shadow">
+            <PrimaryButton 
+              onClick={handleCreateSchedule}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm shadow">
               <CalendarPlus className="w-4 h-4" />
               이 지역으로 일정 만들기
             </PrimaryButton>
