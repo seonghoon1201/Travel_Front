@@ -14,6 +14,14 @@ export async function getSchedule(scheduleId) {
   return data;
 }
 
+
+/** 일정 상세 조회(전체 공개) */
+export async function getSchedule(scheduleId) {
+  if (!scheduleId) throw new Error('scheduleId가 필요합니다.');
+  const { data } = await http.get(`/schedule/public/${scheduleId}`);
+  return data;
+}
+
 /** 일정 최적화 요청 */
 export async function optimizeSchedule(scheduleId) {
   if (!scheduleId) throw new Error('scheduleId가 필요합니다.');
