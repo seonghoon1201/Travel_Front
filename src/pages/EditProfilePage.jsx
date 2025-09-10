@@ -1,19 +1,16 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Pencil, X } from 'lucide-react';
+import { message } from 'antd';
+
 import BackHeader from '../components/header/BackHeader';
 import PrimaryButton from '../components/common/PrimaryButton';
-import Toast from '../components/common/Toast';
-import { useToast } from '../utils/useToast';
-import { Pencil, X } from 'lucide-react';
 import useUserStore from '../store/userStore';
 import profileDefault from '../assets/profile_default.png';
-import { uploadProfileImage } from '../api';
-import { userProfileUpdate } from '../api';
+import { uploadProfileImage, userProfileUpdate } from '../api';
 
 const EditProfile = () => {
   const navigate = useNavigate();
-  const { toast, showToast, hideToast, showSuccess, showError } = useToast();
-
   const [loading, setLoading] = useState(false);
 
   const storeNickname = useUserStore((s) => s.nickname);
@@ -24,7 +21,8 @@ const EditProfile = () => {
   const [selectedFile, setSelectedFile] = useState(null);
 
   const fileInputRef = useRef(null);
-  
+  const [messageApi, contextHolder] = message.useMessage();
+
   useEffect(() => {
     setLocalNickname(storeNickname || '');
   }, [storeNickname]);
@@ -62,7 +60,7 @@ const EditProfile = () => {
       setLoading(true);
       const trimmedNickname = (localNickname || '').trim();
       if (!trimmedNickname) {
-        showError('닉네임을 입력해주세요.');
+        messageApi.error('닉네임을 입력해주세요.');
         setLoading(false);
         return;
       }
@@ -72,7 +70,7 @@ const EditProfile = () => {
       if (selectedFile) {
         const uploadRes = await uploadProfileImage(selectedFile);
         if (!uploadRes?.success) {
-          showError('이미지 업로드 실패');
+          messageApi.error('이미지 업로드 실패');
           setLoading(false);
           return;
         }
@@ -82,8 +80,8 @@ const EditProfile = () => {
           uploadRes?.data?.url ||
           uploadRes?.url;
         if (!uploadedUrl) {
-          showError('서버에서 이미지 URL을 받지 못했어요.');
-           setLoading(false);
+          messageApi.error('서버에서 이미지 URL을 받지 못했어요.');
+          setLoading(false);
           return;
         }
         finalImageUrl = uploadedUrl;
@@ -98,8 +96,8 @@ const EditProfile = () => {
 
       const result = await userProfileUpdate(payload);
       if (!result?.success) {
-        showError(`수정 실패: ${result?.error || '알 수 없는 오류'}`);
-         setLoading(false);
+        messageApi.error(`수정 실패: ${result?.error || '알 수 없는 오류'}`);
+        setLoading(false);
         return;
       }
 
@@ -110,28 +108,21 @@ const EditProfile = () => {
         userProfileImage: finalImageUrl,
       });
 
-      showSuccess('프로필 수정 완료!');
+      messageApi.success('프로필 수정 완료!');
       
       setTimeout(() => {
         setLoading(false);
         navigate('/');
       }, 1500);
     } catch (err) {
-        showError('수정 중 오류: ' + (err?.message || err));
-        setLoading(false);
-      }
+      messageApi.error('수정 중 오류: ' + (err?.message || err));
+      setLoading(false);
+    }
   };
 
   return (
     <div className="bg-background min-h-screen flex w-full justify-center ">
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          duration={toast.duration}
-          onClose={hideToast}
-        />
-      )}
+      {contextHolder}
 
       <div className="w-full ">
         <BackHeader title="프로필 편집" />

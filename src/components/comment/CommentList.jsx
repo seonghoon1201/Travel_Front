@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { message } from 'antd';
+
 import CommentItemList from './CommentItemList';
 import CommentInput from './CommentInput';
-import { getComments } from '../../api/comment/getComment';
-import { deleteComment } from '../../api/comment/deleteComment';
-import { createComment } from '../../api/comment/createComment';
-import { updateComment } from '../../api/comment/updateComment';
+
 import useUserStore from '../../store/userStore';
+import { getComments, deleteComment, createComment, updateComment } from '../../api/comment/comment';
 import { normalizeBoardId } from '../../utils/normalizeBoardId';
 
 const PAGE_SIZE = 5;
@@ -19,6 +19,8 @@ const CommentList = ({ boardId }) => {
   const [hasNext, setHasNext] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const commentSectionRef = useRef(null);
+
+  const [messageApi, contextHolder] = message.useMessage();
 
   const { userId: currentUserId, nickname, profileImageUrl } = useUserStore();
   const safeId = normalizeBoardId(boardId);
@@ -170,9 +172,12 @@ const loadMore = async () => {
     }
   };
 
-  // 신고 (임시)
   const handleReport = async (commentId) => {
-    alert('신고가 접수되었습니다.');
+    if (!currentUserId) {
+      messageApi.warning('로그인 후 이용 가능합니다.');
+      return;
+    }
+     messageApi.success('신고가 접수되었습니다.');
   };
 
   if (loading) {
@@ -186,6 +191,7 @@ const loadMore = async () => {
 
   return (
     <div className="mt-8" ref={commentSectionRef}>
+      {contextHolder}
       <h3 className="font-bold text-base mb-3">
         댓글 {totalCount > 0 && `(${totalCount})`}
       </h3>
@@ -202,6 +208,7 @@ const loadMore = async () => {
             onDelete={handleDelete}
             onEdit={handleEdit}
             onReport={handleReport}
+            isLoggedIn={Boolean(currentUserId)}
           />
           {(hasNext || page > 0) && (
             <div className="mt-3 flex justify-between items-center">
