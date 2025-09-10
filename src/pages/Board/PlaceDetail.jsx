@@ -9,6 +9,7 @@ import { getTourDetail } from '../../api/tour/getTourDetail';
 import { getFavorites } from '../../api/favorite/getFavorites'; 
 import { toggleFavorite } from '../../api/favorite/toggleFavorite'; 
 import { message } from 'antd';
+import useUserStore from '../../store/userStore'; 
 
 const PlaceDetail = () => {
   const { contentId } = useParams();
@@ -17,7 +18,7 @@ const PlaceDetail = () => {
   const [error, setError] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
 
-  // ✅ antd message
+  const isLoggedIn = useUserStore((s) => s.isLoggedIn); 
   const [messageApi, contextHolder] = message.useMessage();
 
   const extractHref = (html) => {
@@ -49,7 +50,6 @@ const PlaceDetail = () => {
             setIsSaved(exists);
           }
         } catch (err) {
-          console.error('즐겨찾기 목록 확인 실패:', err);
         }
       } else {
         setError(result.error || '데이터를 불러올 수 없습니다.');
@@ -62,18 +62,22 @@ const PlaceDetail = () => {
   }, [contentId]);
 
   const handleToggleFavorite = async () => {
+    if (!isLoggedIn) {
+      messageApi.warning('로그인 후 이용 가능합니다!');
+      return;
+    }
+
     try {
       const res = await toggleFavorite(contentId);
       setIsSaved(res.favorite);
       setPlace((prev) => (prev ? { ...prev, favorite: res.favorite } : prev));
 
       if (res.favorite) {
-        messageApi.success('즐겨찾기에 추가되었습니다! ');
+        messageApi.success('즐겨찾기에 추가되었습니다!');
       } else {
         messageApi.info('즐겨찾기에서 제거되었습니다.');
       }
     } catch (err) {
-      console.error('즐겨찾기 토글 실패:', err);
       messageApi.error('즐겨찾기 처리에 실패했습니다.');
     }
   };
