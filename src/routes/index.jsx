@@ -15,7 +15,6 @@ import AuthChecker from '../components/auth/AuthChecker';
 
 import HotBoardPage from '../pages/Board/HotBoardPage';
 import RegionDetailPage from '../pages/Board/RegionDetailPage';
-import BudgetBoardPage from '../pages/Board/BudgetBoardPage';
 import PlaceDetail from '../pages/Board/PlaceDetail';
 
 import TravelDiaryBoardPage from '../pages/Travel_Diary/TravelDiaryBoardPage';
@@ -59,7 +58,6 @@ const AppRoutes = () => (
 
       <Route path="/board/hot" element={<HotBoardPage />} />
       <Route path="/region/detail/:city" element={<RegionDetailPage />} />
-      <Route path="/board/budget" element={<BudgetBoardPage />} />
       <Route path="/place/detail/:contentId" element={<PlaceDetail />} />
 
       <Route path="/board/travel/diary" element={<TravelDiaryBoardPage />} />
