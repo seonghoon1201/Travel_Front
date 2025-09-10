@@ -16,7 +16,7 @@ export async function getSchedule(scheduleId) {
 
 
 /** 일정 상세 조회(전체 공개) */
-export async function getSchedule(scheduleId) {
+export async function getPublicSchedule(scheduleId) {
   if (!scheduleId) throw new Error('scheduleId가 필요합니다.');
   const { data } = await http.get(`/schedule/public/${scheduleId}`);
   return data;

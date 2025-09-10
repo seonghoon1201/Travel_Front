@@ -50,6 +50,7 @@ export {
   createSchedule,
   optimizeSchedule,
   getSchedule,
+  getPublicSchedule,
   deleteSchedule,
   updateScheduleAll
 } from './schedule/schedule';
