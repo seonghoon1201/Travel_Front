@@ -35,14 +35,17 @@ export async function updateScheduleAll(payload) {
   return data ?? null;
 }
 
-/** 일정 삭제 (Swagger 스펙: DELETE /schedule/delete, body: { scheduleId }) */
-export async function deleteSchedule(scheduleId) {
+/** 일정 삭제 (Swagger 스펙: DELETE /schedule/{scheduleId}) */
+export async function deleteSchedule(scheduleId, accessToken) {
   if (!scheduleId) throw new Error('scheduleId가 필요합니다.');
-  // axios에서 DELETE 본문은 { data } 키로 전달
-  const { data } = await http.delete('/schedule/delete', {
-    data: { scheduleId },
+  if (!accessToken) throw new Error('accessToken이 필요합니다.');
+
+  const { data } = await http.delete(`/schedule/${scheduleId}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
   });
-  return data; // {} 빈 객체 응답(200) 기대
+  return data; 
 }
 
 export async function getParticipantCount(scheduleId) {

@@ -5,7 +5,7 @@ import { message } from 'antd';
 import MyTravelItem from './MyTravelItem';
 import useUserStore from '../../store/userStore';
 import { fetchMyTravel } from '../../api/user/userContentApi';
-import { deleteSchedule, getParticipantCount  } from '../../api/schedule/schedule'; 
+import { deleteSchedule, getParticipantCount } from '../../api/schedule/schedule'; 
 import ConfirmModal from '../modal/ConfirmModal';  
 
 const MyTravelSection = () => {
@@ -37,7 +37,7 @@ const MyTravelSection = () => {
         let companionCount = 1;
         if (trip.scheduleId) {
           try {
-            const res = await getParticipantCount(trip.scheduleId); // named import 사용
+            const res = await getParticipantCount(trip.scheduleId);
             companionCount = res;
           } catch (err) {
             console.error(`스케줄 참여자 수 불러오기 실패 (${trip.scheduleId}):`, err);
@@ -91,7 +91,8 @@ const MyTravelSection = () => {
   const confirmDeleteTrip = async () => {
     if (!deleteTarget) return;
     try {
-      await deleteSchedule(deleteTarget);
+      // ✅ 토큰 같이 전달
+      await deleteSchedule(deleteTarget, accessToken);
       await loadData();
       messageApi.success('일정이 삭제되었습니다.');
     } catch (error) {
