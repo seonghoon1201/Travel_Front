@@ -4,7 +4,7 @@ import { Ellipsis } from 'lucide-react';
 import { deleteDiary } from '../../api/board/deleteDiary';
 import useUserStore from '../../store/userStore';
 import ConfirmModal from '../modal/ConfirmModal';
-import { useToast } from '../../utils/useToast';
+import { message } from 'antd';
 
 const PostActionModal = ({ id, writerNickname }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,7 +13,9 @@ const PostActionModal = ({ id, writerNickname }) => {
   const navigate = useNavigate();
 
   const currentUserNickname = useUserStore((state) => state.nickname);
-  const { showSuccess, showError, showInfo } = useToast();
+  const isLoggedIn = useUserStore((state) => state.isLoggedIn);
+
+  const [messageApi, contextHolder] = message.useMessage();
 
   const toggleMenu = () => setIsOpen((prev) => !prev);
   const closeMenu = () => setIsOpen(false);
@@ -33,20 +35,23 @@ const PostActionModal = ({ id, writerNickname }) => {
   const confirmDelete = async () => {
     try {
       await deleteDiary(id);
-      showSuccess('삭제 완료되었습니다.'); 
+      messageApi.success('삭제 완료되었습니다.');
       navigate('/board/travel/diary');
     } catch (err) {
-      showError('삭제에 실패했습니다.'); 
+      console.error(err);
+      messageApi.error('삭제에 실패했습니다.');
     } finally {
       setShowConfirm(false);
       closeMenu();
     }
   };
 
-  const isWriter = currentUserNickname === writerNickname;
+  const isWriter = isLoggedIn && currentUserNickname === writerNickname;
 
   return (
     <div className="relative inline-block" ref={menuRef}>
+      {contextHolder}
+
       <button onClick={toggleMenu} className="text-gray-500 text-xl">
         <Ellipsis />
       </button>
@@ -74,7 +79,11 @@ const PostActionModal = ({ id, writerNickname }) => {
           ) : (
             <button
               onClick={() => {
-                showInfo('신고가 접수되었습니다.'); // ✅ toast
+                if (!isLoggedIn) {
+                  messageApi.warning('로그인 후 이용 가능합니다.');
+                } else {
+                  messageApi.info('신고가 접수되었습니다.');
+                }
                 closeMenu();
               }}
               className="w-full px-4 py-2 text-sm hover:bg-gray-100"
@@ -85,13 +94,12 @@ const PostActionModal = ({ id, writerNickname }) => {
         </div>
       )}
 
-      {/* ✅ 삭제 확인 모달 */}
       <ConfirmModal
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}
         onConfirm={confirmDelete}
         title="게시글 삭제"
-        message="정말 삭제하시겠습니까?"
+        message="정말 게시글을 삭제하시겠습니까?"
         confirmText="삭제"
         cancelText="취소"
         confirmButtonClass="bg-red-500 hover:bg-red-600"

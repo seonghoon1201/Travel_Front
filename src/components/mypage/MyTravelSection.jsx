@@ -1,20 +1,22 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { message } from 'antd';
 
 import MyTravelItem from './MyTravelItem';
 import useUserStore from '../../store/userStore';
 import { fetchMyTravel } from '../../api/user/userContentApi';
 import { deleteSchedule } from '../../api/schedule/schedule'; 
 import groupApi from '../../api/group/group';
-import { useToast } from '../../utils/useToast';
+import ConfirmModal from '../modal/ConfirmModal';  
 
 const MyTravelSection = () => {
   const [upcomingTrips, setUpcomingTrips] = useState([]);
   const [pastTrips, setPastTrips] = useState([]);
+  const [deleteTarget, setDeleteTarget] = useState(null); 
+  const [showConfirm, setShowConfirm] = useState(false); 
+
   const accessToken = useUserStore((state) => state.accessToken);
-  const { showSuccess, showError, showInfo, showWarning } = useToast();
-
-
+  const [messageApi, contextHolder] = message.useMessage();
   const navigate = useNavigate();
 
   const loadData = async () => {
@@ -65,6 +67,7 @@ const MyTravelSection = () => {
       setPastTrips(past);
     } catch (error) {
       console.error('내 여행 불러오기 실패:', error);
+      messageApi.error('내 여행 목록을 불러오지 못했습니다.');
     }
   };
 
@@ -79,24 +82,32 @@ const MyTravelSection = () => {
     [navigate]
   );
 
-  const handleDeleteTrip = useCallback(async (scheduleId) => {
-    if (!window.confirm('정말 이 일정을 삭제하시겠습니까?')) {
-      return;
-    }
+  //  삭제 버튼 눌렀을 때 모달 오픈
+  const handleDeleteTrip = useCallback((scheduleId) => {
+    setDeleteTarget(scheduleId);
+    setShowConfirm(true);
+  }, []);
 
+  //  모달에서 "삭제" 눌렀을 때 실행
+  const confirmDeleteTrip = async () => {
+    if (!deleteTarget) return;
     try {
-      await deleteSchedule(scheduleId);
+      await deleteSchedule(deleteTarget);
       await loadData();
-      
-      showSuccess('일정이 삭제되었습니다.');
+      messageApi.success('일정이 삭제되었습니다.');
     } catch (error) {
       console.error('일정 삭제 실패:', error);
-      showWarning('일정 삭제에 실패했습니다.');
+      messageApi.warning('일정 삭제에 실패했습니다.');
+    } finally {
+      setShowConfirm(false);
+      setDeleteTarget(null);
     }
-  }, [accessToken]);
+  };
 
   return (
     <div className="px-4 pt-2 m-2 sm:px-6 md:px-8">
+      {contextHolder}
+
       <p className="text-sm font-semibold text-gray-600 mb-3 pt-2">
         다가오는 여행
       </p>
@@ -112,7 +123,7 @@ const MyTravelSection = () => {
             companionCount={trip.companionCount}
             imageUrl={trip.imageUrl}
             onClick={() => handleClickTrip(trip.scheduleId)}
-            onDelete={handleDeleteTrip} 
+            onDelete={handleDeleteTrip}  
           />
         ))
       )}
@@ -132,10 +143,22 @@ const MyTravelSection = () => {
             companionCount={trip.companionCount}
             imageUrl={trip.imageUrl}
             onClick={() => handleClickTrip(trip.scheduleId)}
-            onDelete={handleDeleteTrip} 
+            onDelete={handleDeleteTrip}
           />
         ))
       )}
+
+      {/*  삭제 확인 모달 */}
+      <ConfirmModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={confirmDeleteTrip}
+        title="일정 삭제"
+        message="정말 이 일정을 삭제하시겠습니까?"
+        confirmText="삭제"
+        cancelText="취소"
+        confirmButtonClass="bg-red-500 hover:bg-red-600"
+      />
     </div>
   );
 };

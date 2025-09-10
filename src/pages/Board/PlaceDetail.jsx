@@ -4,32 +4,12 @@ import { useParams } from 'react-router-dom';
 import KakaoMap from '../../components/map/KakaoMap';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
-import Toast from '../../components/common/Toast';
 
 import { getTourDetail } from '../../api/tour/getTourDetail';
 import { getFavorites } from '../../api/favorite/getFavorites'; 
 import { toggleFavorite } from '../../api/favorite/toggleFavorite'; 
-
-const useToast = () => {
-  const [toast, setToast] = useState(null);
-
-  const showToast = (message, type = 'success', duration = 3000) => {
-    setToast({ message, type, duration });
-  };
-
-  const hideToast = () => setToast(null);
-
-  const ToastComponent = toast ? (
-    <Toast
-      message={toast.message}
-      type={toast.type}
-      duration={toast.duration}
-      onClose={hideToast}
-    />
-  ) : null;
-
-  return { showToast, ToastComponent };
-};
+import { message } from 'antd';
+import useUserStore from '../../store/userStore'; 
 
 const PlaceDetail = () => {
   const { contentId } = useParams();
@@ -38,8 +18,8 @@ const PlaceDetail = () => {
   const [error, setError] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
 
-
-  const { showToast, ToastComponent } = useToast();
+  const isLoggedIn = useUserStore((s) => s.isLoggedIn); 
+  const [messageApi, contextHolder] = message.useMessage();
 
   const extractHref = (html) => {
     const match = html.match(/href="([^"]+)"/);
@@ -70,7 +50,6 @@ const PlaceDetail = () => {
             setIsSaved(exists);
           }
         } catch (err) {
-          console.error('즐겨찾기 목록 확인 실패:', err);
         }
       } else {
         setError(result.error || '데이터를 불러올 수 없습니다.');
@@ -83,43 +62,46 @@ const PlaceDetail = () => {
   }, [contentId]);
 
   const handleToggleFavorite = async () => {
-  try {
-    const res = await toggleFavorite(contentId);
-    setIsSaved(res.favorite);
-    setPlace((prev) => (prev ? { ...prev, favorite: res.favorite } : prev));
-
-    if (res.favorite) {
-      showToast('즐겨찾기에 추가되었습니다!', 'success');
-    } else {
-      showToast('즐겨찾기에서 제거되었습니다!', 'info');
+    if (!isLoggedIn) {
+      messageApi.warning('로그인 후 이용 가능합니다!');
+      return;
     }
-  } catch (err) {
-    console.error('즐겨찾기 토글 실패:', err);
-    showToast('즐겨찾기 처리에 실패했습니다.', 'error');
-  }
-};
 
+    try {
+      const res = await toggleFavorite(contentId);
+      setIsSaved(res.favorite);
+      setPlace((prev) => (prev ? { ...prev, favorite: res.favorite } : prev));
+
+      if (res.favorite) {
+        messageApi.success('즐겨찾기에 추가되었습니다!');
+      } else {
+        messageApi.info('즐겨찾기에서 제거되었습니다.');
+      }
+    } catch (err) {
+      messageApi.error('즐겨찾기 처리에 실패했습니다.');
+    }
+  };
 
   const handleFindRoute = () => {
     if (place && place.latitude && place.longitude) {
       const kakaoUrl = `https://map.kakao.com/link/to/${place.title},${place.latitude},${place.longitude}`;
       window.open(kakaoUrl, '_blank');
-      showToast('카카오맵으로 이동합니다!', 'success');
+      messageApi.success('카카오맵으로 이동합니다!');
     } else {
-      showToast('위치 정보가 없어 길찾기를 할 수 없습니다.', 'error');
+      messageApi.error('위치 정보가 없어 길찾기를 할 수 없습니다.');
     }
   };
 
   if (loading) {
     return (
       <DefaultLayout>
+        {contextHolder}
         <div className="w-full mx-auto">
           <BackHeader />
           <div className="flex justify-center items-center h-64">
             <div className="text-gray-500">로딩 중...</div>
           </div>
         </div>
-        {ToastComponent}
       </DefaultLayout>
     );
   }
@@ -127,17 +109,18 @@ const PlaceDetail = () => {
   if (error || !place) {
     return (
       <DefaultLayout>
+        {contextHolder}
         <BackHeader />
         <div className="flex justify-center items-center h-64">
           <div className="text-red-500">{error || '데이터를 찾을 수 없습니다.'}</div>
         </div>
-        {ToastComponent}
       </DefaultLayout>
     );
   }
 
   return (
     <DefaultLayout>
+      {contextHolder}
       <div className="w-full mx-auto">
         <BackHeader />
 
@@ -221,7 +204,7 @@ const PlaceDetail = () => {
             </>
           )}
 
-          {/* 추가 정보들 */}
+          {/* 추가 정보 */}
           <div className="border-t pt-4 space-y-4">
             <div>
               <p className="font-medium text-sm mb-1"><strong>카테고리</strong></p>
@@ -230,7 +213,6 @@ const PlaceDetail = () => {
           </div>
         </div>
       </div>
-      {ToastComponent}
     </DefaultLayout>
   );
 };
