@@ -13,7 +13,6 @@ import DaySelectorModal from '../../components/modal/DaySelectorModal';
 import useUserStore from '../../store/userStore';
 import useScheduleStore from '../../store/scheduleStore'; 
 import { getDiaryDetail, getPublicSchedule } from '../../api';
-import { fetchMyTravel } from '../../api/user/userContentApi';
 
 const TravelDiaryDetail = () => {
   const { id } = useParams();
@@ -183,7 +182,7 @@ const TravelDiaryDetail = () => {
                 {tags.map((tag, i) => (
                   <span
                     key={`${tag}-${i}`}
-                    className="text-blue-600 px-3 py-1 rounded-full"
+                    className="text-blue-600  py-1 rounded-full"
                   >
                     #{tag}
                   </span>

@@ -13,6 +13,7 @@ const PostActionModal = ({ id, writerNickname }) => {
   const navigate = useNavigate();
 
   const currentUserNickname = useUserStore((state) => state.nickname);
+  const isLoggedIn = useUserStore((state) => state.isLoggedIn);
 
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -45,7 +46,7 @@ const PostActionModal = ({ id, writerNickname }) => {
     }
   };
 
-  const isWriter = currentUserNickname === writerNickname;
+  const isWriter = isLoggedIn && currentUserNickname === writerNickname;
 
   return (
     <div className="relative inline-block" ref={menuRef}>
@@ -78,7 +79,11 @@ const PostActionModal = ({ id, writerNickname }) => {
           ) : (
             <button
               onClick={() => {
-                messageApi.info('신고가 접수되었습니다.');
+                if (!isLoggedIn) {
+                  messageApi.warning('로그인 후 이용 가능합니다.');
+                } else {
+                  messageApi.info('신고가 접수되었습니다.');
+                }
                 closeMenu();
               }}
               className="w-full px-4 py-2 text-sm hover:bg-gray-100"
