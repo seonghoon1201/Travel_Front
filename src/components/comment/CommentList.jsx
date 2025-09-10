@@ -5,10 +5,7 @@ import CommentItemList from './CommentItemList';
 import CommentInput from './CommentInput';
 
 import useUserStore from '../../store/userStore';
-import { getComments } from '../../api/comment/getComment';
-import { deleteComment } from '../../api/comment/deleteComment';
-import { createComment } from '../../api/comment/createComment';
-import { updateComment } from '../../api/comment/updateComment';
+import { getComments, deleteComment, createComment, updateComment } from '../../api/comment/comment';
 import { normalizeBoardId } from '../../utils/normalizeBoardId';
 
 const PAGE_SIZE = 5;

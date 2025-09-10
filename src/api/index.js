@@ -16,6 +16,8 @@ export { default as GroupAPI } from './group/group';
 
 // 게시판
 export {  getDiary,getDiaryDetail, updateDiary, writeDiary} from './board/diary';
+export { getComments, createComment, deleteComment, updateComment } from './comment/comment';
+
 
 // 파일 업로드
 export { uploadProfileImage } from './file/uploadProfileImage';
