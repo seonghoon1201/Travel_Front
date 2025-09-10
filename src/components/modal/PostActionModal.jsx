@@ -99,7 +99,7 @@ const PostActionModal = ({ id, writerNickname }) => {
         onClose={() => setShowConfirm(false)}
         onConfirm={confirmDelete}
         title="게시글 삭제"
-        message="정말 삭제하시겠습니까?"
+        message="정말 게시글을 삭제하시겠습니까?"
         confirmText="삭제"
         cancelText="취소"
         confirmButtonClass="bg-red-500 hover:bg-red-600"
