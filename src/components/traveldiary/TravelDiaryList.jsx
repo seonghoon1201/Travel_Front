@@ -10,7 +10,6 @@ const TravelDiaryList = ({ title, showMore }) => {
 
   useEffect(() => {
     const fetchDiaries = async () => {
-
       
       try {
         const res = await getDiary(0, 6);
@@ -109,12 +108,12 @@ const TravelDiaryList = ({ title, showMore }) => {
 
             {/* 태그 */}
             {Array.isArray(diary.tags) && diary.tags.length > 0 && (
-              <div className="px-4 pb-2">
+              <div className=" px-4 pb-1 pt-1">
                 <div className="flex flex-wrap gap-1">
                   {diary.tags.map((t, idx) => (
                     <span
                       key={`${diary.id}-tag-${idx}`}
-                      className="px-2 py-1 text-xs rounded-full text-blue-600 font-medium"
+                      className=" py-1 text-xs rounded-full text-blue-600 font-medium"
                     >
                       #{t}
                     </span>
