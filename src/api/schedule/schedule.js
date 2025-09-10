@@ -44,3 +44,9 @@ export async function deleteSchedule(scheduleId) {
   });
   return data; // {} 빈 객체 응답(200) 기대
 }
+
+export async function getParticipantCount(scheduleId) {
+  if (!scheduleId) throw new Error('scheduleId가 필요합니다.');
+  const { data } = await http.get(`/schedule/${scheduleId}/count`);
+  return data;
+}
