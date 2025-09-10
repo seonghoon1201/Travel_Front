@@ -25,10 +25,11 @@ const BackHeader = ({
 
       {/* 가운데: 제목 */}
       <div className="flex-1 flex justify-center items-center">
-        <h1 className="pt-1 font-noonnu text-lg sm:text-xl font-extrabold text-center whitespace-nowrap">
+        <h1 className="h-9 flex items-center font-noonnu text-lg sm:text-xl font-extrabold text-center whitespace-nowrap">
           {title}
         </h1>
       </div>
+
 
       {/* 오른쪽: 버튼 또는 빈 공간 */}
       <div className=" flex-1 flex justify-end">
