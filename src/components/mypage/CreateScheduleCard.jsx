@@ -11,16 +11,20 @@ const CreateScheduleCard = () => {
 
   const handleClick = () => {
     if (!accessToken) {
-      messageApi.warning(
-        <>
-          로그인 후 이용 가능합니다. 
-          오른쪽 상단 메뉴를 눌러 회원가입 또는 로그인 해주세요!
-        </>
-      );
+      messageApi.warning({
+        content: (
+          <>
+            로그인 후 이용 가능합니다. <br />
+            오른쪽 상단 메뉴를 눌러 회원가입 또는 로그인 해주세요!
+          </>
+        ),
+        key: 'login-warning',
+      });
       return;
     }
     navigate('/plan/location');
   };
+
 
   return (
     <>

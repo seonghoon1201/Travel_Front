@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getDiary } from '../../api/board/getDiary';
+import { getDiary } from '../../api/board/diary';
 import ImageSlider from './ImageSlider';
 import dayjs from 'dayjs';
 

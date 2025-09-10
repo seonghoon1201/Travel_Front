@@ -7,10 +7,8 @@ import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
 import PrimaryButton from '../../components/common/PrimaryButton';
 
-import { getDiaryDetail } from '../../api/board/getDiaryDetail';
-import { updateDiary } from '../../api/board/updateDiary';
 import { uploadProfileImage } from '../../api/file/uploadProfileImage';
-import { getSchedule } from '../../api'; 
+import { getDiaryDetail ,updateDiary, getSchedule } from '../../api'; 
 import DaySelectorModal from '../../components/modal/DaySelectorModal'; 
 
 const UpdateTravelDiaryPage = () => {
