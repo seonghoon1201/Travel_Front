@@ -20,7 +20,6 @@ const SideMenu = ({ onClose }) => {
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  // ✅ antd message hook
   const [messageApi, contextHolder] = message.useMessage();
 
   useEffect(() => {
@@ -45,8 +44,8 @@ const SideMenu = ({ onClose }) => {
   const handleLogout = () => {
     logout();
     onClose();
-    navigate('/');
     messageApi.success('로그아웃 되었습니다.');
+    navigate('/');
   };
 
   const handleLogin = () => {
@@ -60,7 +59,7 @@ const SideMenu = ({ onClose }) => {
   const confirmDelete = useCallback(async () => {
     try {
       setDeleting(true);
-      await deleteUser(accessToken); // /user/delete 호출
+      await deleteUser(accessToken); 
       messageApi.success('탈퇴가 완료되었습니다.');
       logout();
       closeDelete();
@@ -76,14 +75,13 @@ const SideMenu = ({ onClose }) => {
 
   return (
     <>
-      {/* ✅ message context */}
-      {contextHolder}
-
       {/* 오버레이 */}
       <div className="fixed inset-0 bg-black bg-opacity-40 z-40" onClick={onClose} />
 
       {/* 사이드 메뉴 */}
       <div className="fixed top-0 right-0 h-full w-4/5 bg-white z-50 shadow-lg transition-transform duration-300 p-4">
+        {contextHolder}
+
         {/* 닫기 */}
         <div className="flex justify-start">
           <button className="pt-3 pl-2" onClick={onClose}>

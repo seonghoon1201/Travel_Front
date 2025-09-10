@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CalendarDays, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { message } from 'antd';
 
 import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
@@ -9,9 +10,6 @@ import PrimaryButton from '../../components/common/PrimaryButton';
 import { getDiaryDetail } from '../../api/board/getDiaryDetail';
 import { updateDiary } from '../../api/board/updateDiary';
 import { uploadProfileImage } from '../../api/file/uploadProfileImage';
-import { useToast } from '../../utils/useToast';
-
-import Toast from '../../components/common/Toast';
 
 const UpdateTravelDiaryPage = () => {
   const { boardId } = useParams();
@@ -26,7 +24,7 @@ const UpdateTravelDiaryPage = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [previewUrls, setPreviewUrls] = useState([]);
 
-  const { toast, showError, showInfo, showSuccess, hideToast } = useToast();
+  const [messageApi, contextHolder] = message.useMessage();
 
   useEffect(() => {
     const fetchDiary = async () => {
@@ -50,7 +48,7 @@ const UpdateTravelDiaryPage = () => {
   const addTag = () => {
     const trimmed = inputValue.trim();
     if (tags.length >= 10) {
-      showInfo('태그는 최대 10개까지만 추가할 수 있어요!');
+      messageApi.info('태그는 최대 10개까지만 추가할 수 있어요!');
       return;
     }
     if (trimmed && !tags.includes(trimmed)) {
@@ -99,7 +97,7 @@ const UpdateTravelDiaryPage = () => {
 
   const handleUpdate = async () => {
     if (!title.trim() || !content.trim()) {
-      showError('제목과 내용을 입력해주세요.');
+      messageApi.error('제목과 내용을 입력해주세요.');
       return;
     }
 
@@ -109,7 +107,7 @@ const UpdateTravelDiaryPage = () => {
         const results = await Promise.all(selectedFiles.map((f) => uploadProfileImage(f)));
         const failed = results.find((r) => !r?.success);
         if (failed) {
-          showError('이미지 업로드 중 일부 실패했습니다.');
+          messageApi.error('이미지 업로드 중 일부 실패했습니다.');
           return;
         }
         newUploadedUrls = results.map((r) => r.imageUrl);
@@ -125,16 +123,15 @@ const UpdateTravelDiaryPage = () => {
       });
 
       if (result?.success) {
-        showSuccess('수정이 완료되었습니다!');
+        messageApi.success('수정이 완료되었습니다!');
         setTimeout(() => {
-        navigate(`/board/travel/diary/${boardId}`);
-      }, 1200);
-
+          navigate(`/board/travel/diary/${boardId}`);
+        }, 1200);
       } else {
-        showError(`수정 실패: ${result?.error ?? '원인 미상'}`);
+        messageApi.error(`수정 실패: ${result?.error ?? '원인 미상'}`);
       }
     } catch (err) {
-      showError('오류 발생: ' + err.message);
+      messageApi.error('오류 발생: ' + err.message);
     }
   };
 
@@ -146,6 +143,8 @@ const UpdateTravelDiaryPage = () => {
 
   return (
     <DefaultLayout>
+      {contextHolder}
+
       <div className="w-full max-w-sm mx-auto">
         <BackHeader />
 
@@ -254,15 +253,6 @@ const UpdateTravelDiaryPage = () => {
           </div>
         </div>
       </div>
-
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          duration={toast.duration}
-          onClose={hideToast}
-        />
-      )}
     </DefaultLayout>
   );
 };

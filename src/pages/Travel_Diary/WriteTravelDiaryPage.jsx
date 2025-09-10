@@ -10,11 +10,9 @@ import useUserStore from '../../store/userStore';
 import { writeDiary } from '../../api';
 import { uploadProfileImage } from '../../api';
 import { fetchMyTravel } from '../../api/user/userContentApi';
-
 import { getSchedule } from '../../api/';
 
-import { useToast } from '../../utils/useToast';
-import Toast from '../../components/common/Toast';
+import { message } from 'antd';
 import DaySelectorModal from '../../components/modal/DaySelectorModal';
 
 const WriteTravelDiary = () => {
@@ -43,8 +41,8 @@ const WriteTravelDiary = () => {
   const [scheduleDays, setScheduleDays] = useState([]);
   const [showDaySelector, setShowDaySelector] = useState(false);
 
-  // Toast
-  const { toast, showError, showInfo, showSuccess, hideToast } = useToast();
+  // ✅ antd message
+  const [messageApi, contextHolder] = message.useMessage();
 
   // 진입 시 일정 세팅
   useEffect(() => {
@@ -74,17 +72,17 @@ const WriteTravelDiary = () => {
         }
       } catch (e) {
         console.error('일정 불러오기 실패:', e);
-        showError('일정 정보를 불러올 수 없습니다.');
+        messageApi.error('일정 정보를 불러올 수 없습니다.');
       }
     };
     load();
-  }, [scheduleId, accessToken]);
+  }, [scheduleId, accessToken, messageApi]);
 
   const addTag = () => {
     const trimmed = inputValue.trim();
     if (!trimmed) return;
     if (tags.length >= 10) {
-      showInfo('태그는 최대 10개까지만 추가할 수 있어요!');
+      messageApi.info('태그는 최대 10개까지만 추가할 수 있어요!');
       return;
     }
     if (!tags.includes(trimmed)) {
@@ -126,11 +124,11 @@ const WriteTravelDiary = () => {
   // 제출
   const handleSubmit = async () => {
     if (!title.trim() || !content.trim()) {
-      showError('제목과 내용을 입력해주세요.');
+      messageApi.error('제목과 내용을 입력해주세요.');
       return;
     }
     if (!selectedScheduleId) {
-      showError(
+      messageApi.error(
         '연결된 일정이 없습니다. 일정 선택 후 작성 페이지로 들어오세요.'
       );
       return;
@@ -144,7 +142,7 @@ const WriteTravelDiary = () => {
         );
         const failed = results.find((r) => !r?.success || !r?.imageUrl);
         if (failed) {
-          showError('이미지 업로드 중 일부 실패했습니다.');
+          messageApi.error('이미지 업로드 중 일부 실패했습니다.');
           return;
         }
         imageUrls = imageUrls.concat(results.map((r) => r.imageUrl));
@@ -161,20 +159,23 @@ const WriteTravelDiary = () => {
       const result = await writeDiary(payload);
       if (result?.success && result?.boardId) {
         previewUrls.forEach((u) => URL.revokeObjectURL(u));
-        showSuccess('여행일기가 작성되었습니다!');
+        messageApi.success('여행일기가 작성되었습니다!');
         setTimeout(() => {
           navigate(`/board/travel/diary/${result.boardId}`);
         }, 1200);
       } else {
-        showError(`작성 실패: ${result?.error ?? '원인 미상'}`);
+        messageApi.error(`작성 실패: ${result?.error ?? '원인 미상'}`);
       }
     } catch (err) {
-      showError('오류 발생: ' + (err?.message ?? String(err)));
+      messageApi.error('오류 발생: ' + (err?.message ?? String(err)));
     }
   };
 
   return (
     <DefaultLayout>
+      {/* ✅ contextHolder 추가 */}
+      {contextHolder}
+
       <div className="w-full mx-auto">
         <BackHeader title="여행일기" />
         <div className="px-4 pb-[calc(env(safe-area-inset-bottom)+80px)]">
@@ -307,15 +308,6 @@ const WriteTravelDiary = () => {
         days={scheduleDays}
         onDaySelect={() => {}}
       />
-
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          duration={toast.duration}
-          onClose={hideToast}
-        />
-      )}
     </DefaultLayout>
   );
 };
