@@ -5,13 +5,14 @@ import CommentItemList from './CommentItemList';
 import CommentInput from './CommentInput';
 
 import useUserStore from '../../store/userStore';
-import { getComments, deleteComment, createComment, updateComment } from '../../api/comment/comment';
+import { getComments, deleteComment, createComment, updateComment, reportComment } from '../../api/comment/comment';
 import { normalizeBoardId } from '../../utils/normalizeBoardId';
 
 const PAGE_SIZE = 5;
 const byNewest = (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
 
 const CommentList = ({ boardId }) => {
+  const token = useUserStore((state) => state.accessToken);
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [moreLoading, setMoreLoading] = useState(false);
@@ -154,7 +155,6 @@ const loadMore = async () => {
         setTotalCount(prev => Math.max(0, prev - 1));
       }
     } catch (e) {
-      console.error('댓글 삭제 에러:', e);
     }
   };
 
@@ -173,11 +173,17 @@ const loadMore = async () => {
   };
 
   const handleReport = async (commentId) => {
-    if (!currentUserId) {
+    if (!token) {
       messageApi.warning('로그인 후 이용 가능합니다.');
       return;
     }
-     messageApi.success('신고가 접수되었습니다.');
+
+    const res = await reportComment(commentId);
+    if (res.success) {
+      messageApi.success(res.data || '신고가 접수되었습니다.');
+    } else {
+      messageApi.error(res.error?.message || '신고 처리에 실패했습니다.');
+    }
   };
 
   if (loading) {
