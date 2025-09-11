@@ -2,7 +2,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DefaultLayout from '../../layouts/DefaultLayout';
-import HomeHeader from '../../components/header/HomeHeader';
+import BackHeader from '../../components/header/BackHeader';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import DayScheduleSection from '../../components/schedule/DayScheduleSection';
 import KakaoMap from '../../components/map/KakaoMap';
@@ -10,7 +10,7 @@ import useScheduleStore from '../../store/scheduleStore';
 import useCartStore from '../../store/cartStore';
 import usePlanStore from '../../store/planStore';
 import { getSchedule, deleteSchedule } from '../../api';
-import { message, Progress, Flex, Modal } from 'antd';
+import { message, Progress, Flex, Modal, Spin } from 'antd';
 
 const toNum = (v) => (typeof v === 'number' ? v : Number(v));
 
@@ -26,10 +26,12 @@ const ScheduleResultPage = () => {
   const getDays = useScheduleStore((s) => s.getDays);
 
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+  const [mapLoading, setMapLoading] = useState(true); // 지도 로딩 제어
 
   const planBudget = usePlanStore((s) => s.budget ?? 0);
   const budget = detail?.budget ?? planBudget;
 
+  // 상세 불러오기
   useEffect(() => {
     (async () => {
       if (String(detail?.scheduleId ?? detail?.id) === String(scheduleId))
@@ -47,6 +49,7 @@ const ScheduleResultPage = () => {
     })();
   }, [scheduleId, detail?.scheduleId, detail?.id, setDetail]);
 
+  // placeIndex 구성 (카트 + 서버 아이템 병합)
   useEffect(() => {
     if (!detail || !Array.isArray(detail?.scheduleItems)) return;
     if (placeIndex && Object.keys(placeIndex).length > 0) return;
@@ -93,6 +96,7 @@ const ScheduleResultPage = () => {
     if (selectedDayIndex >= days.length) setSelectedDayIndex(0);
   }, [days.length, selectedDayIndex]);
 
+  // 예산/비용
   const totalCost = useMemo(() => {
     const getCost = (p) => Number(p?.cost ?? p?.price ?? p?.amount ?? 0) || 0;
     try {
@@ -114,22 +118,64 @@ const ScheduleResultPage = () => {
     return Math.min(100, (totalCost / budget) * 100);
   }, [budget, totalCost]);
 
+  // 히어로 이미지 (regionImage 우선)
+  const heroUrl = useMemo(() => {
+    const byDetail =
+      detail?.regionImage || detail?.imageUrl || detail?.thumbnail;
+    const byItems = (detail?.scheduleItems || [])
+      .map((it) => it.imageUrl || it.firstImage || it.firstimage)
+      .find(Boolean);
+    return byDetail || byItems || null;
+  }, [detail]);
+
+  // 현재 Day의 원본 리스트 (좌표 유무 상관없이)
+  const selectedList = useMemo(() => {
+    const d = days[selectedDayIndex];
+    let list = d?.plans ?? [];
+    if ((!list || list.length === 0) && Array.isArray(detail?.scheduleItems)) {
+      list = detail.scheduleItems.filter(
+        (it) => Number(it.dayNumber) === selectedDayIndex + 1
+      );
+    }
+    return list || [];
+  }, [days, detail, selectedDayIndex]);
+
+  // 실제 마커
   const selectedMarkers = useMemo(() => {
-    if (!days[selectedDayIndex]) return [];
-    return days[selectedDayIndex].plans
-      .filter((p) => typeof p.lat === 'number' && typeof p.lng === 'number')
-      .map((p, i) => ({
-        lat: p.lat,
-        lng: p.lng,
-        order: i + 1,
-        title: p.title || p.name || `#${i + 1}`,
-      }));
-  }, [days, selectedDayIndex]);
+    const markers = [];
+    (selectedList || []).forEach((p, i) => {
+      const lat = toNum(p.lat ?? p.latitude ?? p.mapY);
+      const lng = toNum(p.lng ?? p.longitude ?? p.mapX);
+      if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+        markers.push({
+          lat,
+          lng,
+          order: i + 1,
+          title: p.title || p.name || `#${i + 1}`,
+        });
+      }
+    });
+    return markers;
+  }, [selectedList]);
 
   const path = useMemo(
     () => selectedMarkers.map((m) => ({ lat: m.lat, lng: m.lng })),
     [selectedMarkers]
   );
+
+  // 지도 로딩 컨트롤: 모두 준비되면 즉시, 일부 없어도 1.5초 후엔 표시
+  useEffect(() => {
+    setMapLoading(true);
+    const expected = selectedList.length;
+    const readyAll = expected === 0 || selectedMarkers.length === expected;
+
+    if (readyAll) {
+      setMapLoading(false);
+      return;
+    }
+    const t = setTimeout(() => setMapLoading(false), 1500);
+    return () => clearTimeout(t);
+  }, [selectedList, selectedMarkers, selectedDayIndex]);
 
   const title = detail?.scheduleName || '여행 일정';
   const dateRange =
@@ -137,6 +183,7 @@ const ScheduleResultPage = () => {
       ? `${detail.startDate} ~ ${detail.endDate}`
       : '';
 
+  // 원래 있던 동작 유지
   const finishAndExit = async () => {
     try {
       await clearScheduleStore();
@@ -190,89 +237,132 @@ const ScheduleResultPage = () => {
 
   return (
     <DefaultLayout>
-      <HomeHeader />
-      <div className="w-full mx-auto px-4 sm:px-6 md:px-8 pb-28">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-1">
-          <h1 className="text-xl font-bold">{title}</h1>
-          {/* 편집 버튼 제거 */}
-        </div>
-        <p className="text-sm text-gray-500 mt-1">{dateRange}</p>
-
-        {/* 예산 진행률 */}
-        <div className="mt-3">
-          <p className="text-sm text-center flex justify-center items-center gap-1">
-            전체 예산 대비{' '}
-            <span
-              className={
-                remaining < 0
-                  ? 'text-red-500 font-bold'
-                  : 'text-blue-500 font-bold'
-              }
+      <BackHeader />
+      <div className="w-full mx-auto pb-28">
+        {/* === Hero (regionImage 배경) === */}
+        <div className="px-4 sm:px-6 md:px-8">
+          <div className="mt-2 rounded-2xl overflow-hidden border shadow-sm relative">
+            <div
+              className="h-40 sm:h-48 md:h-56 w-full"
+              style={{
+                backgroundImage: heroUrl ? `url('${heroUrl}')` : undefined,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
             >
-              {Math.abs(remaining).toLocaleString()}원{' '}
-              {remaining < 0 ? '초과' : '여유'}
-            </span>
-            입니다.
-          </p>
-          <Flex gap="small" vertical className="mt-2">
-            <Progress
-              percent={percentUsed}
-              status={remaining < 0 ? 'exception' : 'active'}
-              format={() =>
-                `₩${totalCost.toLocaleString()} / ₩${(
-                  budget || 0
-                ).toLocaleString()}`
-              }
-            />
-          </Flex>
-        </div>
-
-        {/* Day 버튼 */}
-        <div className="flex items-center gap-2 mb-4 mt-3">
-          <div className="flex-1 overflow-x-auto scrollbar-hide">
-            <div className="flex gap-2 w-max">
-              {days.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setSelectedDayIndex(idx)}
-                  className={`px-3 py-1 rounded-full text-sm border whitespace-nowrap ${
-                    selectedDayIndex === idx
-                      ? 'border-primary text-primary bg-blue-50'
-                      : 'border-gray-300 text-gray-500 bg-white'
-                  }`}
-                >
-                  Day {idx + 1}
-                </button>
-              ))}
+              {!heroUrl && (
+                <div className="h-full w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+              )}
+              <div className="absolute inset-0 bg-black/30" />
+              <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3">
+                <div className="min-w-0">
+                  <h1 className="text-white font-extrabold text-lg sm:text-xl truncate drop-shadow">
+                    {title}
+                  </h1>
+                  <p className="text-white/90 text-xs sm:text-sm mt-0.5">
+                    {dateRange}
+                  </p>
+                </div>
+                {/* 확인 페이지 → 상단 액션 없음 */}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* 지도 */}
-        <div className="w-full h-48 rounded-lg mb-6 overflow-hidden">
-          <KakaoMap
-            key={`${selectedDayIndex}-${selectedMarkers.length}`}
-            markers={selectedMarkers}
-            useCustomOverlay
-            drawPath
-            path={path}
-            fitToMarkers
-            fitPadding={60}
-          />
+        {/* === 예산 진행률 === */}
+        <div className="px-4 sm:px-6 md:px-8 mt-3">
+          <div className="rounded-2xl border bg-white shadow-sm p-4">
+            <p className="text-sm text-center flex justify-center items-center gap-1">
+              전체 예산 대비{' '}
+              <span
+                className={
+                  remaining < 0
+                    ? 'text-red-500 font-bold'
+                    : 'text-blue-500 font-bold'
+                }
+              >
+                {Math.abs(remaining).toLocaleString()}원{' '}
+                {remaining < 0 ? '초과' : '여유'}
+              </span>{' '}
+              입니다.
+            </p>
+            <Flex gap="small" vertical className="mt-2">
+              <Progress
+                percent={percentUsed}
+                status={remaining < 0 ? 'exception' : 'active'}
+                format={() =>
+                  `₩${totalCost.toLocaleString()} / ₩${(
+                    budget || 0
+                  ).toLocaleString()}`
+                }
+              />
+            </Flex>
+          </div>
         </div>
 
-        {/* 선택한 날짜 일정 */}
-        {days[selectedDayIndex] && (
-          <DayScheduleSection
-            key={selectedDayIndex}
-            day={days[selectedDayIndex]}
-            dayIndex={selectedDayIndex}
-            readOnly // 수정 불가
-          />
-        )}
+        {/* === Day 버튼 === */}
+        <div className="px-4 sm:px-6 md:px-8">
+          <div className="flex items-center gap-2 mb-4 mt-3">
+            <div className="flex-1 overflow-x-auto scrollbar-hide">
+              <div className="flex gap-2 w-max">
+                {days.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedDayIndex(idx)}
+                    className={`px-3 py-1 rounded-full text-sm border whitespace-nowrap ${
+                      selectedDayIndex === idx
+                        ? 'border-primary text-primary bg-blue-50'
+                        : 'border-gray-300 text-gray-600 bg-white'
+                    }`}
+                  >
+                    Day {idx + 1}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
 
-        {/* 하단 고정 버튼 바 */}
+        {/* === 지도 (핀 준비될 때까지 로딩) === */}
+        <div className="px-4 sm:px-6 md:px-8">
+          <div className="w-full h-56 md:h-64 rounded-xl mb-6 overflow-hidden border shadow-sm flex items-center justify-center">
+            {mapLoading ? (
+              <Spin />
+            ) : selectedMarkers.length > 0 ? (
+              <KakaoMap
+                key={`${selectedDayIndex}-${selectedMarkers.length}`}
+                markers={selectedMarkers}
+                useCustomOverlay
+                drawPath
+                path={path}
+                fitToMarkers
+                fitPadding={60}
+              />
+            ) : (
+              <div className="text-gray-400 text-sm">
+                표시할 위치가 없습니다.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* === 선택한 날짜 일정 === */}
+        <div className="px-4 sm:px-6 md:px-8">
+          {days[selectedDayIndex] ? (
+            <DayScheduleSection
+              key={selectedDayIndex}
+              day={days[selectedDayIndex]}
+              dayIndex={selectedDayIndex}
+              readOnly // 확인용
+            />
+          ) : (
+            <div className="rounded-xl border bg-gray-50 text-gray-500 text-sm p-6 text-center">
+              표시할 일정이 없습니다.
+            </div>
+          )}
+        </div>
+
+        {/* === 하단 고정 버튼 바 (원래대로 유지) === */}
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
           <div className="mx-auto w-full px-4 sm:px-6 md:px-8 py-3 flex gap-2">
             <button
