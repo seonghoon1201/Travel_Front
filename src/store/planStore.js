@@ -8,7 +8,7 @@ const usePlanStore = create(
     (set, get) => ({
       // ---- 플로우 상태 ----
       inPlanFlow: false, // /plan/* 안에 있는지 여부
-      planSessionId: null, // 새 일정 시작 시 구분용(필요하면 사용)
+      planSessionId: null, // 새 일정 시작 시 구분용
 
       // ---- 기본 상태 ----
       locationIds: [], // 지역 id 배열
@@ -18,7 +18,6 @@ const usePlanStore = create(
       companion: '',
       styles: [], // 다중 선택 가능
       transport: '',
-      invitees: [],
       people: 1,
       budget: 0,
 
@@ -29,14 +28,12 @@ const usePlanStore = create(
       // (구) planStore.cartItems — 호환을 위해 남겨두지만 실제로는 cartStore 사용
       cartItems: [],
 
+      // 출발 정보
       departurePlace: '', // => API: startPlace
       departureTime: '', // => API: startTime ('HH:mm')
 
       // ---- 백엔드 바디 매칭 ----
       scheduleName: '',
-      groupId: '',
-      groupName: '',
-      scheduleType: 'GROUP', // 'GROUP' | 'SOLO'
       scheduleStyle: '', // 단일값
 
       // 즐겨찾기
@@ -75,7 +72,6 @@ const usePlanStore = create(
       setCompanion: (v) => set({ companion: v }),
       setStyles: (values) => set({ styles: values }),
       setTransport: (v) => set({ transport: v }),
-      setInvitees: (list) => set({ invitees: list }),
       setPeople: (v) => set({ people: Math.max(1, Number(v) || 1) }),
       setBudget: (v) => {
         const next = Math.max(0, Number.isFinite(+v) ? +v : 0);
@@ -92,9 +88,6 @@ const usePlanStore = create(
       setDepartureTime: (v) => set({ departureTime: v }),
 
       setScheduleName: (v) => set({ scheduleName: v }),
-      setGroupId: (v) => set({ groupId: v }),
-      setGroupName: (v) => set({ groupName: v }),
-      setScheduleType: (v) => set({ scheduleType: v }),
       setScheduleStyle: (v) => set({ scheduleStyle: v }),
 
       setSelectedRegionMeta: ({ name, imageUrl }) =>
@@ -107,7 +100,6 @@ const usePlanStore = create(
       beginPlanFlow: () => set({ inPlanFlow: true, planSessionId: Date.now() }),
 
       // ❌ 자동 초기화 금지: /plan/* 벗어나도 여기서는 비우지 않음
-      //    (자세히 보기 등 외부 라우트로 이동해도 플로우 유지)
       endPlanFlow: () => set({ inPlanFlow: false }),
 
       // ✅ 세션 시작: 카트/입력값을 비우되, 지역정보는 유지
@@ -126,18 +118,14 @@ const usePlanStore = create(
           companion: '',
           styles: [],
           transport: '',
-          invitees: [],
           people: 1,
           budget: 0,
           cartItems: [],
           departurePlace: '',
           departureTime: '',
           scheduleName: '',
-          groupId: '',
-          groupName: '',
-          scheduleType: 'GROUP',
           scheduleStyle: '',
-          selectedRegionName: state.selectedRegionName, // 지역은 유지하고 싶으면 그대로
+          selectedRegionName: state.selectedRegionName, // 지역 메타 유지
           selectedRegionImage: state.selectedRegionImage,
           // favorites는 그대로 둠
         }));
@@ -157,16 +145,12 @@ const usePlanStore = create(
           companion: '',
           styles: [],
           transport: '',
-          invitees: [],
           people: 1,
           budget: 0,
           cartItems: [],
           departurePlace: '',
           departureTime: '',
           scheduleName: '',
-          groupId: '',
-          groupName: '',
-          scheduleType: 'GROUP',
           scheduleStyle: '',
           favorites: [],
           selectedRegionName: '',
@@ -193,16 +177,12 @@ const usePlanStore = create(
           companion: '',
           styles: [],
           transport: '',
-          invitees: [],
           people: 1,
           budget: 0,
           cartItems: [],
           departurePlace: '',
           departureTime: '',
           scheduleName: '',
-          groupId: '',
-          groupName: '',
-          scheduleType: 'GROUP',
           scheduleStyle: '',
           favorites: [],
           selectedRegionName: '',
@@ -218,8 +198,8 @@ const usePlanStore = create(
        * 백엔드 /schedule/create 등에 보낼 바디 생성
        * 스키마:
        * {
-       *   scheduleName, startDate, endDate, budget, groupId,
-       *   scheduleType, scheduleStyle, startPlace, startTime,
+       *   scheduleName, startDate, endDate, budget,
+       *   scheduleStyle, startPlace, startTime,
        *   scheduleItem: [{ contentId, cost }]
        * }
        */
@@ -269,8 +249,6 @@ const usePlanStore = create(
           startDate: s.startDate,
           endDate: s.endDate,
           budget: Number(s.budget ?? 0),
-          groupId: s.groupId || undefined, // 비어있으면 undefined
-          scheduleType: s.scheduleType,
           // 단일값 우선, 비어있으면 styles[0]
           scheduleStyle:
             s.scheduleStyle || (Array.isArray(s.styles) ? s.styles[0] : ''),
@@ -290,16 +268,12 @@ const usePlanStore = create(
           companion: '',
           styles: [],
           transport: '',
-          invitees: [],
           people: 1,
           budget: 0,
           cartItems: [],
           departurePlace: '',
           departureTime: '',
           scheduleName: '',
-          groupId: '',
-          groupName: '',
-          scheduleType: 'GROUP',
           scheduleStyle: '',
           favorites: [],
           selectedRegionName: '',
@@ -318,16 +292,12 @@ const usePlanStore = create(
           companion: '',
           styles: [],
           transport: '',
-          invitees: [],
           people: 1,
           budget: 0,
           cartItems: [],
           departurePlace: '',
           departureTime: '',
           scheduleName: '',
-          groupId: '',
-          groupName: '',
-          scheduleType: 'GROUP',
           scheduleStyle: '',
           favorites: [],
           selectedRegionName: '',
@@ -354,42 +324,39 @@ const usePlanStore = create(
         companion: s.companion,
         styles: s.styles,
         transport: s.transport,
-        invitees: s.invitees,
         people: s.people,
         budget: s.budget,
         departurePlace: s.departurePlace,
         departureTime: s.departureTime,
         scheduleName: s.scheduleName,
-        groupId: s.groupId,
-        groupName: s.groupName,
-        scheduleType: s.scheduleType,
         scheduleStyle: s.scheduleStyle,
         favorites: s.favorites,
         selectedRegionName: s.selectedRegionName,
         selectedRegionImage: s.selectedRegionImage,
       }),
 
-      // 과거 키 마이그레이션
+      // 과거 키 마이그레이션: legacy 필드 제거
       migrate: (persistedState, _version) => {
         const s = { ...(persistedState || {}) };
+
+        // 지역 코드 정규화 유지
         if (Array.isArray(s.locationCodes)) {
           s.locationCodes = s.locationCodes.map((o = {}) => ({
             ldongRegnCd: String(
-              o.ldongRegnCd ??
-                o.ldongRegnCd ??
-                o.lDongRegnCd ??
-                o.ldongRegnCd ??
-                ''
+              o.ldongRegnCd ?? o.lDongRegnCd ?? o.ldongRegnCd ?? ''
             ),
             ldongSignguCd: String(
-              o.ldongSignguCd ??
-                o.ldongSignguCd ??
-                o.lDongSignguCd ??
-                o.ldongSignguCd ??
-                ''
+              o.ldongSignguCd ?? o.lDongSignguCd ?? o.ldongSignguCd ?? ''
             ),
           }));
         }
+
+        // 🔥 legacy 제거: invitees, groupId, groupName, scheduleType 등
+        delete s.invitees;
+        delete s.groupId;
+        delete s.groupName;
+        delete s.scheduleType;
+
         return s;
       },
     }

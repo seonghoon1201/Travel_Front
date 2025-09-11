@@ -163,9 +163,7 @@ const WriteTravelDiary = () => {
         setTimeout(() => {
           navigate(`/board/travel/diary/${result.boardId}`);
         }, 1200);
-      } else {
-        messageApi.error(`작성 실패: ${result?.error ?? '원인 미상'}`);
-      }
+      } 
     } catch (err) {
       messageApi.error('오류 발생: ' + (err?.message ?? String(err)));
     }
@@ -173,7 +171,6 @@ const WriteTravelDiary = () => {
 
   return (
     <DefaultLayout>
-      {/* ✅ contextHolder 추가 */}
       {contextHolder}
 
       <div className="w-full mx-auto">
