@@ -14,7 +14,6 @@ export async function getSchedule(scheduleId) {
   return data;
 }
 
-
 /** 일정 상세 조회(전체 공개) */
 export async function getPublicSchedule(scheduleId) {
   if (!scheduleId) throw new Error('scheduleId가 필요합니다.');
@@ -35,17 +34,21 @@ export async function updateScheduleAll(payload) {
   return data ?? null;
 }
 
-/** 일정 삭제 (Swagger 스펙: DELETE /schedule/{scheduleId}) */
-export async function deleteSchedule(scheduleId, accessToken) {
+/** 일정 삭제 (Swagger 스펙: DELETE /schedule/delete, body: { scheduleId }) */
+export async function deleteSchedule(scheduleId) {
   if (!scheduleId) throw new Error('scheduleId가 필요합니다.');
-  if (!accessToken) throw new Error('accessToken이 필요합니다.');
-
-  const { data } = await http.delete(`/schedule/${scheduleId}`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
+  // axios에서 DELETE 본문은 { data } 키로 전달
+  const { data } = await http.delete('/schedule/delete', {
+    data: { scheduleId },
   });
-  return data; 
+  return data; // {} 빈 객체 응답(200) 기대
+}
+
+/** 초대 수락(현재 로그인 유저를 참여자로 추가) */
+export async function joinSchedule(scheduleId) {
+  if (!scheduleId) throw new Error('scheduleId가 필요합니다.');
+  const { data } = await http.post(`/schedule/${scheduleId}/join`);
+  return data;
 }
 
 export async function getParticipantCount(scheduleId) {

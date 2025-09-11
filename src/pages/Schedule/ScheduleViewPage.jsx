@@ -105,20 +105,21 @@ const ScheduleViewPage = () => {
     return Math.min(100, (totalCost / budget) * 100);
   }, [budget, totalCost]);
 
-  // ✅ 마커 생성: lat/lng || latitude/longitude || mapY/mapX 순으로 안전 파싱
+  // ✅ 수정된 편집 가능 여부
+  // → 로그인 상태(detail이 내 일정으로 조회됨) + editable = true인 경우만 편집 가능
+  // → 로그아웃(public view)이면 무조건 편집 불가
+  const canEdit = !isPublicView && detail?.editable === true;
+
   const selectedMarkers = useMemo(() => {
-    // 1) 우선 days에서 시도
     const d = days[selectedDayIndex];
     let list = d?.plans ?? [];
 
-    // 2) 좌표가 없다면 scheduleItems에서 dayNumber로 폴백
     if ((!list || list.length === 0) && Array.isArray(detail?.scheduleItems)) {
       list = detail.scheduleItems.filter(
         (it) => Number(it.dayNumber) === selectedDayIndex + 1
       );
     }
 
-    // 3) 안전 파싱 (latitude/longitude → lat/lng)
     const markers = [];
     (list || []).forEach((p, i) => {
       const lat = toNum(p.lat ?? p.latitude ?? p.mapY);
@@ -147,14 +148,6 @@ const ScheduleViewPage = () => {
       ? `${detail.startDate} ~ ${detail.endDate}`
       : '';
 
-  // 편집 가능 여부 판단: 공개 보기가 아니거나, 공개 보기이면서 editable이 true인 경우
-  const canEdit = !isPublicView || detail?.editable === true;
-  
-  // 디버깅용 로그
-  console.log('Debug - isPublicView:', isPublicView);
-  console.log('Debug - detail.editable:', detail?.editable);
-  console.log('Debug - canEdit:', canEdit);
-
   return (
     <DefaultLayout>
       <BackHeader />
@@ -162,23 +155,24 @@ const ScheduleViewPage = () => {
         {/* Header */}
         <div className="flex justify-between items-center mb-1 px-1">
           <h1 className="text-xl font-bold">{title}</h1>
-          {/* 편집 버튼: 편집 가능한 경우에만 표시 */}
-          {canEdit && (
+          {canEdit ? (
             <button
               onClick={() => setShowEditModal(true)}
               className="text-sm text-gray-400 hover:text-gray-600"
             >
               편집
             </button>
+          ) : (
+            <span className="text-xs text-red-500">편집 권한이 없습니다</span>
           )}
         </div>
         <p className="text-sm text-gray-500 mt-1">{dateRange}</p>
 
-        {/* 공개 보기 상태 표시 (선택사항) */}
+        {/* 공개 보기 뱃지 */}
         {isPublicView && (
           <div className="mt-2 mb-1">
             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-              {detail?.editable ? '공개 일정 (편집 가능)' : '공개 일정 (읽기 전용)'}
+              공개 일정 (읽기 전용)
             </span>
           </div>
         )}
@@ -214,11 +208,13 @@ const ScheduleViewPage = () => {
 
         {/* Day 버튼 */}
         <div className="flex items-center gap-2 mb-4 mt-3">
-          <div className="flex-shrink-0">
-            <PrimaryButton className="px-3 py-1 text-sm whitespace-nowrap">
-              함께하는 일행
-            </PrimaryButton>
-          </div>
+          {canEdit && (  
+            <div className="flex-shrink-0">
+              <PrimaryButton className="px-3 py-1 text-sm whitespace-nowrap">
+                함께하는 일행
+              </PrimaryButton>
+            </div>
+          )}
           <div className="flex-1 overflow-x-auto scrollbar-hide">
             <div className="flex gap-2 w-max">
               {days.map((_, idx) => (
@@ -241,7 +237,7 @@ const ScheduleViewPage = () => {
         {/* 지도 */}
         <div className="w-full h-48 rounded-lg mb-6 overflow-hidden">
           <KakaoMap
-            key={`${selectedDayIndex}-${selectedMarkers.length}`} // ← 마커 변동 시 리렌더 보장
+            key={`${selectedDayIndex}-${selectedMarkers.length}`}
             markers={selectedMarkers}
             useCustomOverlay
             drawPath
@@ -250,16 +246,18 @@ const ScheduleViewPage = () => {
             fitPadding={60}
           />
         </div>
+
         {/* 선택한 날짜 일정 */}
         {days[selectedDayIndex] && (
           <DayScheduleSection
             key={selectedDayIndex}
             day={days[selectedDayIndex]}
             dayIndex={selectedDayIndex}
+            canEdit={canEdit} 
           />
         )}
 
-        {/* 편집 모달: 편집 가능한 경우에만 표시 */}
+        {/* 편집 모달 */}
         {showEditModal && canEdit && (
           <EditModal onClose={() => setShowEditModal(false)} />
         )}
