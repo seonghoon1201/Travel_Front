@@ -132,7 +132,7 @@ const MyTravelSection = () => {
             scheduleId={trip.scheduleId}
             title={trip.scheduleName}
             dateRange={`${trip.startDate} ~ ${trip.endDate}`}
-            companionCount={trip.companionCount}
+            companionCount={Math.max(0, trip.companionCount - 1)}
             imageUrl={trip.imageUrl}
             onClick={() => handleClickTrip(trip.scheduleId)}
             onDelete={handleDeleteTrip}
@@ -152,7 +152,7 @@ const MyTravelSection = () => {
             scheduleId={trip.scheduleId}
             title={trip.scheduleName}
             dateRange={`${trip.startDate} ~ ${trip.endDate}`}
-            companionCount={trip.companionCount}
+            companionCount={Math.max(0, trip.companionCount - 1)}
             imageUrl={trip.imageUrl}
             onClick={() => handleClickTrip(trip.scheduleId)}
             onDelete={handleDeleteTrip}
