@@ -39,6 +39,7 @@ const MyTravelSection = () => {
         // 새로운 API를 사용하여 스케줄 참여자 수 가져오기
         let companionCount = 1;
         if (trip.scheduleId) {
+        if (trip.scheduleId) {
           try {
             const res = await getParticipantCount(trip.scheduleId);
             companionCount = res;
@@ -97,6 +98,8 @@ const MyTravelSection = () => {
   const confirmDeleteTrip = async () => {
     if (!deleteTarget) return;
     try {
+      // ✅ 토큰 같이 전달
+      await deleteSchedule(deleteTarget, accessToken);
       // ✅ 토큰 같이 전달
       await deleteSchedule(deleteTarget, accessToken);
       await loadData();

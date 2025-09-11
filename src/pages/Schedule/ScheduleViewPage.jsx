@@ -9,7 +9,7 @@ import EditModal from '../../components/schedule/EditModal';
 import KakaoMap from '../../components/map/KakaoMap';
 import useScheduleStore from '../../store/scheduleStore';
 import usePlanStore from '../../store/planStore';
-import { getSchedule } from '../../api';
+import { getSchedule, getPublicSchedule } from '../../api';
 import { message, Progress, Flex, Spin } from 'antd';
 
 const toNum = (v) => (typeof v === 'number' ? v : Number(v));
@@ -20,7 +20,7 @@ const ScheduleViewPage = () => {
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [isPublicView, setIsPublicView] = useState(false); // 공개 보기 모드인지 확인
 
   const detail = useScheduleStore((s) => s.detail);
   const setDetail = useScheduleStore((s) => s.setDetail);
@@ -33,12 +33,17 @@ const ScheduleViewPage = () => {
   useEffect(() => {
     (async () => {
       try {
-        if (String(detail?.scheduleId ?? detail?.id) === String(scheduleId)) {
-          setLoading(false);
-          return;
+        // 먼저 일반 API로 시도
+        let res;
+        try {
+          res = await getSchedule(scheduleId);
+          setIsPublicView(false);
+        } catch (error) {
+          // 일반 API 실패시 공개 API로 시도
+          console.log('일반 API 실패, 공개 API로 시도:', error);
+          res = await getPublicSchedule(scheduleId);
+          setIsPublicView(true);
         }
-        setLoading(true);
-        const res = await getSchedule(scheduleId);
         setDetail(res);
       } catch (e) {
         console.error('[ScheduleViewPage] reload fail', e?.response?.data || e);
@@ -101,6 +106,11 @@ const ScheduleViewPage = () => {
     return Math.min(100, (totalCost / budget) * 100);
   }, [budget, totalCost]);
 
+  // ✅ 수정된 편집 가능 여부
+  // → 로그인 상태(detail이 내 일정으로 조회됨) + editable = true인 경우만 편집 가능
+  // → 로그아웃(public view)이면 무조건 편집 불가
+  const canEdit = !isPublicView && detail?.editable === true;
+
   const selectedMarkers = useMemo(() => {
     const d = days[selectedDayIndex];
     let list = d?.plans ?? [];
@@ -143,16 +153,27 @@ const ScheduleViewPage = () => {
         {/* Header */}
         <div className="flex justify-between items-center mb-1 px-1">
           <h1 className="text-xl font-bold">{title}</h1>
-          <div className="flex items-center gap-3">
+          {canEdit ? (
             <button
               onClick={() => setShowEditModal(true)}
-              className="text-sm text-gray-400"
+              className="text-sm text-gray-400 hover:text-gray-600"
             >
               편집
             </button>
-          </div>
+          ) : (
+            <span className="text-xs text-red-500">편집 권한이 없습니다</span>
+          )}
         </div>
         <p className="text-sm text-gray-500 mt-1">{dateRange}</p>
+
+        {/* 공개 보기 뱃지 */}
+        {isPublicView && (
+          <div className="mt-2 mb-1">
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+              공개 일정 (읽기 전용)
+            </span>
+          </div>
+        )}
 
         {/* 예산 진행률 */}
         <div className="mt-3">
@@ -185,14 +206,16 @@ const ScheduleViewPage = () => {
 
         {/* Day 버튼 */}
         <div className="flex items-center gap-2 mb-4 mt-3">
-          <div className="flex-shrink-0">
-            <PrimaryButton
-              className="px-3 py-1 text-sm whitespace-nowrap"
-              onClick={() => navigate(`/schedule/invite/${scheduleId}`)}
-            >
-              여행 초대하기
-            </PrimaryButton>
-          </div>
+          {canEdit && (
+            <div className="flex-shrink-0">
+              <PrimaryButton
+                className="px-3 py-1 text-sm whitespace-nowrap"
+                onClick={() => navigate(`/schedule/invite/${scheduleId}`)}
+              >
+                여행 초대하기
+              </PrimaryButton>
+            </div>
+          )}
           <div className="flex-1 overflow-x-auto scrollbar-hide">
             <div className="flex gap-2 w-max">
               {days.map((_, idx) => (
@@ -213,21 +236,16 @@ const ScheduleViewPage = () => {
         </div>
 
         {/* 지도 */}
-        <div className="w-full h-48 rounded-lg mb-6 overflow-hidden bg-gray-50 flex items-center justify-center">
-          {isMapReady ? (
-            <KakaoMap
-              key={`${selectedDayIndex}-${selectedMarkers.length}`}
-              markers={selectedMarkers}
-              useCustomOverlay
-              fitToMarkers
-              fitPadding={60}
-              className="w-full h-48 rounded-lg"
-            />
-          ) : (
-            <Spin tip="지도를 준비 중..." size="large" className="w-full">
-              <div className="w-full h-48 rounded-lg mb-6 bg-gray-50" />
-            </Spin>
-          )}
+        <div className="w-full h-48 rounded-lg mb-6 overflow-hidden">
+          <KakaoMap
+            key={`${selectedDayIndex}-${selectedMarkers.length}`}
+            markers={selectedMarkers}
+            useCustomOverlay
+            drawPath
+            path={path}
+            fitToMarkers
+            fitPadding={60}
+          />
         </div>
 
         {/* 선택한 날짜 일정 */}
@@ -236,11 +254,14 @@ const ScheduleViewPage = () => {
             key={selectedDayIndex}
             day={days[selectedDayIndex]}
             dayIndex={selectedDayIndex}
+            canEdit={canEdit}
           />
         )}
 
         {/* 편집 모달 */}
-        {showEditModal && <EditModal onClose={() => setShowEditModal(false)} />}
+        {showEditModal && canEdit && (
+          <EditModal onClose={() => setShowEditModal(false)} />
+        )}
       </div>
     </DefaultLayout>
   );
