@@ -13,6 +13,9 @@ const { RangePicker } = DatePicker;
 const PlanDatePage = () => {
   const [dates, setDates] = useState(null);
 
+  // 오늘 00:00 기준 (이전 날짜 비활성화에 사용)
+  const todayStart = dayjs().startOf('day');
+
   // 패널 표시 월 (왼쪽/오른쪽)
   const [pickerValue, setPickerValue] = useState([
     dayjs().startOf('month'),
@@ -35,10 +38,20 @@ const PlanDatePage = () => {
     (state) => state.setDepartureTime
   );
 
+  // 왼쪽 패널이 현재 달보다 이전으로 넘어가지 않도록
+  const canGoPrevMonth = pickerValue?.[0]?.isAfter(todayStart, 'month');
+
   const handleNext = () => {
     if (!dates || dates.length !== 2)
       return message.warning('여행 시작일과 종료일을 모두 선택해 주세요.');
+
     const [start, end] = dates;
+
+    // 안전장치: 혹시라도 과거 날짜가 들어오면 막기
+    if (start.isBefore(todayStart, 'day') || end.isBefore(todayStart, 'day')) {
+      return message.warning('오늘 이전 날짜는 선택할 수 없습니다.');
+    }
+
     if (end.isBefore(start, 'day'))
       return message.warning('종료일은 시작일 이후로 선택해 주세요.');
     if (!departurePlace) return message.warning('출발 장소를 입력해 주세요.');
@@ -69,6 +82,10 @@ const PlanDatePage = () => {
             format="YYYY-MM-DD"
             value={dates}
             onChange={setDates}
+            /* 오늘 이전 날짜 비활성화 */
+            disabledDate={(current) =>
+              !!current && current.startOf('day').isBefore(todayStart)
+            }
             /* antd v5: 팝업 클래스 */
             classNames={{ popup: 'one-month-range' }}
             /* 패널 표시 월 제어 (항상 왼쪽 패널 기준으로 본문/라벨 맞춤) */
@@ -94,13 +111,19 @@ const PlanDatePage = () => {
                 <div className="flex items-center justify-between px-3 py-2">
                   <button
                     type="button"
-                    onClick={() =>
+                    onClick={() => {
+                      if (!canGoPrevMonth) return;
                       setPickerValue(([l, r]) => [
                         l.subtract(1, 'month'),
                         r.subtract(1, 'month'),
-                      ])
-                    }
-                    className="text-sm text-gray-600 hover:text-gray-900"
+                      ]);
+                    }}
+                    className={`text-sm ${
+                      canGoPrevMonth
+                        ? 'text-gray-600 hover:text-gray-900'
+                        : 'text-gray-300 cursor-not-allowed'
+                    }`}
+                    disabled={!canGoPrevMonth}
                   >
                     ← 이전달
                   </button>
