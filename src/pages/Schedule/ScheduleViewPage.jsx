@@ -1,5 +1,6 @@
+// src/pages/schedule/ScheduleViewPage.jsx
 import React, { useMemo, useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -9,16 +10,21 @@ import KakaoMap from '../../components/map/KakaoMap';
 import useScheduleStore from '../../store/scheduleStore';
 import usePlanStore from '../../store/planStore';
 import { getSchedule, getPublicSchedule } from '../../api';
-import { message, Progress, Flex } from 'antd';
+import { message, Progress, Flex, Spin } from 'antd';
 
-const toNum = (v) => (typeof v === 'number' ? v : Number(v));
+const toNum = (v) => {
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isFinite(n) ? n : NaN;
+};
 
 const ScheduleViewPage = () => {
   const { scheduleId } = useParams();
+  const navigate = useNavigate();
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
-  const [isPublicView, setIsPublicView] = useState(false); // 공개 보기 모드인지 확인
+  const [isPublicView, setIsPublicView] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const detail = useScheduleStore((s) => s.detail);
   const setDetail = useScheduleStore((s) => s.setDetail);
@@ -28,39 +34,49 @@ const ScheduleViewPage = () => {
   const planBudget = usePlanStore((s) => s.budget ?? 0);
   const budget = detail?.budget ?? planBudget;
 
+  // 일정 불러오기
   useEffect(() => {
+    let mounted = true;
     (async () => {
-      if (String(detail?.scheduleId ?? detail?.id) === String(scheduleId))
-        return;
+      setLoading(true);
       try {
-        // 먼저 일반 API로 시도
         let res;
         try {
           res = await getSchedule(scheduleId);
+          if (!mounted) return;
           setIsPublicView(false);
         } catch (error) {
-          // 일반 API 실패시 공개 API로 시도
-          console.log('일반 API 실패, 공개 API로 시도:', error);
-          res = await getPublicSchedule(scheduleId);
-          setIsPublicView(true);
+          // 일반 API 실패 시 공개 API
+          try {
+            res = await getPublicSchedule(scheduleId);
+            if (!mounted) return;
+            setIsPublicView(true);
+          } catch (e2) {
+            throw e2;
+          }
         }
         setDetail(res);
       } catch (e) {
         console.error('[ScheduleViewPage] reload fail', e?.response?.data || e);
         message.error('일정 정보를 불러오지 못했어요.');
+      } finally {
+        if (mounted) setLoading(false);
       }
     })();
-  }, [scheduleId, detail?.scheduleId, detail?.id, setDetail]);
+    return () => {
+      mounted = false;
+    };
+  }, [scheduleId, setDetail]);
 
+  // 장소 인덱스 구성 (지도/마커용)
   useEffect(() => {
     if (!detail || !Array.isArray(detail?.scheduleItems)) return;
 
     const idx = {};
     detail.scheduleItems.forEach((it) => {
-      const key = String(it.contentId ?? '');
+      const key = String(it.contentId ?? it.tourId ?? '').trim();
       if (!key) return;
 
-      // ✅ 백엔드 latitude/longitude 우선 사용
       const lat = toNum(it.latitude ?? it.lat ?? it.mapY);
       const lng = toNum(it.longitude ?? it.lng ?? it.mapX);
 
@@ -77,12 +93,14 @@ const ScheduleViewPage = () => {
     setPlaceIndex(idx);
   }, [detail, setPlaceIndex]);
 
-  const days = getDays();
+  const days = getDays() || [];
 
+  // Day 인덱스 범위 보정
   useEffect(() => {
     if (selectedDayIndex >= days.length) setSelectedDayIndex(0);
   }, [days.length, selectedDayIndex]);
 
+  // 총 비용
   const totalCost = useMemo(() => {
     const getCost = (p) => Number(p?.cost ?? p?.price ?? p?.amount ?? 0) || 0;
     try {
@@ -102,18 +120,19 @@ const ScheduleViewPage = () => {
 
   const percentUsed = useMemo(() => {
     if (!budget || budget <= 0) return 0;
-    return Math.min(100, (totalCost / budget) * 100);
+    const pct = (totalCost / budget) * 100;
+    return Math.max(0, Math.min(100, Number(pct)));
   }, [budget, totalCost]);
 
-  // ✅ 수정된 편집 가능 여부
-  // → 로그인 상태(detail이 내 일정으로 조회됨) + editable = true인 경우만 편집 가능
-  // → 로그아웃(public view)이면 무조건 편집 불가
+  // 편집 가능 여부: 공개 보기 X + editable === true
   const canEdit = !isPublicView && detail?.editable === true;
 
+  // 선택된 Day의 마커 리스트
   const selectedMarkers = useMemo(() => {
     const d = days[selectedDayIndex];
     let list = d?.plans ?? [];
 
+    // fallback: scheduleItems에서 dayNumber 매칭
     if ((!list || list.length === 0) && Array.isArray(detail?.scheduleItems)) {
       list = detail.scheduleItems.filter(
         (it) => Number(it.dayNumber) === selectedDayIndex + 1
@@ -137,8 +156,9 @@ const ScheduleViewPage = () => {
     return markers;
   }, [days, detail, selectedDayIndex]);
 
+  // 경로 라인 (마커 순서대로)
   const path = useMemo(
-    () => selectedMarkers.map((m) => ({ lat: m.lat, lng: m.lng })),
+    () => selectedMarkers.map(({ lat, lng }) => ({ lat, lng })),
     [selectedMarkers]
   );
 
@@ -208,10 +228,13 @@ const ScheduleViewPage = () => {
 
         {/* Day 버튼 */}
         <div className="flex items-center gap-2 mb-4 mt-3">
-          {canEdit && (  
+          {canEdit && (
             <div className="flex-shrink-0">
-              <PrimaryButton className="px-3 py-1 text-sm whitespace-nowrap">
-                함께하는 일행
+              <PrimaryButton
+                className="px-3 py-1 text-sm whitespace-nowrap"
+                onClick={() => navigate(`/schedule/invite/${scheduleId}`)}
+              >
+                여행 초대하기
               </PrimaryButton>
             </div>
           )}
@@ -234,18 +257,28 @@ const ScheduleViewPage = () => {
           </div>
         </div>
 
-        {/* 지도 */}
-        <div className="w-full h-48 rounded-lg mb-6 overflow-hidden">
-          <KakaoMap
-            key={`${selectedDayIndex}-${selectedMarkers.length}`}
-            markers={selectedMarkers}
-            useCustomOverlay
-            drawPath
-            path={path}
-            fitToMarkers
-            fitPadding={60}
-          />
-        </div>
+        {/* 로딩/지도 */}
+        {loading ? (
+          <div className="w-full h-48 rounded-lg mb-6 flex items-center justify-center">
+            <Spin />
+          </div>
+        ) : selectedMarkers.length > 0 ? (
+          <div className="w-full h-48 rounded-lg mb-6 overflow-hidden">
+            <KakaoMap
+              key={`${selectedDayIndex}-${selectedMarkers.length}`}
+              markers={selectedMarkers}
+              useCustomOverlay
+              drawPath
+              path={path}
+              fitToMarkers
+              fitPadding={60}
+            />
+          </div>
+        ) : (
+          <div className="w-full h-48 rounded-lg mb-6 flex items-center justify-center bg-gray-50 text-gray-400 text-sm">
+            선택한 날짜에 표시할 장소가 없습니다.
+          </div>
+        )}
 
         {/* 선택한 날짜 일정 */}
         {days[selectedDayIndex] && (
@@ -253,7 +286,7 @@ const ScheduleViewPage = () => {
             key={selectedDayIndex}
             day={days[selectedDayIndex]}
             dayIndex={selectedDayIndex}
-            canEdit={canEdit} 
+            canEdit={canEdit}
           />
         )}
 

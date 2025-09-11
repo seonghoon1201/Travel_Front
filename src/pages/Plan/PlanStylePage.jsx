@@ -1,3 +1,4 @@
+// src/pages/Plan/PlanStylePage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DefaultLayout from '../../layouts/DefaultLayout';
@@ -7,23 +8,17 @@ import PrimaryButton from '../../components/common/PrimaryButton';
 import usePlanStore from '../../store/planStore';
 import { message } from 'antd';
 
-const companions = [
-  '혼자',
-  '친구와',
-  '연인과',
-  '배우자와',
-  '아이와',
-  '부모님과',
-  '가족과',
-];
-const travelStyles = [
-  '체험 · 액티비티',
-  '맛집 탐방',
-  '쇼핑',
-  '유적지 탐방',
-  '힐링 여행',
-];
+const companions = ['혼자', '친구와', '연인과', '배우자와', '아이와', '부모님과', '가족과'];
+const travelStyles = ['체험 · 액티비티', '맛집 탐방', '쇼핑', '유적지 탐방', '힐링 여행'];
 const transports = ['자동차', '비행기', '대중교통'];
+
+const STYLE_MAP = {
+  '체험 · 액티비티': 'Activity',
+  '맛집 탐방': 'Food',
+  '쇼핑': 'Shopping',
+  '유적지 탐방': 'Heritage',
+  '힐링 여행': 'Healing',
+};
 
 const PlanStylePage = () => {
   const navigate = useNavigate();
@@ -42,25 +37,16 @@ const PlanStylePage = () => {
   const setStyles = usePlanStore((s) => s.setStyles);
   const setTransport = usePlanStore((s) => s.setTransport);
   const setScheduleStyle = usePlanStore((s) => s.setScheduleStyle);
-  const setScheduleType = usePlanStore((s) => s.setScheduleType);
 
-  // ✅ UI 라벨(한글) → API enum(영문) 매핑 (예시)
-  const STYLE_MAP = {
-    '체험 · 액티비티': 'Activity',
-    '맛집 탐방': 'Food',
-    쇼핑: 'Shopping',
-    '유적지 탐방': 'Heritage',
-    '힐링 여행': 'Healing',
-  };
-
-  // ✅ 마운트 시 store 값 복원 (return 위, 컴포넌트 본문에 위치)
+  // 초기 복원
   useEffect(() => {
     if (companionFromStore) setSelectedCompanion(companionFromStore);
     if (Array.isArray(stylesFromStore) && stylesFromStore.length) {
       setSelectedStyles(stylesFromStore);
     }
     if (transportFromStore) setSelectedTransport(transportFromStore);
-  }, []); // 의도적으로 1회만 복원
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const toggleStyle = (style) => {
     setSelectedStyles((prev) =>
@@ -69,11 +55,7 @@ const PlanStylePage = () => {
   };
 
   const handleSubmit = () => {
-    if (
-      !selectedCompanion ||
-      !selectedTransport ||
-      selectedStyles.length === 0
-    ) {
+    if (!selectedCompanion || !selectedTransport || selectedStyles.length === 0) {
       message.warning('모든 항목을 선택해주세요.');
       return;
     }
@@ -82,9 +64,8 @@ const PlanStylePage = () => {
     setCompanion(selectedCompanion);
     setStyles(selectedStyles);
     setTransport(selectedTransport);
-    setScheduleType(selectedCompanion === '혼자' ? 'SOLO' : 'GROUP');
 
-    // ✅ scheduleStyle 단일값 저장 (첫 번째 선택 기준, 매핑 적용)
+    // scheduleStyle 단일값 저장 (첫 번째 선택 기준, 매핑 적용)
     const first = selectedStyles[0];
     const mapped = first ? STYLE_MAP[first] ?? first : '';
     setScheduleStyle(mapped);
@@ -118,9 +99,7 @@ const PlanStylePage = () => {
 
             {/* 여행 스타일 */}
             <div>
-              <p className="text-sm font-semibold text-gray-800 mb-3">
-                여행 스타일
-              </p>
+              <p className="text-sm font-semibold text-gray-800 mb-3">여행 스타일</p>
               <div className={gridResponsive}>
                 {travelStyles.map((style) => (
                   <CategoryButton
@@ -135,9 +114,7 @@ const PlanStylePage = () => {
 
             {/* 이동 수단 */}
             <div>
-              <p className="text-sm font-semibold text-gray-800 mb-3">
-                이동 수단
-              </p>
+              <p className="text-sm font-semibold text-gray-800 mb-3">이동 수단</p>
               <div className={gridResponsive}>
                 {transports.map((mode) => (
                   <CategoryButton
@@ -153,17 +130,13 @@ const PlanStylePage = () => {
         </div>
       </div>
 
-      {/* 하단 고정 버튼 바 (페이지 래퍼 밖에 두되, 폭은 w-full) */}
+      {/* 하단 고정 버튼 바 */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
         <div className="mx-auto w-full px-4 sm:px-6 md:px-8 py-3">
           <PrimaryButton
             onClick={handleSubmit}
             className="w-full"
-            disabled={
-              !selectedCompanion ||
-              !selectedTransport ||
-              selectedStyles.length === 0
-            }
+            disabled={!selectedCompanion || !selectedTransport || selectedStyles.length === 0}
           >
             완료
           </PrimaryButton>
