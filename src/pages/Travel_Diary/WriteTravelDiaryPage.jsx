@@ -161,7 +161,16 @@ const WriteTravelDiary = () => {
     setSelectedFiles(selectedFiles.filter((_, i) => i !== idx));
   };
 
-  // 향상된 제출 함수
+  const handleDaySelect = (dayIndex) => {
+  if (dayIndex === 'all') {
+    navigate(`/schedule/view/${scheduleInfo.scheduleId}`);
+  } else {
+    navigate(`/schedule/view/${scheduleInfo.scheduleId}?day=${dayIndex}`);
+  }
+  setShowDaySelector(false); 
+};
+
+  // 제출 함수
   const handleSubmit = async () => {
     if (!title.trim() || !content.trim()) {
       messageApi.error('제목과 내용을 입력해주세요.');
@@ -358,7 +367,7 @@ const WriteTravelDiary = () => {
         onClose={() => setShowDaySelector(false)}
         scheduleInfo={scheduleInfo}
         days={scheduleDays}
-        onDaySelect={() => {}}
+        onDaySelect={handleDaySelect}
       />
     </DefaultLayout>
   );
