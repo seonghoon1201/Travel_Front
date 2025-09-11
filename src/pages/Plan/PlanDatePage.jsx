@@ -1,17 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DatePicker, Input, Select, message } from 'antd';
 import 'antd/dist/reset.css';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import BackHeader from '../../components/header/BackHeader';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation  } from 'react-router-dom';
 import dayjs from 'dayjs';
 import usePlanStore from '../../store/planStore';
 
 const { RangePicker } = DatePicker;
 
 const PlanDatePage = () => {
+  const location = useLocation();
+  const { ldongRegnCd, ldongSignguCd } = location.state || {};
+
   const [dates, setDates] = useState(null);
+  const setLocationCodes  = usePlanStore((state) => state.setLocationCodes) || {};
+
+ useEffect(() => {
+
+    if (ldongRegnCd && ldongSignguCd) {
+      setLocationCodes([{ ldongRegnCd, ldongSignguCd }]);
+  } else {
+    message.warning('지역 정보가 부족합니다.');
+  }
+}, [ldongRegnCd, ldongSignguCd, setLocationCodes]);  
 
   // 오늘 00:00 기준 (이전 날짜 비활성화에 사용)
   const todayStart = dayjs().startOf('day');
