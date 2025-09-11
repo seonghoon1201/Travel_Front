@@ -21,10 +21,40 @@ const MyTravelSection = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const navigate = useNavigate();
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const data = await fetchMyTravel(accessToken);
       const list = Array.isArray(data) ? data : data?.schedules || [];
+
+      // 참여자 수/이미지 정제 포함한 병렬 가공
+      const enriched = await Promise.all(
+        list.map(async (trip) => {
+          // 기본 1명, API 응답 안전 처리
+          let companionCount = 1;
+          if (trip?.scheduleId) {
+            try {
+              const res = await getParticipantCount(trip.scheduleId);
+              companionCount = typeof res === 'number' ? res : res?.count ?? 1;
+            } catch (err) {
+              console.error(
+                `스케줄 참여자 수 불러오기 실패 (${trip.scheduleId}):`,
+                err
+              );
+            }
+          }
+
+          const safeImage =
+            (trip.regionImage && String(trip.regionImage).trim()) ||
+            (trip.imageUrl && String(trip.imageUrl).trim()) ||
+            '/default-travel.jpg';
+
+          return {
+            ...trip,
+            companionCount,
+            imageUrl: safeImage,
+          };
+        })
+      );
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -32,42 +62,16 @@ const MyTravelSection = () => {
       const upcoming = [];
       const past = [];
 
-      for (const trip of list) {
+      for (const trip of enriched) {
         const start = new Date(trip.startDate);
         start.setHours(0, 0, 0, 0);
-
-        // 새로운 API를 사용하여 스케줄 참여자 수 가져오기
-        let companionCount = 1;
-        if (trip.scheduleId) {
-        if (trip.scheduleId) {
-          try {
-            const res = await getParticipantCount(trip.scheduleId);
-            companionCount = res;
-          } catch (err) {
-            console.error(
-              `스케줄 참여자 수 불러오기 실패 (${trip.scheduleId}):`,
-              err
-            );
-          }
-        }
-
-        const safeImage =
-          (trip.regionImage && String(trip.regionImage).trim()) ||
-          (trip.imageUrl && String(trip.imageUrl).trim()) ||
-          '/default-travel.jpg';
-
-        const enrichedTrip = {
-          ...trip,
-          companionCount,
-          imageUrl: safeImage,
-        };
-
-        if (start >= today) {
-          upcoming.push(enrichedTrip);
-        } else {
-          past.push(enrichedTrip);
-        }
+        if (start >= today) upcoming.push(trip);
+        else past.push(trip);
       }
+
+      // 정렬: 다가오는(시작일 오름차순), 지난(시작일 내림차순)
+      upcoming.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+      past.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
 
       setUpcomingTrips(upcoming);
       setPastTrips(past);
@@ -75,11 +79,11 @@ const MyTravelSection = () => {
       console.error('내 여행 불러오기 실패:', error);
       messageApi.error('내 여행 목록을 불러오지 못했습니다.');
     }
-  };
+  }, [accessToken, messageApi]);
 
   useEffect(() => {
     if (accessToken) loadData();
-  }, [accessToken]);
+  }, [accessToken, loadData]);
 
   const handleClickTrip = useCallback(
     (scheduleId) => {
@@ -88,20 +92,17 @@ const MyTravelSection = () => {
     [navigate]
   );
 
-  //  삭제 버튼 눌렀을 때 모달 오픈
+  // 삭제 버튼 눌렀을 때 모달 오픈
   const handleDeleteTrip = useCallback((scheduleId) => {
     setDeleteTarget(scheduleId);
     setShowConfirm(true);
   }, []);
 
-  //  모달에서 "삭제" 눌렀을 때 실행
-  const confirmDeleteTrip = async () => {
+  // 모달에서 "삭제" 눌렀을 때 실행
+  const confirmDeleteTrip = useCallback(async () => {
     if (!deleteTarget) return;
     try {
-      // ✅ 토큰 같이 전달
-      await deleteSchedule(deleteTarget, accessToken);
-      // ✅ 토큰 같이 전달
-      await deleteSchedule(deleteTarget, accessToken);
+      await deleteSchedule(deleteTarget, accessToken); // ✅ 단 한 번만 호출
       await loadData();
       messageApi.success('일정이 삭제되었습니다.');
     } catch (error) {
@@ -111,7 +112,7 @@ const MyTravelSection = () => {
       setShowConfirm(false);
       setDeleteTarget(null);
     }
-  };
+  }, [deleteTarget, accessToken, loadData, messageApi]);
 
   return (
     <div className="px-4 pt-2 m-2 sm:px-6 md:px-8">
@@ -125,7 +126,7 @@ const MyTravelSection = () => {
       ) : (
         upcomingTrips.map((trip) => (
           <MyTravelItem
-            key={trip.scheduleId}
+            key={trip.scheduleId ?? `${trip.startDate}-${trip.scheduleName}`}
             scheduleId={trip.scheduleId}
             title={trip.scheduleName}
             dateRange={`${trip.startDate} ~ ${trip.endDate}`}
@@ -145,7 +146,7 @@ const MyTravelSection = () => {
       ) : (
         pastTrips.map((trip) => (
           <MyTravelItem
-            key={trip.scheduleId}
+            key={trip.scheduleId ?? `${trip.startDate}-${trip.scheduleName}`}
             scheduleId={trip.scheduleId}
             title={trip.scheduleName}
             dateRange={`${trip.startDate} ~ ${trip.endDate}`}
@@ -157,7 +158,7 @@ const MyTravelSection = () => {
         ))
       )}
 
-      {/*  삭제 확인 모달 */}
+      {/* 삭제 확인 모달 */}
       <ConfirmModal
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}
