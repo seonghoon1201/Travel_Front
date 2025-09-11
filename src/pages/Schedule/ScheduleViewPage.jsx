@@ -9,10 +9,13 @@ import EditModal from '../../components/schedule/EditModal';
 import KakaoMap from '../../components/map/KakaoMap';
 import useScheduleStore from '../../store/scheduleStore';
 import usePlanStore from '../../store/planStore';
-import { getSchedule } from '../../api';
+import { getSchedule, getPublicSchedule } from '../../api';
 import { message, Progress, Flex, Spin } from 'antd';
 
-const toNum = (v) => (typeof v === 'number' ? v : Number(v));
+const toNum = (v) => {
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isFinite(n) ? n : NaN;
+};
 
 const ScheduleViewPage = () => {
   const { scheduleId } = useParams();
@@ -20,6 +23,7 @@ const ScheduleViewPage = () => {
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+  const [isPublicView, setIsPublicView] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const detail = useScheduleStore((s) => s.detail);
@@ -30,35 +34,51 @@ const ScheduleViewPage = () => {
   const planBudget = usePlanStore((s) => s.budget ?? 0);
   const budget = detail?.budget ?? planBudget;
 
+  // 일정 불러오기
   useEffect(() => {
+    let mounted = true;
     (async () => {
+      setLoading(true);
       try {
-        if (String(detail?.scheduleId ?? detail?.id) === String(scheduleId)) {
-          setLoading(false);
-          return;
+        let res;
+        try {
+          res = await getSchedule(scheduleId);
+          if (!mounted) return;
+          setIsPublicView(false);
+        } catch (error) {
+          // 일반 API 실패 시 공개 API
+          try {
+            res = await getPublicSchedule(scheduleId);
+            if (!mounted) return;
+            setIsPublicView(true);
+          } catch (e2) {
+            throw e2;
+          }
         }
-        setLoading(true);
-        const res = await getSchedule(scheduleId);
         setDetail(res);
       } catch (e) {
         console.error('[ScheduleViewPage] reload fail', e?.response?.data || e);
         message.error('일정 정보를 불러오지 못했어요.');
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     })();
-  }, [scheduleId, detail?.scheduleId, detail?.id, setDetail]);
+    return () => {
+      mounted = false;
+    };
+  }, [scheduleId, setDetail]);
 
+  // 장소 인덱스 구성 (지도/마커용)
   useEffect(() => {
     if (!detail || !Array.isArray(detail?.scheduleItems)) return;
 
     const idx = {};
     detail.scheduleItems.forEach((it) => {
-      const key = String(it.contentId ?? '');
+      const key = String(it.contentId ?? it.tourId ?? '').trim();
       if (!key) return;
 
       const lat = toNum(it.latitude ?? it.lat ?? it.mapY);
-      const lng = toNum(it.longitude ?? it.mapX ?? it.lng);
+      const lng = toNum(it.longitude ?? it.lng ?? it.mapX);
 
       idx[key] = {
         name: it.title || it.name || key,
@@ -73,12 +93,14 @@ const ScheduleViewPage = () => {
     setPlaceIndex(idx);
   }, [detail, setPlaceIndex]);
 
-  const days = getDays();
+  const days = getDays() || [];
 
+  // Day 인덱스 범위 보정
   useEffect(() => {
     if (selectedDayIndex >= days.length) setSelectedDayIndex(0);
   }, [days.length, selectedDayIndex]);
 
+  // 총 비용
   const totalCost = useMemo(() => {
     const getCost = (p) => Number(p?.cost ?? p?.price ?? p?.amount ?? 0) || 0;
     try {
@@ -98,13 +120,19 @@ const ScheduleViewPage = () => {
 
   const percentUsed = useMemo(() => {
     if (!budget || budget <= 0) return 0;
-    return Math.min(100, (totalCost / budget) * 100);
+    const pct = (totalCost / budget) * 100;
+    return Math.max(0, Math.min(100, Number(pct)));
   }, [budget, totalCost]);
 
+  // 편집 가능 여부: 공개 보기 X + editable === true
+  const canEdit = !isPublicView && detail?.editable === true;
+
+  // 선택된 Day의 마커 리스트
   const selectedMarkers = useMemo(() => {
     const d = days[selectedDayIndex];
     let list = d?.plans ?? [];
 
+    // fallback: scheduleItems에서 dayNumber 매칭
     if ((!list || list.length === 0) && Array.isArray(detail?.scheduleItems)) {
       list = detail.scheduleItems.filter(
         (it) => Number(it.dayNumber) === selectedDayIndex + 1
@@ -128,13 +156,17 @@ const ScheduleViewPage = () => {
     return markers;
   }, [days, detail, selectedDayIndex]);
 
+  // 경로 라인 (마커 순서대로)
+  const path = useMemo(
+    () => selectedMarkers.map(({ lat, lng }) => ({ lat, lng })),
+    [selectedMarkers]
+  );
+
   const title = detail?.scheduleName || '여행 일정';
   const dateRange =
     detail?.startDate && detail?.endDate
       ? `${detail.startDate} ~ ${detail.endDate}`
       : '';
-
-  const isMapReady = !loading && selectedMarkers.length > 0;
 
   return (
     <DefaultLayout>
@@ -143,16 +175,27 @@ const ScheduleViewPage = () => {
         {/* Header */}
         <div className="flex justify-between items-center mb-1 px-1">
           <h1 className="text-xl font-bold">{title}</h1>
-          <div className="flex items-center gap-3">
+          {canEdit ? (
             <button
               onClick={() => setShowEditModal(true)}
-              className="text-sm text-gray-400"
+              className="text-sm text-gray-400 hover:text-gray-600"
             >
               편집
             </button>
-          </div>
+          ) : (
+            <span className="text-xs text-red-500">편집 권한이 없습니다</span>
+          )}
         </div>
         <p className="text-sm text-gray-500 mt-1">{dateRange}</p>
+
+        {/* 공개 보기 뱃지 */}
+        {isPublicView && (
+          <div className="mt-2 mb-1">
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+              공개 일정 (읽기 전용)
+            </span>
+          </div>
+        )}
 
         {/* 예산 진행률 */}
         <div className="mt-3">
@@ -185,14 +228,16 @@ const ScheduleViewPage = () => {
 
         {/* Day 버튼 */}
         <div className="flex items-center gap-2 mb-4 mt-3">
-          <div className="flex-shrink-0">
-            <PrimaryButton
-              className="px-3 py-1 text-sm whitespace-nowrap"
-              onClick={() => navigate(`/schedule/invite/${scheduleId}`)}
-            >
-              여행 초대하기
-            </PrimaryButton>
-          </div>
+          {canEdit && (
+            <div className="flex-shrink-0">
+              <PrimaryButton
+                className="px-3 py-1 text-sm whitespace-nowrap"
+                onClick={() => navigate(`/schedule/invite/${scheduleId}`)}
+              >
+                여행 초대하기
+              </PrimaryButton>
+            </div>
+          )}
           <div className="flex-1 overflow-x-auto scrollbar-hide">
             <div className="flex gap-2 w-max">
               {days.map((_, idx) => (
@@ -212,23 +257,28 @@ const ScheduleViewPage = () => {
           </div>
         </div>
 
-        {/* 지도 */}
-        <div className="w-full h-48 rounded-lg mb-6 overflow-hidden bg-gray-50 flex items-center justify-center">
-          {isMapReady ? (
+        {/* 로딩/지도 */}
+        {loading ? (
+          <div className="w-full h-48 rounded-lg mb-6 flex items-center justify-center">
+            <Spin />
+          </div>
+        ) : selectedMarkers.length > 0 ? (
+          <div className="w-full h-48 rounded-lg mb-6 overflow-hidden">
             <KakaoMap
               key={`${selectedDayIndex}-${selectedMarkers.length}`}
               markers={selectedMarkers}
               useCustomOverlay
+              drawPath
+              path={path}
               fitToMarkers
               fitPadding={60}
-              className="w-full h-48 rounded-lg"
             />
-          ) : (
-            <Spin tip="지도를 준비 중..." size="large" className="w-full">
-              <div className="w-full h-48 rounded-lg mb-6 bg-gray-50" />
-            </Spin>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="w-full h-48 rounded-lg mb-6 flex items-center justify-center bg-gray-50 text-gray-400 text-sm">
+            선택한 날짜에 표시할 장소가 없습니다.
+          </div>
+        )}
 
         {/* 선택한 날짜 일정 */}
         {days[selectedDayIndex] && (
@@ -236,11 +286,14 @@ const ScheduleViewPage = () => {
             key={selectedDayIndex}
             day={days[selectedDayIndex]}
             dayIndex={selectedDayIndex}
+            canEdit={canEdit}
           />
         )}
 
         {/* 편집 모달 */}
-        {showEditModal && <EditModal onClose={() => setShowEditModal(false)} />}
+        {showEditModal && canEdit && (
+          <EditModal onClose={() => setShowEditModal(false)} />
+        )}
       </div>
     </DefaultLayout>
   );

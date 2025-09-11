@@ -1,4 +1,3 @@
-// src/components/schedule/DayScheduleSection.jsx
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
@@ -16,7 +15,7 @@ import { getSchedule } from '../../api';
 
 const toNum = (v) => (typeof v === 'number' ? v : Number(v));
 
-const DayScheduleSection = ({ day, dayIndex }) => {
+const DayScheduleSection = ({ day, dayIndex, canEdit }) => {
   const scheduleStore = useScheduleStore();
   const detail = scheduleStore.detail;
   const patchItems = useScheduleStore((s) => s.patchItems);
@@ -28,7 +27,6 @@ const DayScheduleSection = ({ day, dayIndex }) => {
     [detail]
   );
 
-  // ✅ 서버 0-베이스 여부
   const isZeroBased = useMemo(() => {
     const items = Array.isArray(detail?.scheduleItems)
       ? detail.scheduleItems
@@ -53,7 +51,8 @@ const DayScheduleSection = ({ day, dayIndex }) => {
   useEffect(() => {
     setPlans(day.plans);
     setCheckedMap({});
-  }, [dayIndex, day.plans]);
+    if (!canEdit) setIsEditing(false); // 권한 없으면 편집모드 끔
+  }, [dayIndex, day.plans, canEdit]);
 
   const toggleCheck = (planId) => {
     setCheckedMap((prev) => ({ ...prev, [planId]: !prev[planId] }));
@@ -62,15 +61,15 @@ const DayScheduleSection = ({ day, dayIndex }) => {
   const goPlaceDetail = (plan) => {
     const cid = String(plan?.contentId || '').trim();
     if (!cid)
-      return message.warning(
-        'contentId가 없어 상세 페이지로 이동할 수 없어요.'
-      );
+      return message.warning('contentId가 없어 상세 페이지로 이동할 수 없어요.');
     navigate(`/place/detail/${encodeURIComponent(cid)}`);
   };
 
-  // === 드래그 종료: 순서 저장 ===
+  // === 드래그 종료 ===
   const handleDragEnd = async (result) => {
     if (!result.destination) return;
+    if (!canEdit) return; // 권한 없으면 막기
+
     const newPlans = Array.from(plans);
     const [moved] = newPlans.splice(result.source.index, 1);
     newPlans.splice(result.destination.index, 0, moved);
@@ -78,7 +77,6 @@ const DayScheduleSection = ({ day, dayIndex }) => {
 
     try {
       const serverDay = isZeroBased ? dayIndex : dayIndex + 1;
-
       const batched = [];
       const patches = [];
       newPlans.forEach((p, idx) => {
@@ -104,7 +102,6 @@ const DayScheduleSection = ({ day, dayIndex }) => {
       });
       if (batched.length) await Promise.all(batched);
       if (patches.length) patchItems(patches);
-
       message.success('순서를 저장했어요.');
     } catch (e) {
       console.error('[reorder] fail', e?.response?.data || e);
@@ -113,9 +110,9 @@ const DayScheduleSection = ({ day, dayIndex }) => {
     }
   };
 
-  // === 편집(메모/가격) ===
+  // === 편집 ===
   const openEdit = (plan) => {
-    if (!isEditing) return;
+    if (!canEdit || !isEditing) return;
     setEditTarget({
       ...plan,
       cost: Number(plan.cost ?? 0),
@@ -125,6 +122,7 @@ const DayScheduleSection = ({ day, dayIndex }) => {
   };
 
   const saveEdit = async () => {
+    if (!canEdit) return;
     const p = editTarget;
     try {
       const serverDay = isZeroBased ? dayIndex : dayIndex + 1;
@@ -160,6 +158,7 @@ const DayScheduleSection = ({ day, dayIndex }) => {
 
   // === 삭제 ===
   const doDelete = async () => {
+    if (!canEdit) return;
     const ids = Object.entries(checkedMap)
       .filter(([, v]) => v)
       .map(([k]) => k);
@@ -167,7 +166,6 @@ const DayScheduleSection = ({ day, dayIndex }) => {
 
     try {
       await Promise.all(ids.map((id) => deleteScheduleItem(scheduleId, id)));
-
       const rest = plans.filter((p) => !ids.includes(String(p.id)));
       setPlans(rest);
 
@@ -203,16 +201,17 @@ const DayScheduleSection = ({ day, dayIndex }) => {
     }
   };
 
-  // === 추가(페이지 이동) ===
+  // === 추가 (페이지 이동) ===
   const openAdd = () => {
+    if (!canEdit) return;
     const scheduleIdStr = String(detail?.scheduleId ?? detail?.id ?? '');
     navigate('/plan/add', {
       state: { scheduleId: scheduleIdStr, dayNumber: dayIndex + 1 },
     });
   };
 
-  // === (직접 contentId 입력해서 추가하는 모달은 남겨두되 서버 재조회로 동기화) ===
   const saveAdd = async () => {
+    if (!canEdit) return;
     try {
       const serverDay = isZeroBased ? dayIndex : dayIndex + 1;
       const order = plans.length + (isZeroBased ? 0 : 1);
@@ -243,25 +242,26 @@ const DayScheduleSection = ({ day, dayIndex }) => {
       <div className="flex items-center mb-2">
         <p className="text-sm font-medium">{day.date}</p>
         <div className="ml-auto flex items-center gap-3">
-          {isEditing && (
+          {canEdit && isEditing && (
             <button
               className="text-sm text-primary flex items-center gap-1"
               onClick={openAdd}
-              title="일정 추가"
             >
               <Plus className="w-4 h-4" /> 추가
             </button>
           )}
-          <button
-            className="text-sm text-[#9CA3AF]"
-            onClick={() => setIsEditing((prev) => !prev)}
-          >
-            {isEditing ? '완료' : '편집'}
-          </button>
+          {canEdit && (
+            <button
+              className="text-sm text-[#9CA3AF]"
+              onClick={() => setIsEditing((prev) => !prev)}
+            >
+              {isEditing ? '완료' : '편집'}
+            </button>
+          )}
         </div>
       </div>
 
-      <DragDropContext onDragEnd={handleDragEnd}>
+      <DragDropContext onDragEnd={canEdit ? handleDragEnd : () => {}}>
         <Droppable droppableId={`day-${dayIndex}`}>
           {(provided) => (
             <div
@@ -273,7 +273,7 @@ const DayScheduleSection = ({ day, dayIndex }) => {
                 const normalizedPlan = {
                   ...plan,
                   contentId: String(plan?.contentId ?? plan?.id ?? ''),
-                  dayNumber: dayIndex + 1, // ✅ PlanCard에서 업데이트에 사용
+                  dayNumber: dayIndex + 1,
                   lat: toNum(plan?.lat),
                   lng: toNum(plan?.lng),
                   category: (plan?.tema ?? plan?.category ?? '').toString(),
@@ -289,35 +289,32 @@ const DayScheduleSection = ({ day, dayIndex }) => {
                     key={String(normalizedPlan.id)}
                     draggableId={String(normalizedPlan.id)}
                     index={idx}
+                    isDragDisabled={!canEdit}
                   >
                     {(provided2) => (
                       <div
                         ref={provided2.innerRef}
-                        {...provided2.draggableProps}
+                        {...(canEdit ? provided2.draggableProps : {})}
                         className="flex items-center gap-2 w-full"
                         onClick={() =>
-                          isEditing ? openEdit(normalizedPlan) : null
+                          canEdit && isEditing ? openEdit(normalizedPlan) : null
                         }
                       >
-                        {isEditing ? (
-                          <div className="w-full">
-                            <EditPlanCard
-                              plan={normalizedPlan}
-                              checked={!!checkedMap[normalizedPlan.id]}
-                              onCheck={() => toggleCheck(normalizedPlan.id)}
-                              dragHandleProps={provided2.dragHandleProps}
-                            />
-                          </div>
+                        {canEdit && isEditing ? (
+                          <EditPlanCard
+                            plan={normalizedPlan}
+                            checked={!!checkedMap[normalizedPlan.id]}
+                            onCheck={() => toggleCheck(normalizedPlan.id)}
+                            dragHandleProps={provided2.dragHandleProps}
+                          />
                         ) : (
-                          <div
-                            {...provided2.dragHandleProps}
-                            className="w-full"
-                          >
+                          <div {...(canEdit ? provided2.dragHandleProps : {})} className="w-full">
                             <PlanCard
                               plan={normalizedPlan}
                               index={idx}
                               isLast={idx === plans.length - 1}
                               onDetail={goPlaceDetail}
+                              canEdit={canEdit}
                             />
                           </div>
                         )}
@@ -332,7 +329,7 @@ const DayScheduleSection = ({ day, dayIndex }) => {
         </Droppable>
       </DragDropContext>
 
-      {isEditing && (
+      {canEdit && isEditing && (
         <div className="mt-4">
           <button
             onClick={doDelete}
@@ -345,27 +342,75 @@ const DayScheduleSection = ({ day, dayIndex }) => {
       )}
 
       {/* 수정 모달 */}
-      <Modal
-        open={editModalOpen}
-        onCancel={() => setEditModalOpen(false)}
-        onOk={saveEdit}
-        okText="수정"
-        cancelText="닫기"
-        title="일정 수정"
-        okButtonProps={{
-          className: 'bg-blue-500 hover:bg-blue-600 text-white',
-          style: { borderColor: 'transparent' },
-        }}
-        cancelButtonProps={{ className: 'text-gray-600' }}
-      >
-        {editTarget && (
+      {canEdit && (
+        <Modal
+          open={editModalOpen}
+          onCancel={() => setEditModalOpen(false)}
+          onOk={saveEdit}
+          okText="수정"
+          cancelText="닫기"
+          title="일정 수정"
+          okButtonProps={{
+            className: 'bg-blue-500 hover:bg-blue-600 text-white',
+            style: { borderColor: 'transparent' },
+          }}
+          cancelButtonProps={{ className: 'text-gray-600' }}
+        >
+          {editTarget && (
+            <div className="space-y-3">
+              <div>
+                <div className="text-xs text-gray-500">메모</div>
+                <Input
+                  value={editTarget.memo}
+                  onChange={(e) =>
+                    setEditTarget((p) => ({ ...p, memo: e.target.value }))
+                  }
+                  placeholder="메모를 입력하세요"
+                />
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">가격(원)</div>
+                <InputNumber
+                  className="w-full"
+                  min={0}
+                  value={Number(editTarget.cost || 0)}
+                  onChange={(v) =>
+                    setEditTarget((p) => ({ ...p, cost: Number(v || 0) }))
+                  }
+                />
+              </div>
+            </div>
+          )}
+        </Modal>
+      )}
+
+      {/* 추가 모달 */}
+      {canEdit && (
+        <Modal
+          open={addModalOpen}
+          onCancel={() => setAddModalOpen(false)}
+          onOk={saveAdd}
+          okText="추가"
+          cancelText="닫기"
+          title="스케줄 추가"
+        >
           <div className="space-y-3">
+            <div>
+              <div className="text-xs text-gray-500">contentId</div>
+              <Input
+                value={addForm.contentId}
+                onChange={(e) =>
+                  setAddForm((f) => ({ ...f, contentId: e.target.value }))
+                }
+                placeholder="예: 126508"
+              />
+            </div>
             <div>
               <div className="text-xs text-gray-500">메모</div>
               <Input
-                value={editTarget.memo}
+                value={addForm.memo}
                 onChange={(e) =>
-                  setEditTarget((p) => ({ ...p, memo: e.target.value }))
+                  setAddForm((f) => ({ ...f, memo: e.target.value }))
                 }
                 placeholder="메모를 입력하세요"
               />
@@ -375,59 +420,15 @@ const DayScheduleSection = ({ day, dayIndex }) => {
               <InputNumber
                 className="w-full"
                 min={0}
-                value={Number(editTarget.cost || 0)}
+                value={Number(addForm.cost || 0)}
                 onChange={(v) =>
-                  setEditTarget((p) => ({ ...p, cost: Number(v || 0) }))
+                  setAddForm((f) => ({ ...f, cost: Number(v || 0) }))
                 }
               />
             </div>
           </div>
-        )}
-      </Modal>
-
-      {/* 추가 모달 */}
-      <Modal
-        open={addModalOpen}
-        onCancel={() => setAddModalOpen(false)}
-        onOk={saveAdd}
-        okText="추가"
-        cancelText="닫기"
-        title="스케줄 추가"
-      >
-        <div className="space-y-3">
-          <div>
-            <div className="text-xs text-gray-500">contentId</div>
-            <Input
-              value={addForm.contentId}
-              onChange={(e) =>
-                setAddForm((f) => ({ ...f, contentId: e.target.value }))
-              }
-              placeholder="예: 126508"
-            />
-          </div>
-          <div>
-            <div className="text-xs text-gray-500">메모</div>
-            <Input
-              value={addForm.memo}
-              onChange={(e) =>
-                setAddForm((f) => ({ ...f, memo: e.target.value }))
-              }
-              placeholder="메모를 입력하세요"
-            />
-          </div>
-          <div>
-            <div className="text-xs text-gray-500">가격(원)</div>
-            <InputNumber
-              className="w-full"
-              min={0}
-              value={Number(addForm.cost || 0)}
-              onChange={(v) =>
-                setAddForm((f) => ({ ...f, cost: Number(v || 0) }))
-              }
-            />
-          </div>
-        </div>
-      </Modal>
+        </Modal>
+      )}
     </div>
   );
 };

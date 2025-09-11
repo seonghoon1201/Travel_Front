@@ -19,6 +19,7 @@ import usePlanStore from '../../store/planStore';
 import { loadKakaoMap } from '../../utils/kakaoMapLoader';
 import { getPlacesByRegionTheme, getRegions } from '../../api';
 import useCartStore from '../../store/cartStore';
+import { toggleFavorite as toggleFavoriteApi } from '../../api/favorite/toggleFavorite';
 
 const CATEGORIES = ['관광', '숙소', '맛집', '축제', '레저'];
 const CATEGORY_TO_CONTENTTYPEID = {
@@ -653,6 +654,20 @@ const PlanCartPage = () => {
                 !!item?.location &&
                 typeof item.location.lat === 'number' &&
                 typeof item.location.lng === 'number';
+                const handleFavorite = async () => {
+                  try {
+                    const res = await toggleFavoriteApi(String(item.contentId));
+                    if (res.favorite) {
+                      message.success('즐겨찾기에 추가되었습니다!');
+                    } else {
+                      message.info('즐겨찾기에서 제거되었습니다.');
+                    }
+                    toggleFavorite(String(item.contentId));
+                  } catch (err) {
+                    console.error('[favorite error]', err);
+                    message.error('즐겨찾기 처리에 실패했습니다.');
+                  }
+                };
 
               return (
                 <div
@@ -689,9 +704,7 @@ const PlanCartPage = () => {
                       )}
                       <FavoriteButton
                         isActive={isFavorite(String(item.contentId))}
-                        toggleFavorite={() =>
-                          toggleFavorite(String(item.contentId))
-                        }
+                        toggleFavorite={handleFavorite}
                       />
                     </div>
                     <div>
