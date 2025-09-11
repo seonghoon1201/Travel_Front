@@ -4,7 +4,7 @@ import 'antd/dist/reset.css';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import BackHeader from '../../components/header/BackHeader';
-import { useNavigate, useLocation  } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import dayjs from 'dayjs';
 import usePlanStore from '../../store/planStore';
 
@@ -12,19 +12,9 @@ const { RangePicker } = DatePicker;
 
 const PlanDatePage = () => {
   const location = useLocation();
-  const { ldongRegnCd, ldongSignguCd } = location.state || {};
+  const { ldongRegnCd, ldongSignguCd, city } = location.state || {};
 
   const [dates, setDates] = useState(null);
-  const setLocationCodes  = usePlanStore((state) => state.setLocationCodes) || {};
-
- useEffect(() => {
-
-    if (ldongRegnCd && ldongSignguCd) {
-      setLocationCodes([{ ldongRegnCd, ldongSignguCd }]);
-  } else {
-    message.warning('지역 정보가 부족합니다.');
-  }
-}, [ldongRegnCd, ldongSignguCd, setLocationCodes]);  
 
   // 오늘 00:00 기준 (이전 날짜 비활성화에 사용)
   const todayStart = dayjs().startOf('day');
@@ -50,6 +40,20 @@ const PlanDatePage = () => {
   const setDepartureTimeInStore = usePlanStore(
     (state) => state.setDepartureTime
   );
+  const setLocationCodes = usePlanStore((state) => state.setLocationCodes);
+  const setSelectedRegionMeta = usePlanStore(
+    (state) => state.setSelectedRegionMeta
+  );
+
+  // ✅ state에서 받은 지역 정보 planStore에 저장
+  useEffect(() => {
+    if (ldongRegnCd && ldongSignguCd) {
+      setLocationCodes([{ ldongRegnCd, ldongSignguCd }]);
+    }
+    if (city) {
+      setSelectedRegionMeta({ name: city, imageUrl: '' });
+    }
+  }, [ldongRegnCd, ldongSignguCd, city, setLocationCodes, setSelectedRegionMeta]);
 
   // 왼쪽 패널이 현재 달보다 이전으로 넘어가지 않도록
   const canGoPrevMonth = pickerValue?.[0]?.isAfter(todayStart, 'month');
@@ -60,7 +64,7 @@ const PlanDatePage = () => {
 
     const [start, end] = dates;
 
-    // 안전장치: 혹시라도 과거 날짜가 들어오면 막기
+    // 안전장치: 과거 날짜 막기
     if (start.isBefore(todayStart, 'day') || end.isBefore(todayStart, 'day')) {
       return message.warning('오늘 이전 날짜는 선택할 수 없습니다.');
     }
@@ -75,6 +79,7 @@ const PlanDatePage = () => {
     if (ampm === 'AM' && h === 12) h = 0;
     const timeString = `${String(h).padStart(2, '0')}:${minute}`;
 
+    // ✅ store에 날짜, 장소, 출발시간 저장
     setDatesInStore({
       start: dayjs(dates[0]).format('YYYY-MM-DD'),
       end: dayjs(dates[1]).format('YYYY-MM-DD'),
@@ -99,14 +104,11 @@ const PlanDatePage = () => {
             disabledDate={(current) =>
               !!current && current.startOf('day').isBefore(todayStart)
             }
-            /* antd v5: 팝업 클래스 */
             classNames={{ popup: 'one-month-range' }}
-            /* 패널 표시 월 제어 (항상 왼쪽 패널 기준으로 본문/라벨 맞춤) */
             pickerValue={pickerValue}
             onPickerValueChange={(next) => {
               if (Array.isArray(next) && next[0]) setPickerValue(next);
             }}
-            /* 열릴 때마다 현재 달로 강제 리셋 */
             open={open}
             onOpenChange={(isOpen) => {
               setOpen(isOpen);
@@ -118,7 +120,6 @@ const PlanDatePage = () => {
                 ]);
               }
             }}
-            /* 커스텀 헤더: 라벨은 '왼쪽 패널(=보이는 달)' 기준 */
             panelRender={(panelNode) => (
               <div>
                 <div className="flex items-center justify-between px-3 py-2">
@@ -161,7 +162,6 @@ const PlanDatePage = () => {
                 {panelNode}
               </div>
             )}
-            /* 팝업 위치 안정화(선택) */
             getPopupContainer={(trigger) => trigger.parentNode}
           />
 

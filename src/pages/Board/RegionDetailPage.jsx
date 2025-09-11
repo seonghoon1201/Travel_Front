@@ -14,57 +14,47 @@ import { getPlacesByRegion } from '../../api/place/getPlacesByRegion';
 import { getHotRegions } from '../../api/region/getHotRegions';
 import useUserStore from '../../store/userStore';
 
-function normalizeCode(v) {
-  if (v == null) return '';
-  const s = String(v).trim();
-  if (!s || s.toLowerCase() === 'string') return '';
-  return s;
-}
-
 const RegionDetailPage = () => {
   const navigate = useNavigate();
-  const { city } = useParams();
-  const decodedCity = city ? decodeURIComponent(city) : '';
+  const { city: cityParam } = useParams();
   const accessToken = useUserStore((s) => s.accessToken);
   const [messageApi, contextHolder] = message.useMessage();
 
   const locationHook = useLocation();
   const state = locationHook.state || {};
-  const searchParams = new URLSearchParams(locationHook.search);
 
-  // 1) 초기엔 state / querystring 에서 가능한 값 사용
-  const [ldongRegnCd, setLdongRegnCd] = useState(
-    normalizeCode(
-      state.ldongRegnCd ??
-        state.lDongRegnCd ??
-        searchParams.get('ldongRegnCd') ??
-        searchParams.get('lDongRegnCd') ??
-        ''
-    )
-  );
-  const [ldongSignguCd, setLdongSignguCd] = useState(
-    normalizeCode(
-      state.ldongSignguCd ??
-        state.lDongSignguCd ??
-        searchParams.get('ldongSignguCd') ??
-        searchParams.get('lDongSignguCd') ??
-        ''
-    )
-  );
+  // ✅ state.city 있으면 그걸 우선, 없으면 URL에서 받은 cityParam 사용
+  const decodedCity = state.city
+    ? decodeURIComponent(state.city)
+    : cityParam
+    ? decodeURIComponent(cityParam)
+    : '';
+
+  const ldongRegnCd =
+    state.ldongRegnCd ??
+    state.lDongRegnCd ??
+    new URLSearchParams(locationHook.search).get('ldongRegnCd') ??
+    new URLSearchParams(locationHook.search).get('lDongRegnCd') ??
+    '';
+
+  const ldongSignguCd =
+    state.ldongSignguCd ??
+    state.lDongSignguCd ??
+    new URLSearchParams(locationHook.search).get('ldongSignguCd') ??
+    new URLSearchParams(locationHook.search).get('lDongSignguCd') ??
+    '';
 
   const [regionInfo, setRegionInfo] = useState(null);
-
   const [weather, setWeather] = useState(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
-
   const [places, setPlaces] = useState([]);
+
   const [page, setPage] = useState(0);
   const size = 20;
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const idSetRef = useRef(new Set());
 
-  // 일정 만들기
   const handleCreateSchedule = () => {
     if (!accessToken) {
       messageApi.warning(
@@ -76,55 +66,50 @@ const RegionDetailPage = () => {
       return;
     }
 
-    // 2) 버튼 시점에 최종 보강: state 없으면 regionInfo 사용
-    const effRegn = ldongRegnCd || normalizeCode(regionInfo?.ldongRegnCd);
-    const effSign = ldongSignguCd || normalizeCode(regionInfo?.ldongSignguCd);
-
-    if (!effRegn || !effSign) {
+    if (!ldongRegnCd || !ldongSignguCd) {
       messageApi.warning('지역 정보가 부족합니다.');
       return;
     }
 
     navigate('/plan/date', {
-      state: { ldongRegnCd: effRegn, ldongSignguCd: effSign },
+      state: { ldongRegnCd, ldongSignguCd, city: decodedCity },
     });
   };
 
-  // 핫플 정보 로드 + 코드값 보강(fallback)
+  // 🔹 지역 요약 불러오기
   useEffect(() => {
     const loadRegionInfo = async () => {
-      if (!decodedCity) return;
       try {
         const res = await getHotRegions(100);
         if (res.success && Array.isArray(res.data)) {
           const found = res.data.find((r) => r.regionName === decodedCity);
-          if (found) {
-            setRegionInfo(found);
-
-            // 3) state/쿼리에 없을 때만 핫플 코드로 채움
-            if (!ldongRegnCd) setLdongRegnCd(normalizeCode(found.ldongRegnCd));
-            if (!ldongSignguCd) setLdongSignguCd(normalizeCode(found.ldongSignguCd));
-          }
+          if (found) setRegionInfo(found);
         }
       } catch (e) {
         console.error('지역 요약 불러오기 실패:', e);
       }
     };
 
-    loadRegionInfo();
-    // ldongRegnCd/ldongSignguCd는 보강 여부 판별에만 사용
+    if (decodedCity) {
+      loadRegionInfo();
+    }
   }, [decodedCity]);
 
-  // 날씨
+  // 🔹 날씨 불러오기
   const fetchWeather = useCallback(async () => {
     if (!decodedCity) return;
+
     try {
       setWeatherLoading(true);
       const cleanCityName = decodedCity.replace(/(시|군|구)$/, '');
       const response = await getWeather(cleanCityName);
-      if (response.success && response.data) setWeather(response.data);
-      else setWeather(null);
-    } catch {
+
+      if (response.success && response.data) {
+        setWeather(response.data);
+      } else {
+        setWeather(null);
+      }
+    } catch (error) {
       setWeather(null);
     } finally {
       setWeatherLoading(false);
@@ -132,10 +117,12 @@ const RegionDetailPage = () => {
   }, [decodedCity]);
 
   useEffect(() => {
-    if (decodedCity) fetchWeather();
+    if (decodedCity) {
+      fetchWeather();
+    }
   }, [decodedCity, fetchWeather]);
 
-  // 코드/도시 바뀌면 리스트 초기화
+  // 🔹 즐길거리 초기화
   useEffect(() => {
     setPlaces([]);
     setPage(0);
@@ -143,7 +130,7 @@ const RegionDetailPage = () => {
     idSetRef.current.clear();
   }, [decodedCity, ldongRegnCd, ldongSignguCd]);
 
-  // 장소 페이징
+  // 🔹 즐길거리 가져오기
   const fetchPage = useCallback(
     async (pageToLoad) => {
       if (!ldongRegnCd || !ldongSignguCd) return;
@@ -151,12 +138,15 @@ const RegionDetailPage = () => {
 
       try {
         setLoading(true);
-        const res = await getPlacesByRegion({
+
+        const apiParams = {
           ldongRegnCd: String(ldongRegnCd),
           ldongSignguCd: String(ldongSignguCd),
           page: pageToLoad,
           size,
-        });
+        };
+
+        const res = await getPlacesByRegion(apiParams);
 
         if (res.success && Array.isArray(res.data?.content)) {
           const batch = res.data.content;
@@ -201,7 +191,6 @@ const RegionDetailPage = () => {
     [ldongRegnCd, ldongSignguCd, size, loading]
   );
 
-  // 첫 페이지 로드
   useEffect(() => {
     if (decodedCity && ldongRegnCd && ldongSignguCd) {
       fetchPage(0);
@@ -212,8 +201,11 @@ const RegionDetailPage = () => {
 
   const handleLoadMore = () => {
     if (!loading && hasMore) {
-      const nextPage = page + 1;
-      fetchPage(nextPage);
+      setPage((prev) => {
+        const nextPage = prev + 1;
+        fetchPage(nextPage);
+        return nextPage;
+      });
     }
   };
 
@@ -270,7 +262,10 @@ const RegionDetailPage = () => {
             ) : (
               <div className="flex items-center justify-between px-4 py-3 bg-white rounded-lg shadow">
                 <p className="text-sm text-gray-400">날씨 정보를 불러올 수 없습니다.</p>
-                <button onClick={fetchWeather} className="text-blue-500 text-sm hover:underline">
+                <button
+                  onClick={fetchWeather}
+                  className="text-blue-500 text-sm hover:underline"
+                >
                   다시 시도
                 </button>
               </div>
@@ -284,7 +279,17 @@ const RegionDetailPage = () => {
               {places.length > 0 ? (
                 <>
                   {places.map((p) => (
-                    <PlaceList key={p.contentId} {...p} />
+                    <PlaceList
+                      key={p.contentId}
+                      contentId={p.contentId}
+                      destination={p.destination}
+                      category={p.category}
+                      location={p.location}
+                      opentime={p.opentime}
+                      closetime={p.closetime}
+                      tel={p.tel}
+                      imageUrl={p.imageUrl}
+                    />
                   ))}
                   <div className="pt-2 pb-[5rem] text-center">
                     {hasMore ? (
