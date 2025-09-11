@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -15,6 +15,7 @@ const toNum = (v) => (typeof v === 'number' ? v : Number(v));
 
 const ScheduleViewPage = () => {
   const { scheduleId } = useParams();
+  const navigate = useNavigate();
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
@@ -208,10 +209,13 @@ const ScheduleViewPage = () => {
 
         {/* Day 버튼 */}
         <div className="flex items-center gap-2 mb-4 mt-3">
-          {canEdit && (  
+          {canEdit && (
             <div className="flex-shrink-0">
-              <PrimaryButton className="px-3 py-1 text-sm whitespace-nowrap">
-                함께하는 일행
+              <PrimaryButton
+                className="px-3 py-1 text-sm whitespace-nowrap"
+                onClick={() => navigate(`/schedule/invite/${scheduleId}`)}
+              >
+                초대하기
               </PrimaryButton>
             </div>
           )}
@@ -253,7 +257,7 @@ const ScheduleViewPage = () => {
             key={selectedDayIndex}
             day={days[selectedDayIndex]}
             dayIndex={selectedDayIndex}
-            canEdit={canEdit} 
+            canEdit={canEdit}
           />
         )}
 
