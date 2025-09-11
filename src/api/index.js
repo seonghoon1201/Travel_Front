@@ -13,7 +13,7 @@ export { getKakaoLoginUrl, kakaoCallback } from './auth/kakao';
 
 // 게시판
 export {  getDiary,getDiaryDetail, updateDiary, writeDiary} from './board/diary';
-export { getComments, createComment, deleteComment, updateComment } from './comment/comment';
+export { getComments, createComment, deleteComment, updateComment, reportComment } from './comment/comment';
 
 
 // 파일 업로드

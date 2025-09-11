@@ -83,9 +83,18 @@ const GuidePage = () => {
               </div>
             </div>
           ))}
+
+          <div className="text-center text-sm text-gray-500 mt-8">
+            서비스 이용 중 문제가 있거나 문의사항이 있으시면 <br />
+            관리자 이메일로 연락해 주세요:{" "}
+            <span className="text-gray-600 font-medium">
+              doheun9489@naver.com
+            </span>
+          </div>
+
         </div>
       </div>
-
+        
       {/* 하단 고정 버튼 */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur border-t px-6 py-4">
         <button
