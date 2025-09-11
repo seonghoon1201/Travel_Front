@@ -1,4 +1,3 @@
-// src/api/schedule/schedule.js
 import http from '../../utils/authAxios';
 
 /** 일정 생성 */
@@ -11,13 +10,6 @@ export async function createSchedule(payload) {
 export async function getSchedule(scheduleId) {
   if (!scheduleId) throw new Error('scheduleId가 필요합니다.');
   const { data } = await http.get(`/schedule/details/${scheduleId}`);
-  return data;
-}
-
-/** 일정 상세 조회(전체 공개) */
-export async function getPublicSchedule(scheduleId) {
-  if (!scheduleId) throw new Error('scheduleId가 필요합니다.');
-  const { data } = await http.get(`/schedule/public/${scheduleId}`);
   return data;
 }
 
@@ -34,14 +26,16 @@ export async function updateScheduleAll(payload) {
   return data ?? null;
 }
 
-/** 일정 삭제 (Swagger 스펙: DELETE /schedule/delete, body: { scheduleId }) */
+/**
+ * ✅ 일정 나가기/삭제 (새 스펙)
+ * - DELETE /schedule/{scheduleId}
+ * - 현재 사용자만 스케줄에서 제외
+ * - 마지막 참여자면 스케줄 자체가 삭제됨
+ */
 export async function deleteSchedule(scheduleId) {
   if (!scheduleId) throw new Error('scheduleId가 필요합니다.');
-  // axios에서 DELETE 본문은 { data } 키로 전달
-  const { data } = await http.delete('/schedule/delete', {
-    data: { scheduleId },
-  });
-  return data; // {} 빈 객체 응답(200) 기대
+  const { data } = await http.delete(`/schedule/${scheduleId}`);
+  return data ?? null; // 보통 200 OK (본문 없을 수 있음)
 }
 
 /** 초대 수락(현재 로그인 유저를 참여자로 추가) */
@@ -51,6 +45,7 @@ export async function joinSchedule(scheduleId) {
   return data;
 }
 
+/** 참여자 수 조회 */
 export async function getParticipantCount(scheduleId) {
   if (!scheduleId) throw new Error('scheduleId가 필요합니다.');
   const { data } = await http.get(`/schedule/${scheduleId}/count`);

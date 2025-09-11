@@ -19,6 +19,7 @@ const fmt = (d) => {
 const ScheduleInvitePage = () => {
   const { scheduleId } = useParams();
   const [busy, setBusy] = useState(false);
+  const [kakaoReady, setKakaoReady] = useState(false); // ✅ SDK 사전 로드 플래그
 
   // 스케줄 상세
   const detail = useScheduleStore((s) => s.detail);
@@ -27,19 +28,31 @@ const ScheduleInvitePage = () => {
   // detail 없을 때 제목 폴백
   const fallbackScheduleName = usePlanStore((s) => s.scheduleName);
 
+  // ✅ Kakao SDK를 페이지 진입 시 미리 로드 (버튼 클릭 전에 준비)
+  useEffect(() => {
+    let mounted = true;
+    loadKakao()
+      .then(() => {
+        if (mounted) setKakaoReady(true);
+      })
+      .catch((e) => {
+        console.error('[Kakao SDK] load fail', e);
+        // ready=false면 버튼 클릭 시 경고만 띄우고 막음
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
         if (String(detail?.scheduleId ?? detail?.id) === String(scheduleId))
           return;
         const res = await getSchedule(scheduleId);
-        setDetail(res);
-      } catch (e) {
+        setDetail(res?.data ?? res);
+      } catch (_) {
         // 조용히 실패: 버튼 공유는 계속 가능
-        console.debug(
-          '[ScheduleInvitePage] load detail fail',
-          e?.response?.data || e
-        );
       }
     })();
   }, [scheduleId, detail?.scheduleId, detail?.id, setDetail]);
@@ -51,12 +64,25 @@ const ScheduleInvitePage = () => {
       ? `${fmt(detail.startDate)} - ${fmt(detail.endDate)}`
       : '여행 날짜 미정';
 
-  // 초대 URL (표시는 하지 않음)
+  // 초대 URL
   const inviteUrl = useMemo(() => {
     const u = new URL(`${window.location.origin}/invite`);
     u.searchParams.set('scheduleId', String(scheduleId || ''));
     return u.toString();
   }, [scheduleId]);
+
+  // ✅ 공유/헤더에서 쓸 썸네일: regionImage 우선
+  const thumbUrl = useMemo(() => {
+    const fromDetail =
+      detail?.regionImage || detail?.imageUrl || detail?.thumbnail;
+    const fromItems = (detail?.scheduleItems || [])
+      .map((it) => it.imageUrl || it.firstImage || it.firstimage)
+      .find(Boolean);
+    // 마지막 폴백: 카카오 기본 이미지(HTTPS)
+    const fallback =
+      'https://k.kakaocdn.net/dn/bkNtzF/btsQmfsu0l7/kakaolink40_original.png';
+    return fromDetail || fromItems || fallback;
+  }, [detail]);
 
   const handleCopyLink = async () => {
     try {
@@ -64,40 +90,47 @@ const ScheduleInvitePage = () => {
       await navigator.clipboard.writeText(inviteUrl);
       message.success('초대 링크가 복사되었습니다! 카카오톡에 붙여넣어보세요.');
     } catch (e) {
-      console.error(e);
       message.error('초대 링크 복사에 실패했어요.');
     } finally {
       setBusy(false);
     }
   };
 
-  const handleKakaoInvite = async () => {
-    try {
-      setBusy(true);
-      const Kakao = await loadKakao();
-      const TEMPLATE_ID = Number(
-        process.env.REACT_APP_KAKAO_TEMPLATE_ID ||
-          import.meta?.env?.VITE_KAKAO_TEMPLATE_ID
-      );
-      if (!TEMPLATE_ID) throw new Error('KAKAO_TEMPLATE_ID 누락');
+  // ✅ PlanInvitePage와 동일: 클릭 즉시 sendCustom 호출 (비동기 대기 X)
+  const handleKakaoInvite = () => {
+    if (!kakaoReady || !window.Kakao || !window.Kakao.isInitialized()) {
+      message.warning('카카오 초기화 중입니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
 
-      Kakao.Share.sendCustom({
-        templateId: TEMPLATE_ID,
+    const TEMPLATE_ID_RAW =
+      process.env.REACT_APP_KAKAO_TEMPLATE_ID ||
+      import.meta?.env?.VITE_KAKAO_TEMPLATE_ID ||
+      '124047';
+    const templateId = Number(TEMPLATE_ID_RAW);
+    if (!Number.isFinite(templateId)) {
+      message.error('KAKAO_TEMPLATE_ID 설정이 잘못되었습니다.');
+      return;
+    }
+
+    try {
+      // ⛳️ PlanInvitePage와 동일한 키 사용: '${PLAN_TITLE}' 등
+      window.Kakao.Share.sendCustom({
+        templateId,
         templateArgs: {
-          USERNAME: '친구',
-          PLAN_TITLE: planTitle,
-          PLAN_DATE_RANGE: dateRange === '여행 날짜 미정' ? '' : dateRange,
-          THUMB_URL: '', // 이미지 제거. 템플릿에 필수면 로고 등 공용 URL을 세팅하세요.
-          INVITE_URL: inviteUrl,
+          PLAN_TITLE: String(planTitle),
+          PLAN_DATE_RANGE:
+            dateRange === '여행 날짜 미정' ? '' : String(dateRange),
+          INVITE_URL: String(inviteUrl),
+          THUMB_URL: String(thumbUrl), // ✅ regionImage 사용
         },
       });
+      // 여기서 busy를 건드리지 않음: 팝업 차단/intent 핸들러 문제 방지
     } catch (e) {
-      console.error(e);
+      console.error('[Kakao Share] 실패:', e);
       message.error(
-        '카카오 공유에 실패했어요. 키/도메인/템플릿 설정을 확인해주세요.'
+        '카카오 공유에 실패했어요. 키/도메인/템플릿을 확인해주세요.'
       );
-    } finally {
-      setBusy(false);
     }
   };
 
@@ -111,10 +144,24 @@ const ScheduleInvitePage = () => {
           <div className="mt-6 rounded-2xl overflow-hidden border shadow-sm">
             <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 p-5">
               <div className="flex items-start gap-3">
-                {/* 심볼 */}
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 text-white text-xl shadow-sm">
-                  ✈️
-                </div>
+                {/* 심볼 자리 → regionImage 있으면 썸네일, 없으면 기존 ✈️ */}
+                {thumbUrl ? (
+                  <div
+                    className="h-12 w-12 rounded-xl shadow-sm bg-white/20 overflow-hidden flex-shrink-0"
+                    aria-label="지역 이미지"
+                  >
+                    <img
+                      src={thumbUrl}
+                      alt="thumbnail"
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 text-white text-xl shadow-sm">
+                    ✈️
+                  </div>
+                )}
                 {/* 타이틀/날짜 */}
                 <div className="min-w-0 flex-1">
                   <h1 className="text-white font-extrabold text-lg truncate drop-shadow-sm">
