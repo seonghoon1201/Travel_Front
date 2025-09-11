@@ -71,6 +71,19 @@ const ScheduleInvitePage = () => {
     return u.toString();
   }, [scheduleId]);
 
+  // ✅ 공유/헤더에서 쓸 썸네일: regionImage 우선
+  const thumbUrl = useMemo(() => {
+    const fromDetail =
+      detail?.regionImage || detail?.imageUrl || detail?.thumbnail;
+    const fromItems = (detail?.scheduleItems || [])
+      .map((it) => it.imageUrl || it.firstImage || it.firstimage)
+      .find(Boolean);
+    // 마지막 폴백: 카카오 기본 이미지(HTTPS)
+    const fallback =
+      'https://k.kakaocdn.net/dn/bkNtzF/btsQmfsu0l7/kakaolink40_original.png';
+    return fromDetail || fromItems || fallback;
+  }, [detail]);
+
   const handleCopyLink = async () => {
     try {
       setBusy(true);
@@ -109,7 +122,7 @@ const ScheduleInvitePage = () => {
           PLAN_DATE_RANGE:
             dateRange === '여행 날짜 미정' ? '' : String(dateRange),
           INVITE_URL: String(inviteUrl),
-          THUMB_URL: '', // 템플릿에서 이미지 필수면 유효한 URL 넣기
+          THUMB_URL: String(thumbUrl), // ✅ regionImage 사용
         },
       });
       // 여기서 busy를 건드리지 않음: 팝업 차단/intent 핸들러 문제 방지
@@ -131,10 +144,24 @@ const ScheduleInvitePage = () => {
           <div className="mt-6 rounded-2xl overflow-hidden border shadow-sm">
             <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 p-5">
               <div className="flex items-start gap-3">
-                {/* 심볼 */}
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 text-white text-xl shadow-sm">
-                  ✈️
-                </div>
+                {/* 심볼 자리 → regionImage 있으면 썸네일, 없으면 기존 ✈️ */}
+                {thumbUrl ? (
+                  <div
+                    className="h-12 w-12 rounded-xl shadow-sm bg-white/20 overflow-hidden flex-shrink-0"
+                    aria-label="지역 이미지"
+                  >
+                    <img
+                      src={thumbUrl}
+                      alt="thumbnail"
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 text-white text-xl shadow-sm">
+                    ✈️
+                  </div>
+                )}
                 {/* 타이틀/날짜 */}
                 <div className="min-w-0 flex-1">
                   <h1 className="text-white font-extrabold text-lg truncate drop-shadow-sm">
