@@ -186,6 +186,7 @@ const ScheduleResultPage = () => {
   // 원래 있던 동작 유지
   const finishAndExit = async () => {
     try {
+      message.info({ content: '내 일정에 추가되었어요.', duration: 2, key: 'schedule-added' });
       await clearScheduleStore();
       await usePlanStore.getState().finishPlanning();
     } finally {
