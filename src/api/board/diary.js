@@ -17,7 +17,7 @@ export const getDiaryDetail = async (boardId) => {
 };
 
 export const writeDiary = async (payload) => {
-  const { data } = await http.post('/board/diary', payload);
+  const { data } = await http.post('/board', payload);
   return { success: true, data };
 };
 
