@@ -68,39 +68,8 @@ const InviteAcceptPage = () => {
     navigate('/', { replace: true });
   };
 
-  // ✅ 페이지형 백업 UI: 모달이 안 떠도 항상 보임
-  const Fallback = () => (
-    <div className="max-w-md mx-auto mt-16 p-5 rounded-2xl border shadow-sm bg-white text-center">
-      <h1 className="text-lg font-bold mb-2">초대를 수락하시겠어요?</h1>
-      <p className="text-sm text-gray-600 mb-4">
-        이 일정에 참여자로 추가됩니다.
-      </p>
-      <div className="flex gap-2 justify-center">
-        <button
-          onClick={onCancel}
-          className="px-4 py-2 rounded-xl border bg-white text-gray-700"
-        >
-          취소
-        </button>
-        <button
-          onClick={onConfirm}
-          className="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-600/90"
-        >
-          확인
-        </button>
-      </div>
-      <p className="text-xs text-gray-400 mt-3">
-        링크: <code className="break-all">{currentInviteUrl}</code>
-      </p>
-    </div>
-  );
-
   return (
     <DefaultLayout>
-      <div className="w-full min-h-[50vh]">
-        <Fallback />
-      </div>
-
       <Modal
         open={visible}
         title="초대를 수락하시겠어요?"
