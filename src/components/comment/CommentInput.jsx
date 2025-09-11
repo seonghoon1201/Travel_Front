@@ -64,7 +64,7 @@ const CommentInput = ({ onSubmit, disabled = false }) => {
                   isLoggedIn ? "댓글을 작성해주세요..." : "로그인 후 댓글 작성이 가능합니다."
                 }
                 disabled={disabled || isSubmitting}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
                 rows={2}
                 maxLength={500}
               />
@@ -79,8 +79,10 @@ const CommentInput = ({ onSubmit, disabled = false }) => {
               <button
                 type="submit"
                 disabled={!content.trim() || disabled || isSubmitting}
-                className="flex items-center gap-1 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-              >
+                className="flex items-center gap-1 px-4 py-2 
+                          bg-blue-500 text-white rounded-lg text-sm font-medium
+                          hover:bg-blue-600 disabled:bg-gray-300 
+                          disabled:cursor-not-allowed transition-colors"              >
                 {isSubmitting ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

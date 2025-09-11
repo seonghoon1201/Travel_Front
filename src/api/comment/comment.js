@@ -94,9 +94,31 @@ export async function updateComment(commentId, content) {
   }
 }
 
+export async function reportComment(commentId) {
+  if (!commentId) throw new Error('commentId 없음');
+
+  try {
+    const res = await axios.patch(
+      `${baseUrl}/${commentId}/report`,
+      {}, 
+      { headers: getAuthHeaders() }
+    );
+
+    return { success: true, data: res.data, status: res.status };
+  } catch (error) {
+    console.error('[reportComment] 실패:', error?.response?.data || error.message);
+    return {
+      success: false,
+      error: error?.response?.data || { code: 'REQUEST_FAILED', message: '댓글 신고 실패' },
+      status: error?.response?.status,
+    };
+  }
+}
+
 export default {
   createComment,
   deleteComment,
   getComments,
   updateComment,
+  reportComment,
 };

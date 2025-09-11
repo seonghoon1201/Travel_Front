@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DatePicker, Input, Select, message } from 'antd';
 import 'antd/dist/reset.css';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import BackHeader from '../../components/header/BackHeader';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import dayjs from 'dayjs';
 import usePlanStore from '../../store/planStore';
 
 const { RangePicker } = DatePicker;
 
 const PlanDatePage = () => {
+  const location = useLocation();
+  const { ldongRegnCd, ldongSignguCd, city } = location.state || {};
+
   const [dates, setDates] = useState(null);
 
   // 오늘 00:00 기준 (이전 날짜 비활성화에 사용)
@@ -37,6 +40,20 @@ const PlanDatePage = () => {
   const setDepartureTimeInStore = usePlanStore(
     (state) => state.setDepartureTime
   );
+  const setLocationCodes = usePlanStore((state) => state.setLocationCodes);
+  const setSelectedRegionMeta = usePlanStore(
+    (state) => state.setSelectedRegionMeta
+  );
+
+  //  state에서 받은 지역 정보 planStore에 저장
+  useEffect(() => {
+    if (ldongRegnCd && ldongSignguCd) {
+      setLocationCodes([{ ldongRegnCd, ldongSignguCd }]);
+    }
+    if (city) {
+      setSelectedRegionMeta({ name: city, imageUrl: '' });
+    }
+  }, [ldongRegnCd, ldongSignguCd, city, setLocationCodes, setSelectedRegionMeta]);
 
   // 왼쪽 패널이 현재 달보다 이전으로 넘어가지 않도록
   const canGoPrevMonth = pickerValue?.[0]?.isAfter(todayStart, 'month');
@@ -47,7 +64,7 @@ const PlanDatePage = () => {
 
     const [start, end] = dates;
 
-    // 안전장치: 혹시라도 과거 날짜가 들어오면 막기
+    // 안전장치: 과거 날짜 막기
     if (start.isBefore(todayStart, 'day') || end.isBefore(todayStart, 'day')) {
       return message.warning('오늘 이전 날짜는 선택할 수 없습니다.');
     }
@@ -62,6 +79,7 @@ const PlanDatePage = () => {
     if (ampm === 'AM' && h === 12) h = 0;
     const timeString = `${String(h).padStart(2, '0')}:${minute}`;
 
+    // store에 날짜, 장소, 출발시간 저장
     setDatesInStore({
       start: dayjs(dates[0]).format('YYYY-MM-DD'),
       end: dayjs(dates[1]).format('YYYY-MM-DD'),
@@ -72,28 +90,24 @@ const PlanDatePage = () => {
     navigate('/plan/style');
   };
 
-  return (
+   return (
     <DefaultLayout>
       <div className="w-full mx-auto pb-28">
         <BackHeader title="여행 기간 선택" />
-        <div className="px-4 sm:px-6 md:px-8">
+        <div className="px-4 sm:px-6 md:px-8 ">
           <RangePicker
-            className="w-full"
+            className="w-full rounded-lg border-gray-300 shadow-sm"
             format="YYYY-MM-DD"
             value={dates}
             onChange={setDates}
-            /* 오늘 이전 날짜 비활성화 */
             disabledDate={(current) =>
               !!current && current.startOf('day').isBefore(todayStart)
             }
-            /* antd v5: 팝업 클래스 */
             classNames={{ popup: 'one-month-range' }}
-            /* 패널 표시 월 제어 (항상 왼쪽 패널 기준으로 본문/라벨 맞춤) */
             pickerValue={pickerValue}
             onPickerValueChange={(next) => {
               if (Array.isArray(next) && next[0]) setPickerValue(next);
             }}
-            /* 열릴 때마다 현재 달로 강제 리셋 */
             open={open}
             onOpenChange={(isOpen) => {
               setOpen(isOpen);
@@ -105,10 +119,10 @@ const PlanDatePage = () => {
                 ]);
               }
             }}
-            /* 커스텀 헤더: 라벨은 '왼쪽 패널(=보이는 달)' 기준 */
             panelRender={(panelNode) => (
-              <div>
-                <div className="flex items-center justify-between px-3 py-2">
+              <div className="p-4 bg-white rounded-xl shadow-md border border-gray-200">
+                {/* 상단 헤더 */}
+                <div className="flex items-center justify-between mb-3">
                   <button
                     type="button"
                     onClick={() => {
@@ -118,9 +132,9 @@ const PlanDatePage = () => {
                         r.subtract(1, 'month'),
                       ]);
                     }}
-                    className={`text-sm ${
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
                       canGoPrevMonth
-                        ? 'text-gray-600 hover:text-gray-900'
+                        ? 'text-gray-700 hover:bg-gray-100'
                         : 'text-gray-300 cursor-not-allowed'
                     }`}
                     disabled={!canGoPrevMonth}
@@ -128,8 +142,8 @@ const PlanDatePage = () => {
                     ← 이전달
                   </button>
 
-                  <div className="text-sm font-medium">
-                    {pickerValue?.[0]?.format?.('YYYY MMM')}
+                  <div className="text-base font-semibold text-gray-800">
+                    {pickerValue?.[0]?.format?.('YYYY년 M월')}
                   </div>
 
                   <button
@@ -140,55 +154,73 @@ const PlanDatePage = () => {
                         r.add(1, 'month'),
                       ])
                     }
-                    className="text-sm text-gray-600 hover:text-gray-900"
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
                   >
                     다음달 →
                   </button>
                 </div>
-                {panelNode}
+
+                {/* 달력 패널 */}
+                <div className="border-t pt-3">{panelNode}</div>
               </div>
             )}
-            /* 팝업 위치 안정화(선택) */
             getPopupContainer={(trigger) => trigger.parentNode}
           />
 
-          <Input
-            className="mt-4"
-            placeholder="출발 장소를 입력하세요 (예: 서울역)"
-            value={departurePlace}
-            onChange={(e) => setDeparturePlace(e.target.value)}
-          />
 
-          <div className="mt-2 flex gap-2">
-            <Select
-              value={ampm}
-              onChange={setAmpm}
-              className="w-1/3"
-              options={[
-                { value: 'AM', label: '오전' },
-                { value: 'PM', label: '오후' },
-              ]}
-            />
-            <Select
-              value={hour}
-              onChange={setHour}
-              className="w-1/3"
-              placeholder="시"
-              options={Array.from({ length: 12 }, (_, i) => ({
-                value: String(i + 1).padStart(2, '0'),
-                label: `${i + 1}시`,
-              }))}
-            />
-            <Select
-              value={minute}
-              onChange={setMinute}
-              className="w-1/3"
-              placeholder="분"
-              options={['00', '10', '20', '30', '40', '50'].map((m) => ({
-                value: m,
-                label: `${m}분`,
-              }))}
-            />
+           {/* 출발/도착 */}
+          <div className="grid grid-cols-2 gap-3 mb-4 mt-4 ">
+            <div className="p-4 rounded-xl border bg-white shadow-sm">
+              <div className="text-gray-600 text-sm font-medium mb-1">출발</div>
+              <Input
+                placeholder="예: 서울역"
+                value={departurePlace}
+                onChange={(e) => setDeparturePlace(e.target.value)}
+                className=" text-gray-800"
+              />
+            </div>
+            <div className="p-4 rounded-xl border bg-white shadow-sm">
+              <div className="text-gray-600 text-sm font-medium mb-1">도착</div>
+              <div className="text-base font-semibold text-blue-500">
+                {city || '여행지 선택됨'}
+              </div>
+            </div>
+          </div>
+
+          {/* 출발 시간 */}
+          <div className="p-4 rounded-xl border bg-white shadow-sm">
+            <div className="text-gray-600 text-sm font-medium mb-2">출발 시간</div>
+            <div className="flex gap-2">
+              <Select
+                value={ampm}
+                onChange={setAmpm}
+                className="flex-1"
+                options={[
+                  { value: 'AM', label: '오전' },
+                  { value: 'PM', label: '오후' },
+                ]}
+              />
+              <Select
+                value={hour}
+                onChange={setHour}
+                className="flex-1"
+                placeholder="시"
+                options={Array.from({ length: 12 }, (_, i) => ({
+                  value: String(i + 1).padStart(2, '0'),
+                  label: `${i + 1}시`,
+                }))}
+              />
+              <Select
+                value={minute}
+                onChange={setMinute}
+                className="flex-1"
+                placeholder="분"
+                options={['00', '10', '20', '30', '40', '50'].map((m) => ({
+                  value: m,
+                  label: `${m}분`,
+                }))}
+              />
+            </div>
           </div>
         </div>
       </div>

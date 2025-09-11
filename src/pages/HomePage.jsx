@@ -36,6 +36,8 @@ const HomePage = () => {
           name: item.regionName,
           image: item.regionImage,
           description: item.description,
+          ldongRegnCd: item.ldongRegnCd || '',
+          ldongSignguCd: item.ldongSignguCd || '',
         }));
         setHotRegions(formatted);
       }
