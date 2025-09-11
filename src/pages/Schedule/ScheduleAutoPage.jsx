@@ -218,7 +218,6 @@ const ScheduleAutoPage = () => {
           '%c[schedule/create] Request payload',
           'color:#1677ff'
         );
-        console.log('payload →', payload);
         console.groupEnd();
 
         const created = await createSchedule(payload);
@@ -232,8 +231,6 @@ const ScheduleAutoPage = () => {
           '%c[schedule/result] Optimized detail',
           'color:#52c41a;font-weight:bold;'
         );
-        console.log('scheduleId →', scheduleId);
-        console.log('response detail →', detail);
         console.groupEnd();
 
         scheduleStore.setDetail(detail);
