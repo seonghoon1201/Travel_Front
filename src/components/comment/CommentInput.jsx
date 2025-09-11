@@ -18,9 +18,14 @@ const CommentInput = ({ onSubmit, disabled = false }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const profileImageUrl = useUserStore((state) => state.profileImageUrl);
+  const token = useUserStore((state) => state.accessToken);
+
+  const isLoggedIn = Boolean(token);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isLoggedIn) return; 
+
     const text = content.trim();
     if (!text) return;
     try {
@@ -55,15 +60,19 @@ const CommentInput = ({ onSubmit, disabled = false }) => {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="댓글을 작성해주세요..."
+                placeholder={
+                  isLoggedIn ? "댓글을 작성해주세요..." : "로그인 후 댓글 작성이 가능합니다."
+                }
                 disabled={disabled || isSubmitting}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
                 rows={2}
                 maxLength={500}
               />
-              <div className="absolute bottom-2 right-2 text-xs text-gray-400">
-                {content.length}/500
-              </div>
+              {isLoggedIn && (
+                  <div className="absolute bottom-2 right-2 text-xs text-gray-400">
+                    {content.length}/500
+                  </div>
+              )}
             </div>
             <div className="flex justify-between items-center mt-2">
               <span className="text-xs text-gray-500">Shift + Enter로 줄바꿈</span>

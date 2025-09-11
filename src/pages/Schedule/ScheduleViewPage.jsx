@@ -142,7 +142,7 @@ const ScheduleViewPage = () => {
       <BackHeader />
       <div className="w-full mx-auto px-4 sm:px-6 md:px-8 pb-16">
         {/* Header */}
-        <div className="flex justify-between items-center mb-1">
+        <div className="flex justify-between items-center mb-1 px-1">
           <h1 className="text-xl font-bold">{title}</h1>
           <button
             onClick={() => setShowEditModal(true)}

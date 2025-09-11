@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { Ellipsis } from 'lucide-react';
 import useUserStore from '../../store/userStore';
+import ConfirmModal from '../modal/ConfirmModal';
 
 const CommentActionModal = ({
   commentId,
   writerNickname,
-  onDelete,   // 댓글 삭제 함수 (부모에서 받아옴)
-  onEdit,     // 댓글 수정 함수 (선택사항)
-  onReport,   // 댓글 신고 함수 (선택사항)
+  onDelete,   
+  onEdit,     
+  onReport,   
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false); 
   const menuRef = useRef(null);
 
   // 현재 로그인 유저 닉네임
@@ -34,14 +36,14 @@ const CommentActionModal = ({
 
   // 댓글 삭제
   const handleDelete = async () => {
-    if (!window.confirm('정말 댓글을 삭제하시겠습니까?')) return;
-    if (onDelete) await onDelete(commentId); // 부모 콜백 호출
+    if (onDelete) await onDelete(commentId); 
+    setShowConfirm(false);
     closeMenu();
   };
 
   // 댓글 수정
   const handleEdit = () => {
-    if (onEdit) onEdit(commentId); // 부모 콜백 호출
+    if (onEdit) onEdit(commentId);
     closeMenu();
   };
 
@@ -49,8 +51,6 @@ const CommentActionModal = ({
   const handleReport = () => {
     if (onReport) {
       onReport(commentId);
-    } else {
-      alert('신고 기능 준비 중입니다.');
     }
     closeMenu();
   };
@@ -66,7 +66,7 @@ const CommentActionModal = ({
           {isWriter ? (
             <>
               <button
-                onClick={handleDelete}
+                onClick={() => setShowConfirm(true)}
                 className="w-full px-4 py-2 text-sm hover:bg-gray-100"
               >
                 삭제하기
@@ -88,6 +88,17 @@ const CommentActionModal = ({
           )}
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={handleDelete}
+        title="댓글 삭제"
+        message="정말 댓글을 삭제하시겠습니까?"
+        confirmText="삭제"
+        cancelText="취소"
+        confirmButtonClass="bg-red-500 hover:bg-red-600"
+      />
     </div>
   );
 };

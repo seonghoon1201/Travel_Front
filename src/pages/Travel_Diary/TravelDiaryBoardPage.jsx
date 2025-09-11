@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PencilLine, ChevronDown } from 'lucide-react';
+import { message } from 'antd';
 
 import HomeHeader from '../../components/header/HomeHeader';
 import SearchBar from '../../components/common/SearchBar';
@@ -24,6 +25,8 @@ const TravelDiaryBoardPage = () => {
 
   const [selectOpen, setSelectOpen] = useState(false);
   const [trips, setTrips] = useState([]);
+
+  const [messageApi, contextHolder] = message.useMessage();
 
   const sortOptions = [
     { value: 'latest', label: '최신순' },
@@ -83,6 +86,19 @@ const TravelDiaryBoardPage = () => {
   );
 
   const openScheduleModal = async () => {
+    if (!accessToken) {
+      messageApi.warning({
+        content: (
+          <>
+            로그인 후 이용 가능합니다. <br />
+            오른쪽 상단 메뉴를 눌러 회원가입 또는 로그인 해주세요!
+          </>
+        ),
+        key: 'login-warning',
+      });
+      return; 
+    }
+
     try {
       const data = await fetchMyTravel(accessToken);
       setTrips(Array.isArray(data) ? data : []);
@@ -105,6 +121,7 @@ const TravelDiaryBoardPage = () => {
 
   return (
     <DefaultLayout>
+      {contextHolder}
       <div className="w-full mx-auto">
         <HomeHeader />
 
