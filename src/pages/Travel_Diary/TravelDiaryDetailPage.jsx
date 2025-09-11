@@ -12,7 +12,7 @@ import ScheduleMapSection from '../../components/schedule/ScheduleMapSection';
 import DaySelectorModal from '../../components/modal/DaySelectorModal'; 
 import useUserStore from '../../store/userStore';
 import useScheduleStore from '../../store/scheduleStore'; 
-import { getDiaryDetail, getPublicSchedule } from '../../api';
+import { getDiaryDetail, getSchedule } from '../../api';
 
 const TravelDiaryDetail = () => {
   const { id } = useParams();
@@ -40,7 +40,7 @@ const TravelDiaryDetail = () => {
 
             if (res.data.scheduleId) {
                try {
-                const scheduleRes = await getPublicSchedule(res.data.scheduleId);
+                const scheduleRes = await getSchedule(res.data.scheduleId);
                 setScheduleDetail(scheduleRes);
                 scheduleStore.setDetail(scheduleRes);
                 setScheduleInfo({
