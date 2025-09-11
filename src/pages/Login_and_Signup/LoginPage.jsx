@@ -50,33 +50,37 @@ const LoginPage = () => {
   const handleKakaoLogin = () => {
     msg.loading('카카오 로그인 페이지로 이동합니다...', 1);
 
-    // 백업 저장(혹시나 쿼리를 잃어버릴 경우 대비)
+    // 로그인 후 돌아갈 곳: 쿼리에 redirect가 있으면 그곳, 없으면 홈('/')
+    const redirectTarget = redirectParam || '/';
+
+    // 안전 백업 (필요할 때만)
     const scheduleId = new URLSearchParams(window.location.search).get(
       'scheduleId'
     );
     localStorage.setItem(
       'pendingScheduleInvite',
       JSON.stringify({
-        // 초대 링크에서 온 경우라면 이미 저장돼 있을 가능성도 있지만 덮어써도 무방
         scheduleId,
-        redirect: redirectParam || currentUrl, // 현재 위치를 redirect로 보관
+        redirect: redirectParam || '/', // ← /login 저장 금지
         ts: Date.now(),
       })
     );
 
-    // getKakaoLoginUrl()에 redirect를 추가
+    // 카카오로 보낼 때 'state'에 redirect 정보를 넣어 보낸다 (카카오가 그대로 콜백에 돌려줌)
     try {
-      const base = getKakaoLoginUrl(); // 예: https://kauth.kakao.com/oauth/authorize?...
+      const base = getKakaoLoginUrl(); // ex) https://kauth.kakao.com/oauth/authorize?...&response_type=code
       const url = new URL(base);
-      // 백엔드/카카오 콜백에서 사용할 앱 내 리다이렉트를 추가 파라미터로 전달
-      url.searchParams.set('redirect', redirectParam || currentUrl);
+      url.searchParams.set(
+        'state',
+        encodeURIComponent(JSON.stringify({ redirect: redirectTarget }))
+      );
       window.location.href = url.toString();
     } catch {
-      // 혹시 URL 파싱이 안 된다면 수동으로 붙임
       const sep = getKakaoLoginUrl().includes('?') ? '&' : '?';
-      window.location.href = `${getKakaoLoginUrl()}${sep}redirect=${encodeURIComponent(
-        redirectParam || currentUrl
-      )}`;
+      const state = encodeURIComponent(
+        JSON.stringify({ redirect: redirectTarget })
+      );
+      window.location.href = `${getKakaoLoginUrl()}${sep}state=${state}`;
     }
   };
 
