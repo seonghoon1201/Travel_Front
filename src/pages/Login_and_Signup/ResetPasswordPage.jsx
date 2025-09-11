@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { message } from 'antd';
 import { resetPassword } from '../../api';
 import CommonModal from '../../components/modal/CommonModal';
-import { LockKeyhole } from 'lucide-react';
+import { LockKeyhole, Eye, EyeOff } from 'lucide-react';
 import BackHeader from '../../components/header/BackHeader';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import DefaultLayout from '../../layouts/DefaultLayout';
@@ -11,6 +11,8 @@ import DefaultLayout from '../../layouts/DefaultLayout';
 const ResetPasswordPage = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [msg, contextHolder] = message.useMessage();
@@ -25,7 +27,6 @@ const ResetPasswordPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!email) {
       msg.error('이메일 정보가 없습니다. 처음부터 다시 시도해주세요.');
       navigate('/find-password');
@@ -74,28 +75,58 @@ const ResetPasswordPage = () => {
 
       <div className="w-full max-w-md mx-auto px-4">
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* 새 비밀번호 */}
           <div className="relative">
             <input
-              type="password"
+              type={showNewPw ? 'text' : 'password'}
               placeholder="비밀번호 입력"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-10 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              autoComplete="new-password"
+              className="w-full px-10 pr-11 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               disabled={resetting}
             />
             <LockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <button
+              type="button"
+              onClick={() => setShowNewPw((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1"
+              aria-label={showNewPw ? '비밀번호 숨기기' : '비밀번호 보기'}
+              disabled={resetting}
+            >
+              {showNewPw ? (
+                <EyeOff className="w-5 h-5 text-gray-400" />
+              ) : (
+                <Eye className="w-5 h-5 text-gray-400" />
+              )}
+            </button>
           </div>
 
+          {/* 비밀번호 확인 */}
           <div className="relative">
             <input
-              type="password"
+              type={showConfirmPw ? 'text' : 'password'}
               placeholder="비밀번호 확인"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-10 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              autoComplete="new-password"
+              className="w-full px-10 pr-11 py-2.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               disabled={resetting}
             />
             <LockKeyhole className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPw((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1"
+              aria-label={showConfirmPw ? '비밀번호 숨기기' : '비밀번호 보기'}
+              disabled={resetting}
+            >
+              {showConfirmPw ? (
+                <EyeOff className="w-5 h-5 text-gray-400" />
+              ) : (
+                <Eye className="w-5 h-5 text-gray-400" />
+              )}
+            </button>
           </div>
 
           <PrimaryButton type="submit" disabled={resetting}>

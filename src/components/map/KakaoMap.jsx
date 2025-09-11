@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { loadKakaoMapScript } from '../../utils/kakaoMapLoader';
 
 const KakaoMap = ({
@@ -6,93 +6,111 @@ const KakaoMap = ({
   longitude,
   markers = [],
   useCustomOverlay = false,
+  fitToMarkers = true,
+  fitPadding = 60,
+  className = 'w-full h-64 rounded-lg',
 }) => {
-  const mapRef = useRef(null);
+  const containerRef = useRef(null); // div
+  const mapRef = useRef(null); // kakao.maps.Map
+  const [ready, setReady] = useState(false); // SDK 로드 여부
 
+  // SDK 로드
   useEffect(() => {
     loadKakaoMapScript(() => {
-      if (!mapRef.current) return;
+      setReady(true);
+    }).catch((e) => {
+      console.error('[KakaoMap] SDK load error', e);
+    });
+  }, []);
 
-      const colorList = ['#5E87EB', '#F97316', '#10B981', '#EC4899', '#FACC15'];
+  // 지도 초기화
+  useEffect(() => {
+    if (!ready || !containerRef.current || mapRef.current) return;
 
-      let map;
+    const center =
+      (markers[0] &&
+        new window.kakao.maps.LatLng(markers[0].lat, markers[0].lng)) ||
+      (latitude &&
+        longitude &&
+        new window.kakao.maps.LatLng(latitude, longitude)) ||
+      new window.kakao.maps.LatLng(37.5665, 126.978); // 서울 기본값
 
-      const center =
-        markers.length > 0
-          ? new window.kakao.maps.LatLng(markers[0].lat, markers[0].lng)
-          : latitude && longitude
-          ? new window.kakao.maps.LatLng(latitude, longitude)
-          : null;
+    mapRef.current = new window.kakao.maps.Map(containerRef.current, {
+      center,
+      level: 6,
+    });
+  }, [ready, markers, latitude, longitude]);
 
-      if (!center) return;
+  // markers 반영
+  useEffect(() => {
+    if (!ready || !mapRef.current) return;
 
-      map = new window.kakao.maps.Map(mapRef.current, {
-        center,
-        level: 6,
+    const { maps } = window.kakao;
+    const map = mapRef.current;
+
+    // 이전 마커 제거
+    map.markers?.forEach((m) => m.setMap(null));
+    map.markers = [];
+
+    const bounds = new maps.LatLngBounds();
+    const path = [];
+    const colorList = ['#5E87EB', '#F97316', '#10B981', '#EC4899', '#FACC15'];
+
+    if (markers.length > 0) {
+      markers.forEach(({ lat, lng, order }, i) => {
+        const pos = new maps.LatLng(lat, lng);
+        bounds.extend(pos);
+        path.push(pos);
+
+        if (useCustomOverlay) {
+          const overlay = new maps.CustomOverlay({
+            map,
+            position: pos,
+            content: `<div style="
+              width:24px;height:24px;border-radius:50%;
+              background:${colorList[i % colorList.length]};
+              color:#fff;text-align:center;line-height:24px;
+              font-size:12px;font-weight:bold;
+            ">${order || i + 1}</div>`,
+            yAnchor: 1,
+          });
+          map.markers.push(overlay);
+        } else {
+          const marker = new maps.Marker({ map, position: pos });
+          map.markers.push(marker);
+        }
       });
 
-      const bounds = new window.kakao.maps.LatLngBounds();
-      const path = [];
-
-      if (markers.length > 0) {
-        markers.forEach(({ lat, lng, order }, index) => {
-          const position = new window.kakao.maps.LatLng(lat, lng);
-          bounds.extend(position);
-          path.push(position);
-
-          if (useCustomOverlay) {
-            const color = colorList[index % colorList.length];
-            const label =
-              Number.isFinite(order) && order > 0 ? order : index + 1;
-
-            new window.kakao.maps.CustomOverlay({
-              map,
-              position,
-              content: `
-                <div style="
-                  width: 24px;
-                  height: 24px;
-                  border-radius: 50%;
-                  background: ${color};
-                  color: white;
-                  text-align: center;
-                  line-height: 24px;
-                  font-size: 12px;
-                  font-weight: bold;
-                ">
-                  ${label}
-                </div>
-              `,
-              yAnchor: 1,
-            });
-          } else {
-            new window.kakao.maps.Marker({ map, position });
-          }
+      // 경로 라인
+      if (path.length > 1) {
+        const polyline = new maps.Polyline({
+          map,
+          path,
+          strokeWeight: 2,
+          strokeColor: '#3B82F6',
+          strokeOpacity: 0.9,
         });
-
-        if (path.length > 1) {
-          const polyline = new window.kakao.maps.Polyline({
-            map,
-            path,
-            strokeWeight: 2,
-            strokeColor: '#3B82F6',
-            strokeOpacity: 0.9,
-            strokeStyle: 'solid',
-          });
-          polyline.setMap(map);
-        }
-
-        // ✅ 모든 마커가 보이도록 자동 줌
-        map.setBounds(bounds);
-      } else if (latitude && longitude) {
-        const position = new window.kakao.maps.LatLng(latitude, longitude);
-        new window.kakao.maps.Marker({ map, position });
-        map.setCenter(position);
+        map.markers.push(polyline);
       }
-    });
-  }, [latitude, longitude, markers, useCustomOverlay]);
 
-  return <div ref={mapRef} className="w-full h-64 rounded-lg" />;
+      if (fitToMarkers) map.setBounds(bounds, fitPadding);
+    } else if (latitude && longitude) {
+      const pos = new maps.LatLng(latitude, longitude);
+      const marker = new maps.Marker({ map, position: pos });
+      map.markers.push(marker);
+      map.setCenter(pos);
+    }
+  }, [
+    ready,
+    markers,
+    latitude,
+    longitude,
+    useCustomOverlay,
+    fitToMarkers,
+    fitPadding,
+  ]);
+
+  return <div ref={containerRef} className={className} />;
 };
 
 export default KakaoMap;

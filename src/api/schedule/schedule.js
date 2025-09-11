@@ -14,6 +14,13 @@ export async function getSchedule(scheduleId) {
   return data;
 }
 
+/** 일정 상세 조회(전체 공개) */
+export async function getPublicSchedule(scheduleId) {
+  if (!scheduleId) throw new Error('scheduleId가 필요합니다.');
+  const { data } = await http.get(`/schedule/public/${scheduleId}`);
+  return data;
+}
+
 /** 일정 최적화 요청 */
 export async function optimizeSchedule(scheduleId) {
   if (!scheduleId) throw new Error('scheduleId가 필요합니다.');
@@ -35,4 +42,17 @@ export async function deleteSchedule(scheduleId) {
     data: { scheduleId },
   });
   return data; // {} 빈 객체 응답(200) 기대
+}
+
+/** 초대 수락(현재 로그인 유저를 참여자로 추가) */
+export async function joinSchedule(scheduleId) {
+  if (!scheduleId) throw new Error('scheduleId가 필요합니다.');
+  const { data } = await http.post(`/schedule/${scheduleId}/join`);
+  return data;
+}
+
+export async function getParticipantCount(scheduleId) {
+  if (!scheduleId) throw new Error('scheduleId가 필요합니다.');
+  const { data } = await http.get(`/schedule/${scheduleId}/count`);
+  return data;
 }

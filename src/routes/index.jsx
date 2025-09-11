@@ -3,6 +3,7 @@ import HomePage from '../pages/HomePage';
 import SearchPage from '../pages/SearchPage';
 import Splash from '../pages/Splash';
 import LoginPage from '../pages/Login_and_Signup/LoginPage';
+import GuidePage from '../pages/GuidePage';
 import SignUpPage from '../pages/Login_and_Signup/SignUpPage';
 import KakaoCallbackPage from '../pages/Login_and_Signup/KakaoCallbackPage';
 import FindPasswordPage from '../pages/Login_and_Signup/FindPasswordPage';
@@ -14,7 +15,6 @@ import AuthChecker from '../components/auth/AuthChecker';
 
 import HotBoardPage from '../pages/Board/HotBoardPage';
 import RegionDetailPage from '../pages/Board/RegionDetailPage';
-import BudgetBoardPage from '../pages/Board/BudgetBoardPage';
 import PlaceDetail from '../pages/Board/PlaceDetail';
 
 import TravelDiaryBoardPage from '../pages/Travel_Diary/TravelDiaryBoardPage';
@@ -32,6 +32,7 @@ import PlanFlowBoundary from '../components/plan/PlanFlowBoundary';
 import ScheduleAutoPage from '../pages/Schedule/ScheduleAutoPage';
 import ScheduleResultPage from '../pages/Schedule/ScheduleResultPage';
 import ScheduleViewPage from '../pages/Schedule/ScheduleViewPage';
+import ScheduleInvitePage from '../pages/Schedule/ScheduleInvitePage';
 import AddPlace from '../pages/Schedule/AddPlace';
 
 import InviteAcceptPage from '../pages/InviteAcceptPage';
@@ -47,6 +48,7 @@ const AppRoutes = () => (
 
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignUpPage />} />
+      <Route path="/guide" element={<GuidePage />} />
 
       <Route path="/find-password" element={<FindPasswordPage />} />
       <Route path="/find-password/verify" element={<VerifyCodePage />} />
@@ -57,7 +59,6 @@ const AppRoutes = () => (
 
       <Route path="/board/hot" element={<HotBoardPage />} />
       <Route path="/region/detail/:city" element={<RegionDetailPage />} />
-      <Route path="/board/budget" element={<BudgetBoardPage />} />
       <Route path="/place/detail/:contentId" element={<PlaceDetail />} />
 
       <Route path="/board/travel/diary" element={<TravelDiaryBoardPage />} />
@@ -86,7 +87,8 @@ const AppRoutes = () => (
         <Route path="add" element={<AddPlace />} />
       </Route>
       <Route path="/schedule/view/:scheduleId" element={<ScheduleViewPage />} />
-
+      <Route path="/schedule/invite/:scheduleId" element={<ScheduleInvitePage />} />
+      
       <Route path="/kakao/callback" element={<KakaoCallbackPage />} />
       <Route path="/invite" element={<InviteAcceptPage />} />
     </Routes>

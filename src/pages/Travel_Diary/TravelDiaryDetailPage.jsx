@@ -12,8 +12,7 @@ import ScheduleMapSection from '../../components/schedule/ScheduleMapSection';
 import DaySelectorModal from '../../components/modal/DaySelectorModal'; 
 import useUserStore from '../../store/userStore';
 import useScheduleStore from '../../store/scheduleStore'; 
-import { getDiaryDetail, getSchedule } from '../../api';
-import { fetchMyTravel } from '../../api/user/userContentApi';
+import { getDiaryDetail, getPublicSchedule } from '../../api';
 
 const TravelDiaryDetail = () => {
   const { id } = useParams();
@@ -40,24 +39,18 @@ const TravelDiaryDetail = () => {
             setDiary(res.data);
 
             if (res.data.scheduleId) {
-              try {
-                const trips = await fetchMyTravel(token);
-                const found = Array.isArray(trips)
-                  ? trips.find((t) => t.scheduleId === res.data.scheduleId)
-                  : null;
-
-                if (found) {
-                  setScheduleInfo(found);
-                  
-                  try {
-                    const scheduleRes = await getSchedule(found.scheduleId);
-                    setScheduleDetail(scheduleRes);
-                    scheduleStore.setDetail(scheduleRes);
-                  } catch (scheduleErr) {
-                  }
-                }
-              } catch (e) {
-                console.error("fetchMyTravel 에러:", e);
+               try {
+                const scheduleRes = await getPublicSchedule(res.data.scheduleId);
+                setScheduleDetail(scheduleRes);
+                scheduleStore.setDetail(scheduleRes);
+                setScheduleInfo({
+                  scheduleId: scheduleRes.scheduleId,
+                  startDate: scheduleRes.startDate,
+                  endDate: scheduleRes.endDate,
+                  scheduleName: scheduleRes.scheduleName,
+                });
+              } catch (scheduleErr) {
+                console.error("getSchedule 에러:", scheduleErr);
               }
             }
           } else {
@@ -189,7 +182,7 @@ const TravelDiaryDetail = () => {
                 {tags.map((tag, i) => (
                   <span
                     key={`${tag}-${i}`}
-                    className="text-blue-600 px-3 py-1 rounded-full"
+                    className="text-blue-600  py-1 rounded-full"
                   >
                     #{tag}
                   </span>

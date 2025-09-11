@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FavoriteButton from '../common/FavoriteButton';
-import ConfirmModal from '../modal/ConfirmModal'; 
-import { useToast } from '../../utils/useToast';
+import ConfirmModal from '../modal/ConfirmModal';
+import { message } from 'antd';
 
 const BookmarkItem = ({
   contentId,
@@ -19,9 +19,9 @@ const BookmarkItem = ({
   const navigate = useNavigate();
   const [imgError, setImgError] = useState(false);
 
-  const { showSuccess, showError, showInfo } = useToast();
-
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  const [messageApi, contextHolder] = message.useMessage();
 
   const handleClick = () => {
     navigate(`/place/detail/${contentId}`);
@@ -29,7 +29,6 @@ const BookmarkItem = ({
 
   const handleToggleFavorite = async (e) => {
     e.stopPropagation();
-    
 
     if (isFavorite) {
       setShowConfirmModal(true);
@@ -39,11 +38,11 @@ const BookmarkItem = ({
     try {
       const result = await toggleFavorite(contentId);
       if (result?.favorite) {
-        showSuccess('즐겨찾기에 추가되었습니다. ❤️');
+        messageApi.success('즐겨찾기에 추가되었습니다.');
       }
     } catch (err) {
       console.error('즐겨찾기 추가 실패:', err);
-      showError('즐겨찾기 처리에 실패했습니다.');
+      messageApi.error('즐겨찾기 처리에 실패했습니다.');
     }
   };
 
@@ -55,17 +54,17 @@ const BookmarkItem = ({
     try {
       const result = await toggleFavorite(contentId);
       if (!result?.favorite) {
-        showInfo('즐겨찾기에서 제거되었습니다. 🤍');
-        
+        messageApi.info('즐겨찾기에서 제거되었습니다.');
+
         if (onRemove) {
           setTimeout(() => {
             onRemove(contentId);
-          }, 1000); 
+          }, 1000);
         }
       }
     } catch (err) {
       console.error('즐겨찾기 제거 실패:', err);
-      showError('즐겨찾기 처리에 실패했습니다.');
+      messageApi.error('즐겨찾기 처리에 실패했습니다.');
     } finally {
       setShowConfirmModal(false);
     }
@@ -75,6 +74,8 @@ const BookmarkItem = ({
 
   return (
     <>
+      {contextHolder}
+
       <div
         onClick={handleClick}
         className="relative bg-white rounded-xl shadow overflow-hidden flex cursor-pointer hover:shadow-lg transition"
@@ -122,8 +123,7 @@ const BookmarkItem = ({
         title="즐겨찾기 해제"
         message={
           <>
-            <span className="font-medium">"{destination}"</span>을(를) 
-            즐겨찾기에서 제거하시겠습니까?
+            <span className="font-medium">"{destination}"</span>을(를) 즐겨찾기에서 제거하시겠습니까?
           </>
         }
         confirmText="제거"

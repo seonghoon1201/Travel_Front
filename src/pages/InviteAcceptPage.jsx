@@ -1,54 +1,69 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { GroupAPI } from '../api';
-import { message } from 'antd';
-import usePlanStore from '../store/planStore';
-import useUserStore from '../store/userStore'; // userId, username
+import { Modal, message } from 'antd';
+import useUserStore from '../store/userStore';
+import { joinSchedule } from '../api';
 
 const InviteAcceptPage = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const setGroupId = usePlanStore((s) => s.setGroupId);
-  const setGroupName = usePlanStore((s) => s.setGroupName);
-  const userId = useUserStore((s) => s.userId);
+  const isLoggedIn = useUserStore((s) => s.isLoggedIn);
 
-  const groupId = params.get('groupId');
-  const groupName = params.get('groupName');
-
-  const [status, setStatus] = useState('초대 확인 중...');
+  const scheduleId = params.get('scheduleId');
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    if (!scheduleId) {
+      message.error('잘못된 초대 링크입니다.');
+      navigate('/', { replace: true });
+      return;
+    }
+    // 로그인 필요
+    if (!isLoggedIn) {
+      // 로그인 후 돌아오도록 현재 URL 저장
+      localStorage.setItem(
+        'pendingScheduleInvite',
+        JSON.stringify({ scheduleId, ts: Date.now() })
+      );
+      message.info('로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+    setVisible(true);
+  }, [scheduleId, isLoggedIn, navigate]);
 
-    (async () => {
-      try {
-        if (!groupId || !userId) {
-          if (!cancelled) setStatus('필요한 정보가 부족합니다.');
-          return;
-        }
-        await GroupAPI.addMember(groupId, userId);
-        if (cancelled) return;
+  const onConfirm = async () => {
+    try {
+      await joinSchedule(scheduleId);
+      message.success('초대를 수락했어요! 마이페이지로 이동합니다.');
+      navigate('/mypage', { replace: true });
+    } catch (e) {
+      console.error(e);
+      message.error(e?.response?.data?.message || '초대 수락에 실패했어요.');
+    } finally {
+      setVisible(false);
+    }
+  };
 
-        setGroupId(groupId);
-        if (groupName) setGroupName(groupName);
-        setStatus('그룹에 참여되었습니다!');
-        navigate('/plan/invite', { replace: true });
-      } catch (e) {
-        console.error(e);
-        message.error('초대 수락에 실패했어요.');
-        if (!cancelled) setStatus('초대 수락 실패');
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [groupId, groupName, userId, navigate, setGroupId, setGroupName]);
+  const onCancel = () => {
+    setVisible(false);
+    navigate('/', { replace: true });
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-sm text-gray-700">{status}</div>
-    </div>
+    <Modal
+      open={visible}
+      title="초대를 수락하시겠어요?"
+      onOk={onConfirm}
+      onCancel={onCancel}
+      okText="확인"
+      cancelText="취소"
+      destroyOnClose
+    >
+      <div className="text-sm text-gray-600">
+        이 일정에 참여자로 추가됩니다. (ID: {scheduleId})
+      </div>
+    </Modal>
   );
 };
 

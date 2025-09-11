@@ -28,7 +28,6 @@ const CATEGORY_TO_CONTENTTYPEID = {
   축제: 15,
   레저: 28,
 };
-const FALLBACK_IMG = '/assets/dummy.jpg';
 
 const PlanCartPage = () => {
   const navigate = useNavigate();
@@ -113,8 +112,6 @@ const PlanCartPage = () => {
   // 최소/최대 개수
   const cartLimit = useMemo(() => (tripDays ? tripDays * 5 : null), [tripDays]);
   const cartMin = useMemo(() => (tripDays ? tripDays * 2 : null), [tripDays]);
-  const isMinMet = cartMin != null ? cartItems.length >= cartMin : false;
-  const overBy = cartLimit != null ? cartItems.length - cartLimit : 0;
   const underBy = cartMin != null ? Math.max(0, cartMin - cartItems.length) : 0;
 
   // 예산 계산
@@ -679,6 +676,7 @@ const PlanCartPage = () => {
                           }}
                         />
                       ) : (
+                        // 🔹 이미지 없으면 무조건 No Image 박스
                         <div
                           className="w-14 h-14 rounded-md bg-gray-200 flex items-center justify-center text-[10px] text-gray-500 cursor-pointer"
                           onClick={(e) => {
@@ -802,7 +800,6 @@ const PlanCartPage = () => {
         height="70%"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        destroyOnClose
       >
         {cartItems.length === 0 ? (
           <div className="text-sm text-gray-500">담긴 장소가 없어요.</div>
@@ -814,16 +811,37 @@ const PlanCartPage = () => {
                 className="flex items-center justify-between p-2 border rounded-lg"
               >
                 <div className="flex items-center gap-3">
-                  <img
-                    src={it.imageUrl || FALLBACK_IMG}
-                    alt={it.name}
-                    className="w-12 h-12 rounded-md object-cover cursor-pointer"
-                    onError={(e) => (e.currentTarget.src = FALLBACK_IMG)}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      goToDetail(String(it.contentId));
-                    }}
-                  />
+                  {it.imageUrl ? (
+                    <img
+                      src={it.imageUrl}
+                      alt={it.name}
+                      className="w-12 h-12 rounded-md object-cover cursor-pointer"
+                      onError={(e) => {
+                        // 깨지면 No Image 박스로 교체
+                        e.currentTarget.replaceWith(
+                          Object.assign(document.createElement('div'), {
+                            className:
+                              'w-12 h-12 rounded-md bg-gray-200 flex items-center justify-center text-[10px] text-gray-500 cursor-pointer',
+                            innerText: 'No Image',
+                          })
+                        );
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        goToDetail(String(it.contentId));
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="w-12 h-12 rounded-md bg-gray-200 flex items-center justify-center text-[10px] text-gray-500 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        goToDetail(String(it.contentId));
+                      }}
+                    >
+                      No Image
+                    </div>
+                  )}
                   <div>
                     <div
                       className="text-sm font-semibold hover:underline cursor-pointer"
