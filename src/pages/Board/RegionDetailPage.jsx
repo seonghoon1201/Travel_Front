@@ -161,7 +161,7 @@ const RegionDetailPage = () => {
           }
 
           setPlaces((prev) => [...prev, ...next]);
-          setHasMore(batch.length === size);
+          setHasMore(batch.length > 0);
           setPage(pageToLoad);
         } else {
           setHasMore(false);
@@ -185,7 +185,11 @@ const RegionDetailPage = () => {
 
   const handleLoadMore = () => {
     if (!loading && hasMore) {
-      fetchPage(page + 1);
+      setPage((prev) => {
+        const nextPage = prev + 1;
+        fetchPage(nextPage);
+        return nextPage;
+      });
     }
   };
 
