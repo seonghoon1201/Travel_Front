@@ -45,7 +45,6 @@ export {
   createSchedule,
   optimizeSchedule,
   getSchedule,
-  getPublicSchedule,
   deleteSchedule,
   updateScheduleAll,
   joinSchedule
