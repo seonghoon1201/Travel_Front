@@ -43,7 +43,8 @@ const LocationSection = ({ navigateTo = '/board/hot', limit = 10 }) => {
     load();
   }, [limit]);
 
-  const handleClick = (city, ldongRegnCd, ldongSignguCd) => {
+  const handleClick = (city, ldongRegnCd, ldongSignguCd) => {  console.log('넘어가는 값:', { city, ldongRegnCd, ldongSignguCd });
+
     navigate(`/region/detail/${encodeURIComponent(city)}`, {
       state: { 
         ldongRegnCd, 

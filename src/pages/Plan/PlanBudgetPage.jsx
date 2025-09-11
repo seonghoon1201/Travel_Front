@@ -21,12 +21,6 @@ const PlanBudgetPage = () => {
     if (storePeople && Number(storePeople) > 0) setPeople(storePeople);
     if (Number.isFinite(storeBudget) && storeBudget >= 0)
       setBudget(storeBudget);
-    console.log(
-      '[PlanBudgetPage] loaded from store → people:',
-      storePeople,
-      'budget:',
-      storeBudget
-    );
   }, [storePeople, storeBudget]);
 
   const minBudget = 0;
@@ -49,17 +43,10 @@ const PlanBudgetPage = () => {
   const handleSubmit = () => {
     const clampedPeople = Math.max(1, Number(people) || 1);
     const clampedBudget = Math.min(maxBudget, Math.max(minBudget, numBudget));
-    console.log(
-      '[PlanBudgetPage] submit → people:',
-      clampedPeople,
-      'budget:',
-      clampedBudget
-    );
     savePeople(clampedPeople);
     saveBudget(clampedBudget);
     try {
       const persisted = JSON.parse(localStorage.getItem('plan-store-v3'));
-      console.log('[PlanBudgetPage] persisted snapshot after save:', persisted);
     } catch {}
     navigate('/plan/cart');
   };

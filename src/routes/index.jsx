@@ -24,7 +24,6 @@ import UpdateTravelDiaryPage from '../pages/Travel_Diary/UpdateTravelDiaryPage';
 import PlanLocationPage from '../pages/Plan/PlanLocationPage';
 import PlanDatePage from '../pages/Plan/PlanDatePage';
 import PlanStylePage from '../pages/Plan/PlanStylePage';
-import PlanInvitePage from '../pages/Plan/PlanInvitePage';
 import PlanBudgetPage from '../pages/Plan/PlanBudgetPage';
 import PlanCartPage from '../pages/Plan/PlanCartPage';
 import PlanFlowBoundary from '../components/plan/PlanFlowBoundary';
@@ -76,7 +75,6 @@ const AppRoutes = () => (
         <Route path="location" element={<PlanLocationPage />} />
         <Route path="date" element={<PlanDatePage />} />
         <Route path="style" element={<PlanStylePage />} />
-        <Route path="invite" element={<PlanInvitePage />} />
         <Route path="budget" element={<PlanBudgetPage />} />
         <Route path="cart" element={<PlanCartPage />} />
         <Route path="auto" element={<ScheduleAutoPage />} />
@@ -87,8 +85,11 @@ const AppRoutes = () => (
         <Route path="add" element={<AddPlace />} />
       </Route>
       <Route path="/schedule/view/:scheduleId" element={<ScheduleViewPage />} />
-      <Route path="/schedule/invite/:scheduleId" element={<ScheduleInvitePage />} />
-      
+      <Route
+        path="/schedule/invite/:scheduleId"
+        element={<ScheduleInvitePage />}
+      />
+
       <Route path="/kakao/callback" element={<KakaoCallbackPage />} />
       <Route path="/invite" element={<InviteAcceptPage />} />
     </Routes>

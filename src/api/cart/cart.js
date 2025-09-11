@@ -12,12 +12,6 @@ export async function createCart({ ldongRegnCd, ldongSignguCd }) {
     throw err;
   }
 
-  // 디버그
-  console.log('[CartAPI.createCart] POST /carts params →', {
-    lDongRegnCd,
-    lDongSignguCd,
-  });
-
   const { data } = await http.post('/carts', null, {
     params: { lDongRegnCd, lDongSignguCd }, // ← swagger 그대로 (소문자 l)
   });

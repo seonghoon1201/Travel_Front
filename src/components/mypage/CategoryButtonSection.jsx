@@ -6,7 +6,6 @@ const CategoryButtonsSection = ({ activeCategory, setActiveCategory }) => {
 
   const handleClick = (category) => {
     setActiveCategory(category);
-    console.log('선택된 카테고리:', category);
   };
 
   return (

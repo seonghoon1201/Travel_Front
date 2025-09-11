@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, MapPinned, Notebook, Heart } from 'lucide-react';
 import { message } from 'antd';
@@ -7,102 +7,152 @@ import useUserStore from '../../store/userStore';
 import DeleteAccountModal from './DeleteAccountModal';
 import { deleteUser } from '../../api/auth/user';
 
-const SideMenu = ({ onClose }) => {
+const SideMenu = ({
+  open,
+  onClose,
+  setOpenDeleteModal,
+  openDeleteModal,
+  deleting,
+  setDeleting,
+}) => {
   const navigate = useNavigate();
 
-  const nickname = useUserStore((state) => state.nickname);
-  const profileImageUrl = useUserStore((state) => state.profileImageUrl);
-  const isLoggedIn = useUserStore((state) => state.isLoggedIn);
-  const accessToken = useUserStore((state) => state.accessToken);
-  const logout = useUserStore((state) => state.logout);
-  const initializeFromStorage = useUserStore((state) => state.initializeFromStorage);
-
-  const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-
-  const [messageApi, contextHolder] = message.useMessage();
+  const nickname = useUserStore((s) => s.nickname);
+  const profileImageUrl = useUserStore((s) => s.profileImageUrl);
+  const isLoggedIn = useUserStore((s) => s.isLoggedIn);
+  const accessToken = useUserStore((s) => s.accessToken);
+  const logout = useUserStore((s) => s.logout);
+  const initializeFromStorage = useUserStore((s) => s.initializeFromStorage);
 
   useEffect(() => {
     initializeFromStorage();
   }, [initializeFromStorage]);
 
-  const handleProfileEdit = () => {
-    navigate('/edit/profile');
-    onClose();
-  };
+  // 페이지 이동은 즉시 닫기 (언마운트 X, 클래스만 변경)
+  const closeNow = useCallback(() => {
+    onClose?.(); // 부모의 isMenuOpen=false (언마운트 하지 않고 항상 렌더)
+  }, [onClose]);
 
-  const handleTabClick = (tab) => {
-    navigate(`/mypage?tab=${tab}`);
-    onClose();
-  };
+  const nav = useCallback(
+    (path) => {
+      closeNow();
+      navigate(path);
+    },
+    [navigate, closeNow]
+  );
 
-  const goTo = (path) => {
-    navigate(path);
-    onClose();
-  };
+  const handleProfileEdit = () => nav('/edit/profile');
+  const handleTabClick = (tab) => nav(`/mypage?tab=${tab}`);
+  const goTo = (path) => nav(path);
+  const handleLogin = () => nav('/login');
 
   const handleLogout = () => {
-    logout();
-    onClose();
-    messageApi.success('로그아웃 되었습니다.');
-    navigate('/');
+    try {
+      logout();
+      closeNow();
+      message.success('로그아웃 되었습니다.');
+      navigate('/');
+    } catch (e) {
+      console.error(e);
+      message.error('로그아웃 중 오류가 발생했어요.');
+    }
   };
 
-  const handleLogin = () => {
-    onClose();
-    navigate('/login');
-  };
-
-  const openDelete = useCallback(() => setOpenDeleteModal(true), []);
-  const closeDelete = useCallback(() => setOpenDeleteModal(false), []);
+  const openDelete = useCallback(
+    () => setOpenDeleteModal(true),
+    [setOpenDeleteModal]
+  );
+  const closeDelete = useCallback(
+    () => setOpenDeleteModal(false),
+    [setOpenDeleteModal]
+  );
 
   const confirmDelete = useCallback(async () => {
     try {
       setDeleting(true);
-      await deleteUser(accessToken); 
-      messageApi.success('탈퇴가 완료되었습니다.');
+      await deleteUser(accessToken);
+      message.success('탈퇴가 완료되었습니다.');
       logout();
       closeDelete();
-      onClose?.();
+      closeNow();
       navigate('/');
     } catch (e) {
       console.error(e);
-      messageApi.error('탈퇴 처리에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+      message.error('탈퇴 처리에 실패했습니다. 잠시 후 다시 시도해 주세요.');
     } finally {
       setDeleting(false);
     }
-  }, [accessToken, logout, closeDelete, navigate, onClose, messageApi]);
+  }, [accessToken, logout, closeDelete, closeNow, navigate, setDeleting]);
+
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+
+    const prevHtmlOverflow = html.style.overflow;
+    const prevBodyOverflow = body.style.overflow;
+    const prevBodyOverscroll = body.style.overscrollBehavior;
+
+    const current = Number(html.dataset.lockCount || 0);
+
+    if (open) {
+      html.dataset.lockCount = String(current + 1);
+      html.style.overflow = 'hidden';
+      body.style.overflow = 'hidden'; // iOS 대응
+      body.style.overscrollBehavior = 'contain'; // 바운스 방지
+    }
+
+    return () => {
+      if (open) {
+        const next = Math.max(0, Number(html.dataset.lockCount || 1) - 1);
+        if (next === 0) {
+          delete html.dataset.lockCount;
+          html.style.overflow = prevHtmlOverflow;
+          body.style.overflow = prevBodyOverflow;
+          body.style.overscrollBehavior = prevBodyOverscroll;
+        } else {
+          html.dataset.lockCount = String(next);
+        }
+      }
+    };
+  }, [open]);
 
   return (
     <>
       {/* 오버레이 */}
-      <div className="fixed inset-0 bg-black bg-opacity-40 z-40" onClick={onClose} />
+      {open && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 opacity-100"
+          onClick={closeNow}
+          aria-hidden="true"
+        />
+      )}
 
-      {/* 사이드 메뉴 */}
-      <div className="fixed top-0 right-0 h-full w-4/5 bg-white z-50 shadow-lg transition-transform duration-300 p-4">
-        {contextHolder}
-
-        {/* 닫기 */}
+      {/* 패널: 항상 마운트, 클래스만 변경해서 스르륵 */}
+      <div
+        className={[
+          'fixed top-0 right-0 h-full w-4/5 max-w-[420px] bg-white z-50 shadow-lg p-4',
+          'flex flex-col overflow-hidden',
+          'transition-transform duration-300 ease-out',
+          open ? 'translate-x-0' : 'translate-x-full',
+        ].join(' ')}
+        role="dialog"
+        aria-modal="true"
+      >
+        {/* 상단 닫기 */}
         <div className="flex justify-start">
-          <button className="pt-3 pl-2" onClick={onClose}>
+          <button className="pt-3 pl-2" onClick={closeNow} aria-label="닫기">
             <X className="w-7 h-7" />
           </button>
         </div>
 
-        {/* 내용 */}
-        <div className="px-2 mt-16 font-pretendard flex flex-col h-[calc(100%-64px)]">
+        {/* 본문 (스크롤 영역) */}
+        <div className="px-2 mt-16 font-pretendard flex-1 min-h-0 overflow-y-auto">
           {isLoggedIn ? (
             <>
               {/* 프로필 */}
               <div className="flex items-center justify-between mb-6">
                 <div className="w-3/5">
                   <p className="font-noonnu">안녕하세요, {nickname}님</p>
-                  <p
-                    className="text-sm text-gray-500 cursor-pointer"
-                    onClick={handleProfileEdit}
-                  >
-                    프로필편집 &gt;
-                  </p>
                 </div>
                 <div className="w-2/5 flex justify-end">
                   <img
@@ -115,64 +165,56 @@ const SideMenu = ({ onClose }) => {
 
               {/* 탭 */}
               <div className="flex justify-between items-center pt-7 pb-7 px-2 border-t border-b border-gray-200">
-                <div
+                <button
                   className="flex flex-col items-center gap-1"
                   onClick={() => handleTabClick('myTrip')}
                 >
                   <MapPinned className="w-6 h-6" />
                   <span>내 여행</span>
-                </div>
-                <div
+                </button>
+                <button
                   className="flex flex-col items-center gap-1"
                   onClick={() => handleTabClick('myDiary')}
                 >
                   <Notebook className="w-6 h-6" />
                   <span>내 여행 일기</span>
-                </div>
-                <div
+                </button>
+                <button
                   className="flex flex-col items-center gap-1"
                   onClick={() => handleTabClick('myBookmark')}
                 >
                   <Heart className="w-6 h-6" />
                   <span>즐겨찾기</span>
-                </div>
+                </button>
               </div>
 
-              {/* 메뉴 */}
-              <div className="flex flex-col justify-between flex-1">
-                <ul className="mt-7 space-y-4 text-sm text-gray-700">
-                  <li
-                    className="flex justify-between items-center border-b pb-3"
-                    onClick={() => goTo('/edit/profile')}
-                  >
-                    프로필 편집 <span>&gt;</span>
-                  </li>
-                  <li
-                    className="flex justify-between items-center border-b pb-3"
-                    onClick={() => goTo('/mypage')}
-                  >
-                    마이페이지 <span>&gt;</span>
-                  </li>
-                  <li
-                    className="flex justify-between items-center border-b pb-3"
-                    onClick={() => goTo('/guide')}
-                  >
-                    서비스 이용 안내 <span>&gt;</span>
-                  </li>
-                  <li
-                    className="flex justify-between items-center border-b pb-3 text-red-500"
-                    onClick={handleLogout}
-                  >
-                    로그아웃 <span>&gt;</span>
-                  </li>
-                  <li
-                    className="flex justify-between items-center"
-                    onClick={openDelete}
-                  >
-                    탈퇴하기 <span>&gt;</span>
-                  </li>
-                </ul>
-              </div>
+              {/* 메뉴 리스트 */}
+              <ul className="mt-7 space-y-4 text-sm text-gray-700">
+                <li
+                  className="flex justify-between items-center border-b pb-3 cursor-pointer"
+                  onClick={() => goTo('/edit/profile')}
+                >
+                  프로필 편집 <span>&gt;</span>
+                </li>
+                <li
+                  className="flex justify-between items-center border-b pb-3 cursor-pointer"
+                  onClick={() => goTo('/mypage')}
+                >
+                  마이페이지 <span>&gt;</span>
+                </li>
+                <li
+                  className="flex justify-between items-center border-b pb-3 cursor-pointer"
+                  onClick={() => goTo('/guide')}
+                >
+                  서비스 이용 안내 <span>&gt;</span>
+                </li>
+                <li
+                  className="flex justify-between items-center border-b pb-3 text-red-500 cursor-pointer"
+                  onClick={handleLogout}
+                >
+                  로그아웃 <span>&gt;</span>
+                </li>
+              </ul>
             </>
           ) : (
             <div className="text-center mt-10">
@@ -185,8 +227,21 @@ const SideMenu = ({ onClose }) => {
             </div>
           )}
         </div>
+
+        {/* 하단 고정 푸터: 회원 탈퇴 (항상 맨 아래) */}
+        {isLoggedIn && (
+          <div className="border-t py-5 px-2 flex-none">
+            <button
+              className="w-full text-center text-xs text-gray-500 hover:text-red-500 transition-colors"
+              onClick={openDelete}
+            >
+              회원 탈퇴
+            </button>
+          </div>
+        )}
       </div>
 
+      {/* 탈퇴 모달 */}
       <DeleteAccountModal
         open={openDeleteModal}
         onClose={closeDelete}
@@ -197,4 +252,19 @@ const SideMenu = ({ onClose }) => {
   );
 };
 
-export default SideMenu;
+export default function SideMenuContainer({ onClose, open }) {
+  // 내부에서 탈퇴 모달/로딩만 관리 (부모는 open만 관리)
+  const [openDeleteModal, setOpenDeleteModal] = React.useState(false);
+  const [deleting, setDeleting] = React.useState(false);
+
+  return (
+    <SideMenu
+      open={open}
+      onClose={onClose}
+      openDeleteModal={openDeleteModal}
+      setOpenDeleteModal={setOpenDeleteModal}
+      deleting={deleting}
+      setDeleting={setDeleting}
+    />
+  );
+}

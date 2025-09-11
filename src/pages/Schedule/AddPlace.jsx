@@ -10,8 +10,6 @@ import { getSchedule } from '../../api';
 import { getFavorites } from '../../api/favorite/getFavorites';
 import { getPlacesByRegion } from '../../api/place/getPlacesByRegion';
 import { createScheduleItem } from '../../api';
-
-// 👇 RegionDetailPage와 동일한 리스트 컴포넌트 사용
 import PlaceList from '../../components/board/PlaceList';
 
 const dedupBy = (arr, seen, item) => {

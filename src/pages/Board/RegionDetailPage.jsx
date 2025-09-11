@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { CalendarPlus } from 'lucide-react';
 import { message } from 'antd';
 
@@ -15,30 +15,36 @@ import { getHotRegions } from '../../api/region/getHotRegions';
 import useUserStore from '../../store/userStore';
 
 const RegionDetailPage = () => {
-  const { city } = useParams();
-  const decodedCity = city ? decodeURIComponent(city) : '';
+  const navigate = useNavigate();
+  const { city: cityParam } = useParams();
   const accessToken = useUserStore((s) => s.accessToken);
   const [messageApi, contextHolder] = message.useMessage();
 
   const locationHook = useLocation();
   const state = locationHook.state || {};
 
-  const searchParams = new URLSearchParams(locationHook.search);
+  // ✅ state.city 있으면 그걸 우선, 없으면 URL에서 받은 cityParam 사용
+  const decodedCity = state.city
+    ? decodeURIComponent(state.city)
+    : cityParam
+    ? decodeURIComponent(cityParam)
+    : '';
+
   const ldongRegnCd =
     state.ldongRegnCd ??
     state.lDongRegnCd ??
-    searchParams.get('ldongRegnCd') ??
-    searchParams.get('lDongRegnCd') ??
+    new URLSearchParams(locationHook.search).get('ldongRegnCd') ??
+    new URLSearchParams(locationHook.search).get('lDongRegnCd') ??
     '';
+
   const ldongSignguCd =
     state.ldongSignguCd ??
     state.lDongSignguCd ??
-    searchParams.get('ldongSignguCd') ??
-    searchParams.get('lDongSignguCd') ??
+    new URLSearchParams(locationHook.search).get('ldongSignguCd') ??
+    new URLSearchParams(locationHook.search).get('lDongSignguCd') ??
     '';
 
   const [regionInfo, setRegionInfo] = useState(null);
-
   const [weather, setWeather] = useState(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [places, setPlaces] = useState([]);
@@ -49,7 +55,7 @@ const RegionDetailPage = () => {
   const [hasMore, setHasMore] = useState(true);
   const idSetRef = useRef(new Set());
 
-   const handleCreateSchedule = () => {
+  const handleCreateSchedule = () => {
     if (!accessToken) {
       messageApi.warning(
         <>
@@ -59,10 +65,18 @@ const RegionDetailPage = () => {
       );
       return;
     }
-    // 로그인 되어 있다면 일정 만들기 페이지로 이동
-    // navigate('/plan/location');  // 필요시 추가
+
+    if (!ldongRegnCd || !ldongSignguCd) {
+      messageApi.warning('지역 정보가 부족합니다.');
+      return;
+    }
+
+    navigate('/plan/date', {
+      state: { ldongRegnCd, ldongSignguCd, city: decodedCity },
+    });
   };
 
+  // 🔹 지역 요약 불러오기
   useEffect(() => {
     const loadRegionInfo = async () => {
       try {
@@ -81,12 +95,12 @@ const RegionDetailPage = () => {
     }
   }, [decodedCity]);
 
+  // 🔹 날씨 불러오기
   const fetchWeather = useCallback(async () => {
     if (!decodedCity) return;
 
     try {
       setWeatherLoading(true);
-
       const cleanCityName = decodedCity.replace(/(시|군|구)$/, '');
       const response = await getWeather(cleanCityName);
 
@@ -108,6 +122,7 @@ const RegionDetailPage = () => {
     }
   }, [decodedCity, fetchWeather]);
 
+  // 🔹 즐길거리 초기화
   useEffect(() => {
     setPlaces([]);
     setPage(0);
@@ -115,6 +130,7 @@ const RegionDetailPage = () => {
     idSetRef.current.clear();
   }, [decodedCity, ldongRegnCd, ldongSignguCd]);
 
+  // 🔹 즐길거리 가져오기
   const fetchPage = useCallback(
     async (pageToLoad) => {
       if (!ldongRegnCd || !ldongSignguCd) return;
@@ -156,12 +172,12 @@ const RegionDetailPage = () => {
               opentime: item.openTime || '-',
               closetime: item.closeTime || '-',
               tel: item.tel || '정보 없음',
-              imageUrl: item.firstImage ,
+              imageUrl: item.firstImage,
             });
           }
 
           setPlaces((prev) => [...prev, ...next]);
-          setHasMore(batch.length === size);
+          setHasMore(batch.length > 0);
           setPage(pageToLoad);
         } else {
           setHasMore(false);
@@ -185,7 +201,11 @@ const RegionDetailPage = () => {
 
   const handleLoadMore = () => {
     if (!loading && hasMore) {
-      fetchPage(page + 1);
+      setPage((prev) => {
+        const nextPage = prev + 1;
+        fetchPage(nextPage);
+        return nextPage;
+      });
     }
   };
 
@@ -194,7 +214,7 @@ const RegionDetailPage = () => {
       {contextHolder}
       <div className="w-full mx-auto">
         <BackHeader />
-        <div className="px-4  sm:px-6 md:px-8 bg-[#F8FBFF]">
+        <div className="px-4 sm:px-6 md:px-8 bg-[#F8FBFF]">
           <div className="pb-6">
             <RegionSummary
               title={decodedCity}
@@ -203,6 +223,7 @@ const RegionDetailPage = () => {
             />
           </div>
 
+          {/* 날씨 */}
           <div className="pb-6">
             <h3 className="text-base font-semibold text-gray-800 mb-2">날씨</h3>
             {weatherLoading ? (
@@ -251,7 +272,8 @@ const RegionDetailPage = () => {
             )}
           </div>
 
-          <div >
+          {/* 즐길거리 */}
+          <div>
             <h3 className="text-base font-semibold text-gray-800 mb-2">즐길거리</h3>
             <div className="space-y-3">
               {places.length > 0 ? (
@@ -295,12 +317,13 @@ const RegionDetailPage = () => {
           </div>
         </div>
 
-
+        {/* 하단 버튼 */}
         <div className="fixed bottom-0 left-0 w-full px-4 py-3 bg-white shadow-lg z-50 border-t">
           <div className="mx-auto">
-            <PrimaryButton 
+            <PrimaryButton
               onClick={handleCreateSchedule}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm shadow">
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm shadow"
+            >
               <CalendarPlus className="w-4 h-4" />
               이 지역으로 일정 만들기
             </PrimaryButton>

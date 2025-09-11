@@ -10,6 +10,7 @@ import useScheduleStore from '../../store/scheduleStore';
 import usePlanStore from '../../store/planStore';
 import { getSchedule } from '../../api';
 import { message, Progress, Flex, Spin } from 'antd';
+import useUserStore from '../../store/userStore';
 
 const toNum = (v) => (typeof v === 'number' ? v : Number(v));
 
@@ -28,6 +29,68 @@ const ScheduleViewPage = () => {
 
   const planBudget = usePlanStore((s) => s.budget ?? 0);
   const budget = detail?.budget ?? planBudget;
+
+  const meId = useUserStore((s) => s.userId);
+
+  // 참여자 파싱
+  const participants = useMemo(() => {
+    const arr = Array.isArray(detail?.users) ? detail.users : [];
+    return arr.map((u) => ({
+      id: String(u.userId || ''),
+      name: u.userName || '참여자',
+      avatar: u.userProfileImage || '',
+    }));
+  }, [detail?.users]);
+
+  // 본인 제외한 ‘다른 사람’들
+  const otherMembers = useMemo(
+    () =>
+      participants.filter((p) => p.id && meId && String(p.id) !== String(meId)),
+    [participants, meId]
+  );
+
+  // 아바타 스택 UI
+  const AvatarStack = ({ people, max = 3 }) => {
+    if (!people?.length) return null;
+    // 화면을 밀지 않도록 요약(최대 max) + 나머지는 +N
+    const shown = people.slice(0, max);
+    const rest = people.length - shown.length;
+
+    return (
+      <div className="flex items-center">
+        <div className="flex -space-x-2">
+          {shown.map((p, idx) => (
+            <div
+              key={p.id || idx}
+              className="inline-flex h-7 w-7 rounded-full ring-2 ring-white overflow-hidden bg-gray-200 shrink-0"
+              title={p.name}
+            >
+              {p.avatar ? (
+                <img
+                  src={p.avatar}
+                  alt={p.name}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center text-[10px] text-gray-600">
+                  {p.name?.[0] || '유'}
+                </div>
+              )}
+            </div>
+          ))}
+          {rest > 0 && (
+            <div
+              className="inline-flex h-7 w-7 rounded-full ring-2 ring-white bg-gray-300 text-gray-700 text-[11px] items-center justify-center shrink-0"
+              title={`외 ${rest}명`}
+            >
+              +{rest}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   useEffect(() => {
     (async () => {
@@ -176,7 +239,7 @@ const ScheduleViewPage = () => {
     <DefaultLayout>
       <BackHeader />
       <div className="w-full mx-auto pb-16">
-        {/* === Hero (regionImage 배경) === */}
+        {/* === Hero === */}
         <div className="px-4 sm:px-6 md:px-8">
           <div className="mt-2 rounded-2xl overflow-hidden border shadow-sm relative">
             <div
@@ -192,31 +255,39 @@ const ScheduleViewPage = () => {
               )}
               <div className="absolute inset-0 bg-black/30" />
 
-              {/* ⬇️ 히어로 하단 오버레이: 제목/날짜 + 액션들 */}
-              <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3">
-                <div className="min-w-0">
-                  <h1 className="text-white font-extrabold text-lg sm:text-xl truncate drop-shadow">
-                    {title}
-                  </h1>
-                  <p className="text-white/90 text-xs sm:text-sm mt-0.5">
-                    {dateRange}
-                  </p>
-                </div>
+              {/* ⬆️ 상단 오버레이: 제목 + 날짜 (맨 위) */}
+              <div className="absolute top-4 left-5 right-4">
+                <h1 className="text-white font-extrabold text-xl sm:text-xl drop-shadow">
+                  {title}
+                </h1>
+                <p className="text-white/90 text-xs sm:text-sm mt-1">
+                  {dateRange}
+                </p>
+              </div>
 
-                {/* 초대하기(프라이머리) + 편집(고스트) */}
+              {/* ⬇️ 하단 오버레이: 참여자/버튼 (맨 아래, 오른쪽 정렬) */}
+              <div className="absolute bottom-3 left-4 right-4">
                 {canEdit ? (
-                  <div className="shrink-0 flex items-center gap-1.5">
+                  <div className="min-w-0 flex flex-wrap items-center justify-end gap-2">
+                    {participants?.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <AvatarStack people={participants} />
+                        <span className="text-white text-xs bg-black/40 px-2 py-0.5 rounded-full shrink-0">
+                          총 {participants.length}명
+                        </span>
+                      </div>
+                    )}
+
                     <button
                       onClick={() => navigate(`/schedule/invite/${scheduleId}`)}
                       aria-label="일정 초대하기"
                       className="
-                        px-3 py-1 rounded-full text-xs sm:text-sm font-semibold
-                        bg-primary text-white
-                        active:opacity-90 active:translate-y-[0.5px]
-                        focus:outline-none focus:ring-2 focus:ring-white/40
-                        shadow-sm
-                        whitespace-nowrap
-                      "
+                px-3 py-1 rounded-full text-xs sm:text-sm font-semibold
+                bg-primary text-white
+                active:opacity-90 active:translate-y-[0.5px]
+                focus:outline-none focus:ring-2 focus:ring-white/40
+                shadow-sm whitespace-nowrap shrink-0
+              "
                     >
                       <span className="inline-flex items-center gap-1.5">
                         <span className="text-[15px] leading-none">🤝</span>
@@ -227,13 +298,12 @@ const ScheduleViewPage = () => {
                     <button
                       onClick={() => setShowEditModal(true)}
                       className="
-                        px-3 py-1 rounded-full text-xs sm:text-sm
-                        bg-white/90 text-gray-700
-                        active:bg-white
-                        focus:outline-none focus:ring-2 focus:ring-white/50
-                        shadow-sm
-                        whitespace-nowrap
-                      "
+                px-3 py-1 rounded-full text-xs sm:text-sm
+                bg-white/90 text-gray-700
+                active:bg-white
+                focus:outline-none focus:ring-2 focus:ring-white/50
+                shadow-sm whitespace-nowrap shrink-0
+              "
                     >
                       편집
                     </button>
