@@ -5,7 +5,6 @@ import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
 import { message, Spin } from 'antd';
 import { LoadingOutlined } from '@ant-design/icons';
-import useUserStore from '../../store/userStore';
 import usePlanStore from '../../store/planStore';
 import useCartStore from '../../store/cartStore';
 import useScheduleStore from '../../store/scheduleStore';
@@ -70,7 +69,7 @@ async function resolveRegionLabel(locationIds, cartItems) {
   return '여행';
 }
 
-// ✅ 백엔드 스펙 변경(시간 제거)에 맞춘 완료 감지: dayNumber & order가 있으면 완료로 판단
+// 최적화 완료 감지: dayNumber & order 존재 시 완료
 async function waitUntilOptimized(id, { tries = 20, interval = 1200 } = {}) {
   for (let i = 0; i < tries; i++) {
     const detail = await getSchedule(id);
@@ -86,20 +85,15 @@ async function waitUntilOptimized(id, { tries = 20, interval = 1200 } = {}) {
   return await getSchedule(id);
 }
 
-const toHHmmss = (v) => {
+const toHHmm = (v) => {
   const s = String(v || '').trim();
-  if (!s) return '09:00:00';
+  if (!s) return '09:00';
   const m = s.match(/^(\d{1,2}):?(\d{2})/);
-  if (!m) return '09:00:00';
+  if (!m) return '09:00';
   const hh = String(Math.min(23, Number(m[1] || 9))).padStart(2, '0');
   const mm = String(Math.min(59, Number(m[2] || 0))).padStart(2, '0');
-  return `${hh}:${mm}:00`;
+  return `${hh}:${mm}`;
 };
-
-const isUuid = (s) =>
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    String(s || '')
-  );
 
 const clean = (obj) =>
   JSON.parse(
@@ -123,12 +117,6 @@ const toScheduleItems = (items = []) => {
   return result;
 };
 
-function makeTripTitle(locationIds) {
-  const head =
-    Array.isArray(locationIds) && locationIds[0] ? String(locationIds[0]) : '';
-  return head ? `${head} 여행` : '여행 일정';
-}
-
 const ScheduleAutoPage = () => {
   const ranRef = useRef(false);
   const navigate = useNavigate();
@@ -136,8 +124,6 @@ const ScheduleAutoPage = () => {
 
   const getSchedulePayload = usePlanStore((s) => s.getSchedulePayload);
   const locationIds = usePlanStore((s) => s.locationIds);
-  const myUserId = useUserStore((s) => s.userId);
-  const invitees = usePlanStore((s) => s.invitees);
 
   useEffect(() => {
     if (ranRef.current) return;
@@ -158,15 +144,6 @@ const ScheduleAutoPage = () => {
           }
         }
         const cartItems = useCartStore.getState().items;
-        const cartId = useCartStore.getState().cartId;
-
-        if (!cartId) {
-          message.error(
-            '카트 정보(cartId)를 찾을 수 없어요. 지역을 다시 선택해 주세요.'
-          );
-          navigate(-1);
-          return;
-        }
         if (!cartItems.length) {
           message.warning('장바구니가 비어있어요.');
           navigate(-1);
@@ -190,7 +167,6 @@ const ScheduleAutoPage = () => {
         scheduleStore.setPlaceIndex(idx);
 
         const base = getSchedulePayload();
-
         if (!base?.startDate || !base?.endDate) {
           message.error(
             '여행 날짜가 설정되지 않았어요. 날짜를 먼저 선택해 주세요.'
@@ -204,15 +180,6 @@ const ScheduleAutoPage = () => {
           (base.scheduleName && String(base.scheduleName).trim()) ||
           `${regionLabel} 여행`;
 
-        const meId = String(myUserId || '');
-        const othersCount = Array.isArray(invitees)
-          ? invitees.filter((u) => String(u?.userId || '') !== meId).length
-          : 0;
-        const rawGroupId = String(base.groupId || '').trim();
-        const safeGroupId = isUuid(rawGroupId) ? rawGroupId : undefined;
-        const isGroupTrip = Boolean(safeGroupId) && othersCount > 0;
-        const scheduleType = isGroupTrip ? 'GROUP' : 'PERSONAL';
-
         const style = String(
           base.scheduleStyle ||
             (Array.isArray(base.styles) ? base.styles[0] : '') ||
@@ -222,7 +189,7 @@ const ScheduleAutoPage = () => {
         const startPlace = String(
           base.startPlace || base.departurePlace || '서울역'
         );
-        const startTime = toHHmmss(
+        const startTime = toHHmm(
           base.startTime || base.departureTime || '09:00'
         );
 
@@ -241,12 +208,9 @@ const ScheduleAutoPage = () => {
           startDate: String(base.startDate),
           endDate: String(base.endDate),
           budget: Math.max(0, Math.round(Number(base.budget ?? 0))),
-          groupId: isGroupTrip ? safeGroupId : undefined,
-          scheduleType, // GROUP | PERSONAL
           scheduleStyle: style,
           startPlace,
-          startTime, // 'HH:mm:ss'
-          cartId,
+          startTime, // 'HH:mm'
           scheduleItem,
         });
 
@@ -282,14 +246,7 @@ const ScheduleAutoPage = () => {
         navigate(-1);
       }
     })();
-  }, [
-    getSchedulePayload,
-    invitees,
-    locationIds,
-    myUserId,
-    navigate,
-    scheduleStore,
-  ]);
+  }, [getSchedulePayload, locationIds, navigate, scheduleStore]);
 
   const indicator = <LoadingOutlined style={{ fontSize: 32 }} spin />;
 
@@ -306,8 +263,6 @@ const ScheduleAutoPage = () => {
             <div className="mt-3 text-sm text-gray-500">
               잠시만 기다려 주세요
             </div>
-
-            {/* 서브 힌트(선택) */}
             <div className="mt-6 text-[12px] text-gray-400">
               장바구니를 기반으로 이동 동선과 순서를 정리하고 있어요.
             </div>

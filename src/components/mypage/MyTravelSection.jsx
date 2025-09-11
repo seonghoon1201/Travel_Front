@@ -5,15 +5,17 @@ import { message } from 'antd';
 import MyTravelItem from './MyTravelItem';
 import useUserStore from '../../store/userStore';
 import { fetchMyTravel } from '../../api/user/userContentApi';
-import { deleteSchedule } from '../../api/schedule/schedule'; 
-import groupApi from '../../api/group/group';
-import ConfirmModal from '../modal/ConfirmModal';  
+import {
+  deleteSchedule,
+  getParticipantCount,
+} from '../../api/schedule/schedule';
+import ConfirmModal from '../modal/ConfirmModal';
 
 const MyTravelSection = () => {
   const [upcomingTrips, setUpcomingTrips] = useState([]);
   const [pastTrips, setPastTrips] = useState([]);
-  const [deleteTarget, setDeleteTarget] = useState(null); 
-  const [showConfirm, setShowConfirm] = useState(false); 
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const accessToken = useUserStore((state) => state.accessToken);
   const [messageApi, contextHolder] = message.useMessage();
@@ -34,14 +36,17 @@ const MyTravelSection = () => {
         const start = new Date(trip.startDate);
         start.setHours(0, 0, 0, 0);
 
-        // 그룹 인원 수 가져오기
+        // 새로운 API를 사용하여 스케줄 참여자 수 가져오기
         let companionCount = 1;
-        if (trip.groupId) {
+        if (trip.scheduleId) {
           try {
-            const res = await groupApi.count(trip.groupId);
+            const res = await getParticipantCount(trip.scheduleId);
             companionCount = res;
           } catch (err) {
-            console.error(`그룹 인원 수 불러오기 실패 (${trip.groupId}):`, err);
+            console.error(
+              `스케줄 참여자 수 불러오기 실패 (${trip.scheduleId}):`,
+              err
+            );
           }
         }
 
@@ -92,7 +97,8 @@ const MyTravelSection = () => {
   const confirmDeleteTrip = async () => {
     if (!deleteTarget) return;
     try {
-      await deleteSchedule(deleteTarget);
+      // ✅ 토큰 같이 전달
+      await deleteSchedule(deleteTarget, accessToken);
       await loadData();
       messageApi.success('일정이 삭제되었습니다.');
     } catch (error) {
@@ -123,7 +129,7 @@ const MyTravelSection = () => {
             companionCount={trip.companionCount}
             imageUrl={trip.imageUrl}
             onClick={() => handleClickTrip(trip.scheduleId)}
-            onDelete={handleDeleteTrip}  
+            onDelete={handleDeleteTrip}
           />
         ))
       )}

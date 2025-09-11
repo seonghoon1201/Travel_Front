@@ -11,9 +11,6 @@ export { registerUser, loginUser, resetPassword } from './auth/user';
 // 카카오
 export { getKakaoLoginUrl, kakaoCallback } from './auth/kakao';
 
-// 그룹
-export { default as GroupAPI } from './group/group';
-
 // 게시판
 export {  getDiary,getDiaryDetail, updateDiary, writeDiary} from './board/diary';
 export { getComments, createComment, deleteComment, updateComment } from './comment/comment';
@@ -50,7 +47,8 @@ export {
   getSchedule,
   getPublicSchedule,
   deleteSchedule,
-  updateScheduleAll
+  updateScheduleAll,
+  joinSchedule
 } from './schedule/schedule';
 
 // 스케줄 아이템 (명시적)

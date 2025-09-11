@@ -230,11 +230,6 @@ const ScheduleResultPage = () => {
 
         {/* Day 버튼 */}
         <div className="flex items-center gap-2 mb-4 mt-3">
-          <div className="flex-shrink-0">
-            <PrimaryButton className="px-3 py-1 text-sm whitespace-nowrap">
-              함께하는 일행
-            </PrimaryButton>
-          </div>
           <div className="flex-1 overflow-x-auto scrollbar-hide">
             <div className="flex gap-2 w-max">
               {days.map((_, idx) => (

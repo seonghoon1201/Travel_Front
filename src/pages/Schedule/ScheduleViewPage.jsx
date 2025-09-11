@@ -1,6 +1,6 @@
 // src/pages/schedule/ScheduleViewPage.jsx
 import React, { useMemo, useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -10,16 +10,17 @@ import KakaoMap from '../../components/map/KakaoMap';
 import useScheduleStore from '../../store/scheduleStore';
 import usePlanStore from '../../store/planStore';
 import { getSchedule } from '../../api';
-import { message, Progress, Flex, Spin } from 'antd'; // ← Spin 추가
+import { message, Progress, Flex, Spin } from 'antd';
 
 const toNum = (v) => (typeof v === 'number' ? v : Number(v));
 
 const ScheduleViewPage = () => {
   const { scheduleId } = useParams();
+  const navigate = useNavigate();
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
-  const [loading, setLoading] = useState(true); // ← 로딩 상태
+  const [loading, setLoading] = useState(true);
 
   const detail = useScheduleStore((s) => s.detail);
   const setDetail = useScheduleStore((s) => s.setDetail);
@@ -36,14 +37,14 @@ const ScheduleViewPage = () => {
           setLoading(false);
           return;
         }
-        setLoading(true); // ← 시작
+        setLoading(true);
         const res = await getSchedule(scheduleId);
         setDetail(res);
       } catch (e) {
         console.error('[ScheduleViewPage] reload fail', e?.response?.data || e);
         message.error('일정 정보를 불러오지 못했어요.');
       } finally {
-        setLoading(false); // ← 종료
+        setLoading(false);
       }
     })();
   }, [scheduleId, detail?.scheduleId, detail?.id, setDetail]);
@@ -57,7 +58,7 @@ const ScheduleViewPage = () => {
       if (!key) return;
 
       const lat = toNum(it.latitude ?? it.lat ?? it.mapY);
-      const lng = toNum(it.longitude ?? it.lng ?? it.mapX);
+      const lng = toNum(it.longitude ?? it.mapX ?? it.lng);
 
       idx[key] = {
         name: it.title || it.name || key,
@@ -100,7 +101,6 @@ const ScheduleViewPage = () => {
     return Math.min(100, (totalCost / budget) * 100);
   }, [budget, totalCost]);
 
-  // 마커 생성
   const selectedMarkers = useMemo(() => {
     const d = days[selectedDayIndex];
     let list = d?.plans ?? [];
@@ -134,7 +134,6 @@ const ScheduleViewPage = () => {
       ? `${detail.startDate} ~ ${detail.endDate}`
       : '';
 
-  // 지도 준비 여부: API 로딩 끝 + 마커가 하나 이상
   const isMapReady = !loading && selectedMarkers.length > 0;
 
   return (
@@ -144,12 +143,14 @@ const ScheduleViewPage = () => {
         {/* Header */}
         <div className="flex justify-between items-center mb-1 px-1">
           <h1 className="text-xl font-bold">{title}</h1>
-          <button
-            onClick={() => setShowEditModal(true)}
-            className="text-sm text-gray-400"
-          >
-            편집
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="text-sm text-gray-400"
+            >
+              편집
+            </button>
+          </div>
         </div>
         <p className="text-sm text-gray-500 mt-1">{dateRange}</p>
 
@@ -185,8 +186,11 @@ const ScheduleViewPage = () => {
         {/* Day 버튼 */}
         <div className="flex items-center gap-2 mb-4 mt-3">
           <div className="flex-shrink-0">
-            <PrimaryButton className="px-3 py-1 text-sm whitespace-nowrap">
-              함께하는 일행
+            <PrimaryButton
+              className="px-3 py-1 text-sm whitespace-nowrap"
+              onClick={() => navigate(`/schedule/invite/${scheduleId}`)}
+            >
+              여행 초대하기
             </PrimaryButton>
           </div>
           <div className="flex-1 overflow-x-auto scrollbar-hide">
@@ -220,7 +224,9 @@ const ScheduleViewPage = () => {
               className="w-full h-48 rounded-lg"
             />
           ) : (
-            <Spin tip="지도를 준비 중..." />
+            <Spin tip="지도를 준비 중..." size="large" className="w-full">
+              <div className="w-full h-48 rounded-lg mb-6 bg-gray-50" />
+            </Spin>
           )}
         </div>
 

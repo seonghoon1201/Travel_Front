@@ -32,6 +32,7 @@ import PlanFlowBoundary from '../components/plan/PlanFlowBoundary';
 import ScheduleAutoPage from '../pages/Schedule/ScheduleAutoPage';
 import ScheduleResultPage from '../pages/Schedule/ScheduleResultPage';
 import ScheduleViewPage from '../pages/Schedule/ScheduleViewPage';
+import ScheduleInvitePage from '../pages/Schedule/ScheduleInvitePage';
 import AddPlace from '../pages/Schedule/AddPlace';
 
 import InviteAcceptPage from '../pages/InviteAcceptPage';
@@ -86,7 +87,8 @@ const AppRoutes = () => (
         <Route path="add" element={<AddPlace />} />
       </Route>
       <Route path="/schedule/view/:scheduleId" element={<ScheduleViewPage />} />
-
+      <Route path="/schedule/invite/:scheduleId" element={<ScheduleInvitePage />} />
+      
       <Route path="/kakao/callback" element={<KakaoCallbackPage />} />
       <Route path="/invite" element={<InviteAcceptPage />} />
     </Routes>
