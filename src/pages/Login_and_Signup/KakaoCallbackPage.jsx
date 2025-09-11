@@ -81,21 +81,27 @@ const KakaoCallbackPage = () => {
           isLoggedIn: true,
         });
 
-        // ✅ 이동 대상 계산
-        let next = redirectQuery || stateRedirect || '/';
-        try {
-          const raw = localStorage.getItem('pendingScheduleInvite');
-          const saved = raw ? JSON.parse(raw) : null;
-          if (!redirectQuery && !stateRedirect) {
-            if (saved?.redirect) next = saved.redirect;
-            else if (saved?.scheduleId)
+        // ✅ 이동 대상 계산: state > redirect query > 초대보관 > 기본('/')
+        let next = stateRedirect || redirectQuery || null;
+        if (!next) {
+          try {
+            const raw = localStorage.getItem('pendingScheduleInvite');
+            const saved = raw ? JSON.parse(raw) : null;
+            if (saved?.scheduleId) {
               next = `/invite?scheduleId=${saved.scheduleId}`;
+            } else if (saved?.redirect) {
+              next = saved.redirect;
+            }
+          } catch {
+            /* noop */
           }
-          // 사용한 pending은 정리
-          localStorage.removeItem('pendingScheduleInvite');
-        } catch {
-          // noop
         }
+        // 기본값 및 /login 방지: 홈으로 보냄
+        if (!next || String(next).startsWith('/login')) {
+          next = '/';
+        }
+        // 사용한 pending은 정리
+        localStorage.removeItem('pendingScheduleInvite');
 
         hide();
         msg.success('카카오 로그인에 성공했습니다.');
