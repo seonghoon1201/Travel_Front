@@ -8,7 +8,7 @@ import EditModal from '../../components/schedule/EditModal';
 import KakaoMap from '../../components/map/KakaoMap';
 import useScheduleStore from '../../store/scheduleStore';
 import usePlanStore from '../../store/planStore';
-import { getSchedule, getPublicSchedule } from '../../api';
+import { getSchedule } from '../../api';
 import { message, Progress, Flex } from 'antd';
 
 const toNum = (v) => (typeof v === 'number' ? v : Number(v));
@@ -19,7 +19,6 @@ const ScheduleViewPage = () => {
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
-  const [isPublicView, setIsPublicView] = useState(false); // 공개 보기 모드인지 확인
 
   const detail = useScheduleStore((s) => s.detail);
   const setDetail = useScheduleStore((s) => s.setDetail);
@@ -34,17 +33,7 @@ const ScheduleViewPage = () => {
       if (String(detail?.scheduleId ?? detail?.id) === String(scheduleId))
         return;
       try {
-        // 먼저 일반 API로 시도
-        let res;
-        try {
-          res = await getSchedule(scheduleId);
-          setIsPublicView(false);
-        } catch (error) {
-          // 일반 API 실패시 공개 API로 시도
-          console.log('일반 API 실패, 공개 API로 시도:', error);
-          res = await getPublicSchedule(scheduleId);
-          setIsPublicView(true);
-        }
+        const res = await getSchedule(scheduleId);
         setDetail(res);
       } catch (e) {
         console.error('[ScheduleViewPage] reload fail', e?.response?.data || e);
@@ -106,10 +95,9 @@ const ScheduleViewPage = () => {
     return Math.min(100, (totalCost / budget) * 100);
   }, [budget, totalCost]);
 
-  // ✅ 수정된 편집 가능 여부
-  // → 로그인 상태(detail이 내 일정으로 조회됨) + editable = true인 경우만 편집 가능
-  // → 로그아웃(public view)이면 무조건 편집 불가
-  const canEdit = !isPublicView && detail?.editable === true;
+  // ✅ editable 필드로만 편집 권한 판단
+  const canEdit = detail?.editable === true;
+  const isPublicView = detail?.editable === false;
 
   const selectedMarkers = useMemo(() => {
     const d = days[selectedDayIndex];
