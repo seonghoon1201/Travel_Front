@@ -327,7 +327,6 @@ const PlanCartPage = () => {
     }
   };
 
-
   // 포인트 메모이즈
   const points = useMemo(
     () =>
@@ -698,28 +697,30 @@ const PlanCartPage = () => {
                 typeof item.location.lat === 'number' &&
                 typeof item.location.lng === 'number';
 
-                const handleFavorite = async (contentId) => {
-                  try {
-                    const res = await toggleFavoriteApi(String(contentId));
+              const handleFavorite = async (contentId) => {
+                try {
+                  const res = await toggleFavoriteApi(String(contentId));
 
-                    if (res.favorite) {
-                      // 추가된 경우
-                      setFavoriteSet((prev) => new Set([...prev, String(contentId)]));
-                      message.success('즐겨찾기에 추가되었습니다!');
-                    } else {
-                      // 제거된 경우
-                      setFavoriteSet((prev) => {
-                        const next = new Set(prev);
-                        next.delete(String(contentId));
-                        return next;
-                      });
-                      message.info('즐겨찾기에서 제거되었습니다.');
-                    }
-                  } catch (err) {
-                    console.error('[favorite error]', err);
-                    message.error('즐겨찾기 처리에 실패했습니다.');
+                  if (res.favorite) {
+                    // 추가된 경우
+                    setFavoriteSet(
+                      (prev) => new Set([...prev, String(contentId)])
+                    );
+                    message.success('즐겨찾기에 추가되었습니다!');
+                  } else {
+                    // 제거된 경우
+                    setFavoriteSet((prev) => {
+                      const next = new Set(prev);
+                      next.delete(String(contentId));
+                      return next;
+                    });
+                    message.info('즐겨찾기에서 제거되었습니다.');
                   }
-                };
+                } catch (err) {
+                  console.error('[favorite error]', err);
+                  message.error('즐겨찾기 처리에 실패했습니다.');
+                }
+              };
 
               return (
                 <div
@@ -787,15 +788,21 @@ const PlanCartPage = () => {
 
                   {/* 오른쪽 버튼: 자세히 보기 + 카트 버튼 */}
                   <div className="flex items-center gap-2">
-                    <button
-                      className="text-xs px-2 py-1 rounded-md border border-blue-200 text-blue-600 hover:bg-blue-50 transition"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        goToDetail(String(item.contentId));
-                      }}
-                    >
-                      자세히 보기
-                    </button>
+                    <Tooltip title="자세히">
+                      <button
+                        className="w-8 h-8 rounded-md border border-blue-200 text-blue-600 hover:bg-blue-50 transition flex items-center justify-center"
+                        aria-label="자세히"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          goToDetail(String(item.contentId));
+                        }}
+                      >
+                        <span role="img" aria-hidden="true">
+                          🔍
+                        </span>
+                      </button>
+                    </Tooltip>
+
                     <CartButton
                       isAdded={isAdded}
                       onClick={(e) => {
@@ -924,12 +931,18 @@ const PlanCartPage = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
-                    className="text-xs text-blue-600 border border-blue-200 px-2 py-1 rounded-md hover:bg-blue-50"
-                    onClick={() => goToDetail(String(it.contentId))}
-                  >
-                    자세히
-                  </button>
+                  <Tooltip title="자세히">
+                    <button
+                      className="w-8 h-8 rounded-md border border-blue-200 text-blue-600 hover:bg-blue-50 flex items-center justify-center"
+                      aria-label="자세히"
+                      onClick={() => goToDetail(String(it.contentId))}
+                    >
+                      <span role="img" aria-hidden="true">
+                        🔍
+                      </span>
+                    </button>
+                  </Tooltip>
+
                   <button
                     className="text-xs text-red-500"
                     onClick={async () => {
