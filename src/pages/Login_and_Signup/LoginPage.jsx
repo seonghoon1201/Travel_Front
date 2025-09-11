@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import logo from '../../assets/logo.png';
-import { useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { message } from 'antd';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import { loginUser, getKakaoLoginUrl } from '../../api';
@@ -9,6 +9,7 @@ import useUserStore from '../../store/userStore';
 import { Eye, EyeOff } from 'lucide-react';
 
 const LoginPage = () => {
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const login = useUserStore((state) => state.login);
 
@@ -18,9 +19,65 @@ const LoginPage = () => {
   const [loggingIn, setLoggingIn] = useState(false);
   const [msg, contextHolder] = message.useMessage();
 
+  // ✅ 현재 페이지(로그인)의 종료 후 돌아갈 경로 계산
+  const currentUrl = `${window.location.pathname}${window.location.search}`;
+  const redirectParam = searchParams.get('redirect'); // /login?redirect=/invite?scheduleId=...
+
+  // ✅ 공통: 로그인 후 어디로 보낼지 결정
+  const computeNextUrl = () => {
+    // 1) 쿼리 파라미터 우선
+    if (redirectParam) return redirectParam;
+
+    // 2) localStorage 백업
+    try {
+      const raw = localStorage.getItem('pendingScheduleInvite');
+      if (raw) {
+        const saved = JSON.parse(raw);
+        // saved.redirect가 있으면 그걸 가장 우선
+        if (saved?.redirect) return saved.redirect;
+        // redirect가 없고 scheduleId만 있으면 초대수락 페이지로 보내기
+        if (saved?.scheduleId) return `/invite?scheduleId=${saved.scheduleId}`;
+      }
+    } catch {
+      /* no-op */
+    }
+
+    // 3) 기본
+    return '/';
+  };
+
+  // ✅ 카카오 로그인: redirect 유지해서 복귀 가능하게
   const handleKakaoLogin = () => {
     msg.loading('카카오 로그인 페이지로 이동합니다...', 1);
-    window.location.href = getKakaoLoginUrl();
+
+    // 백업 저장(혹시나 쿼리를 잃어버릴 경우 대비)
+    const scheduleId = new URLSearchParams(window.location.search).get(
+      'scheduleId'
+    );
+    localStorage.setItem(
+      'pendingScheduleInvite',
+      JSON.stringify({
+        // 초대 링크에서 온 경우라면 이미 저장돼 있을 가능성도 있지만 덮어써도 무방
+        scheduleId,
+        redirect: redirectParam || currentUrl, // 현재 위치를 redirect로 보관
+        ts: Date.now(),
+      })
+    );
+
+    // getKakaoLoginUrl()에 redirect를 추가
+    try {
+      const base = getKakaoLoginUrl(); // 예: https://kauth.kakao.com/oauth/authorize?...
+      const url = new URL(base);
+      // 백엔드/카카오 콜백에서 사용할 앱 내 리다이렉트를 추가 파라미터로 전달
+      url.searchParams.set('redirect', redirectParam || currentUrl);
+      window.location.href = url.toString();
+    } catch {
+      // 혹시 URL 파싱이 안 된다면 수동으로 붙임
+      const sep = getKakaoLoginUrl().includes('?') ? '&' : '?';
+      window.location.href = `${getKakaoLoginUrl()}${sep}redirect=${encodeURIComponent(
+        redirectParam || currentUrl
+      )}`;
+    }
   };
 
   const handleLogin = async () => {
@@ -42,9 +99,19 @@ const LoginPage = () => {
         userRole,
       } = data;
 
+      // ✅ 토큰/유저정보 저장
       login({ accessToken, refreshToken, nickname, profileImageUrl, userRole });
+
+      // ✅ 성공 메시지
       msg.success('로그인 성공!');
-      navigate('/');
+
+      // ✅ 이동 우선순위: redirect 파라미터 > pending.redirect > pending.scheduleId > /mypage
+      const next = computeNextUrl();
+
+      // ✅ 사용한 pending은 제거
+      localStorage.removeItem('pendingScheduleInvite');
+
+      navigate(next, { replace: true });
     } catch (error) {
       const status = error?.response?.status;
       msg.error(
