@@ -14,12 +14,16 @@ import CategoryButton from '../../components/common/CategoryButton';
 import CartButton from '../../components/common/CartButton';
 import FavoriteButton from '../../components/common/FavoriteButton';
 import AmountInputModal from '../../components/modal/AmountInputModal';
+
 import { HelpCircle, AlertTriangle, XCircle, Info } from 'lucide-react';
+
 import usePlanStore from '../../store/planStore';
 import { loadKakaoMap } from '../../utils/kakaoMapLoader';
 import { getPlacesByRegionTheme, getRegions } from '../../api';
 import useCartStore from '../../store/cartStore';
+
 import { toggleFavorite as toggleFavoriteApi } from '../../api/favorite/toggleFavorite';
+import { getFavorites } from '../../api/favorite/getFavorites';
 
 const CATEGORIES = ['관광', '숙소', '맛집', '축제', '레저'];
 const CATEGORY_TO_CONTENTTYPEID = {
@@ -64,6 +68,8 @@ const PlanCartPage = () => {
   const [codeInvalid, setCodeInvalid] = useState(false);
   const [apiItems, setApiItems] = useState([]);
   const [brokenImages, setBrokenImages] = useState(() => new Set());
+  const [favoriteSet, setFavoriteSet] = useState(new Set());
+
   const markBroken = (id) =>
     setBrokenImages((prev) => {
       if (prev.has(id)) return prev;
@@ -71,6 +77,7 @@ const PlanCartPage = () => {
       next.add(id);
       return next;
     });
+
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingList, setLoadingList] = useState(false);
@@ -284,6 +291,42 @@ const PlanCartPage = () => {
       infoWindowRef.current = null;
     };
   }, []);
+
+  // 사용자의 즐겨찾기 불러오기
+  useEffect(() => {
+    const loadFavorites = async () => {
+      try {
+        const data = await getFavorites({ page: 0, size: 100 });
+        const ids = data?.favorites?.map((f) => String(f.contentId)) ?? [];
+        setFavoriteSet(new Set(ids));
+      } catch (err) {
+        console.error('즐겨찾기 불러오기 실패:', err);
+      }
+    };
+    loadFavorites();
+  }, []);
+
+  // 즐겨찾기 토글 함수
+  const handleFavorite = async (contentId) => {
+    try {
+      const res = await toggleFavoriteApi(String(contentId));
+      if (res.favorite) {
+        setFavoriteSet((prev) => new Set([...prev, String(contentId)]));
+        message.success('즐겨찾기에 추가되었습니다!');
+      } else {
+        setFavoriteSet((prev) => {
+          const next = new Set(prev);
+          next.delete(String(contentId));
+          return next;
+        });
+        message.info('즐겨찾기에서 제거되었습니다.');
+      }
+    } catch (err) {
+      console.error('[favorite error]', err);
+      message.error('즐겨찾기 처리에 실패했습니다.');
+    }
+  };
+
 
   // 포인트 메모이즈
   const points = useMemo(
@@ -560,7 +603,7 @@ const PlanCartPage = () => {
     (cartLimit != null && cartItems.length > cartLimit) ||
     (cartMin != null && cartItems.length < cartMin);
 
-  // ✅ 상세 페이지로 이동
+  // 상세 페이지로 이동
   const goToDetail = useCallback(
     (id) => {
       // 플로우 유지 마커 (안전)
@@ -654,15 +697,24 @@ const PlanCartPage = () => {
                 !!item?.location &&
                 typeof item.location.lat === 'number' &&
                 typeof item.location.lng === 'number';
-                const handleFavorite = async () => {
+
+                const handleFavorite = async (contentId) => {
                   try {
-                    const res = await toggleFavoriteApi(String(item.contentId));
+                    const res = await toggleFavoriteApi(String(contentId));
+
                     if (res.favorite) {
+                      // 추가된 경우
+                      setFavoriteSet((prev) => new Set([...prev, String(contentId)]));
                       message.success('즐겨찾기에 추가되었습니다!');
                     } else {
+                      // 제거된 경우
+                      setFavoriteSet((prev) => {
+                        const next = new Set(prev);
+                        next.delete(String(contentId));
+                        return next;
+                      });
                       message.info('즐겨찾기에서 제거되었습니다.');
                     }
-                    toggleFavorite(String(item.contentId));
                   } catch (err) {
                     console.error('[favorite error]', err);
                     message.error('즐겨찾기 처리에 실패했습니다.');
@@ -691,7 +743,7 @@ const PlanCartPage = () => {
                           }}
                         />
                       ) : (
-                        // 🔹 이미지 없으면 무조건 No Image 박스
+                        // 이미지 없으면 무조건 No Image 박스
                         <div
                           className="w-14 h-14 rounded-md bg-gray-200 flex items-center justify-center text-[10px] text-gray-500 cursor-pointer"
                           onClick={(e) => {
@@ -703,8 +755,8 @@ const PlanCartPage = () => {
                         </div>
                       )}
                       <FavoriteButton
-                        isActive={isFavorite(String(item.contentId))}
-                        toggleFavorite={handleFavorite}
+                        isActive={favoriteSet.has(String(item.contentId))}
+                        toggleFavorite={() => handleFavorite(item.contentId)}
                       />
                     </div>
                     <div>

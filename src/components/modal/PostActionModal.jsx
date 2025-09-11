@@ -36,7 +36,9 @@ const PostActionModal = ({ id, writerNickname }) => {
     try {
       await deleteDiary(id);
       messageApi.success('삭제 완료되었습니다.');
+      setTimeout(() => {
       navigate('/board/travel/diary');
+    }, 1000);
     } catch (err) {
       console.error(err);
       messageApi.error('삭제에 실패했습니다.');
