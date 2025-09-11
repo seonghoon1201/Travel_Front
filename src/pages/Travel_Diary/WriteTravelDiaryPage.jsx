@@ -101,10 +101,8 @@ const WriteTravelDiary = () => {
   // 향상된 이미지 핸들러
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files || []);
-    console.log('📁 선택된 파일들:', files);
     
     if (!files.length) {
-      console.log('❌ 파일이 선택되지 않았습니다.');
       return;
     }
 
@@ -113,12 +111,6 @@ const WriteTravelDiary = () => {
     const invalidFiles = [];
     
     files.forEach(file => {
-      console.log('🔍 파일 검사:', {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        sizeInMB: (file.size / (1024 * 1024)).toFixed(2)
-      });
       
       // 이미지 타입 체크
       if (!file.type.startsWith('image/')) {
@@ -140,7 +132,6 @@ const WriteTravelDiary = () => {
     }
     
     if (validFiles.length === 0) {
-      console.log('❌ 유효한 파일이 없습니다.');
       return;
     }
     
@@ -149,18 +140,12 @@ const WriteTravelDiary = () => {
       ...previewUrls,
       ...validFiles.map((f) => {
         const url = URL.createObjectURL(f);
-        console.log('🖼️ 미리보기 URL 생성:', f.name, url);
         return url;
       })
     ];
     
     setSelectedFiles(nextFiles);
     setPreviewUrls(nextPreviews);
-    
-    console.log('✅ 파일 상태 업데이트:', {
-      totalFiles: nextFiles.length,
-      totalPreviews: nextPreviews.length
-    });
     
     // input 초기화 (같은 파일 다시 선택 가능하게)
     e.target.value = '';
@@ -191,38 +176,28 @@ const WriteTravelDiary = () => {
       let imageUrls = [...existingImageUrls];
       
       if (selectedFiles.length > 0) {
-        console.log('📁 업로드할 파일들:', selectedFiles.map(f => ({
-          name: f.name,
-          size: f.size,
-          type: f.type
-        })));
-        
+
         messageApi.info(`${selectedFiles.length}개 이미지 업로드 중...`);
         
         // 하나씩 업로드해서 어느 파일에서 문제가 생기는지 확인
         for (let i = 0; i < selectedFiles.length; i++) {
           const file = selectedFiles[i];
-          console.log(`📤 업로드 시도 ${i + 1}:`, file.name, file.size, 'bytes');
           
           try {
             const result = await uploadProfileImage(file);
-            console.log(`✅ 업로드 성공 ${i + 1}:`, result);
             
             if (result?.success && result?.imageUrl) {
               imageUrls.push(result.imageUrl);
             } else {
-              console.error(`❌ 업로드 실패 ${i + 1} - 응답 문제:`, result);
               messageApi.error(`이미지 ${i + 1} 업로드 실패: 응답이 올바르지 않습니다.`);
               return;
             }
           } catch (fileError) {
-            console.error(`❌ 업로드 실패 ${i + 1}:`, fileError);
             messageApi.error(`이미지 ${i + 1} 업로드 실패: ${fileError.message || fileError}`);
             return;
           }
         }
         
-        console.log('🖼️ 최종 이미지 URLs:', imageUrls);
       }
 
       const payload = {
@@ -233,22 +208,18 @@ const WriteTravelDiary = () => {
         scheduleId: selectedScheduleId,
       };
 
-      console.log('📝 일기 작성 요청:', payload);
       const result = await writeDiary(payload);
-      console.log('📝 일기 작성 응답:', result);
       
-      if (result?.success && result?.boardId) {
+      if (result?.success && result?.data?.boardId) {
         previewUrls.forEach((u) => URL.revokeObjectURL(u));
         messageApi.success('여행일기가 작성되었습니다!');
         setTimeout(() => {
-          navigate(`/board/travel/diary/${result.boardId}`);
+          navigate(`/board/travel/diary/${result.data.boardId}`);
         }, 1200);
       } else {
-        console.error('❌ 일기 작성 실패:', result);
         messageApi.error('일기 작성에 실패했습니다.');
       }
     } catch (err) {
-      console.error('❌ 전체 프로세스 실패:', err);
       messageApi.error('오류 발생: ' + (err?.response?.data?.message || err?.message || String(err)));
     }
   };
