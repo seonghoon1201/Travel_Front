@@ -89,7 +89,7 @@ const PlanStylePage = () => {
     const mapped = first ? STYLE_MAP[first] ?? first : '';
     setScheduleStyle(mapped);
 
-    navigate('/plan/invite');
+    navigate('/plan/budget');
   };
 
   const gridResponsive =
