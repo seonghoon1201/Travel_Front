@@ -45,7 +45,7 @@ const PlanDatePage = () => {
     (state) => state.setSelectedRegionMeta
   );
 
-  // ✅ state에서 받은 지역 정보 planStore에 저장
+  //  state에서 받은 지역 정보 planStore에 저장
   useEffect(() => {
     if (ldongRegnCd && ldongSignguCd) {
       setLocationCodes([{ ldongRegnCd, ldongSignguCd }]);
@@ -79,7 +79,7 @@ const PlanDatePage = () => {
     if (ampm === 'AM' && h === 12) h = 0;
     const timeString = `${String(h).padStart(2, '0')}:${minute}`;
 
-    // ✅ store에 날짜, 장소, 출발시간 저장
+    // store에 날짜, 장소, 출발시간 저장
     setDatesInStore({
       start: dayjs(dates[0]).format('YYYY-MM-DD'),
       end: dayjs(dates[1]).format('YYYY-MM-DD'),
