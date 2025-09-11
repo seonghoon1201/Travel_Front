@@ -69,7 +69,7 @@ async function resolveRegionLabel(locationIds, cartItems) {
   return '여행';
 }
 
-// 최적화 완료 감지: dayNumber & order 존재 시 완료
+// 최적화 완료 감지
 async function waitUntilOptimized(id, { tries = 20, interval = 1200 } = {}) {
   for (let i = 0; i < tries; i++) {
     const detail = await getSchedule(id);
@@ -252,19 +252,24 @@ const ScheduleAutoPage = () => {
 
   return (
     <DefaultLayout>
-      <div className="w-full max-w-sm mx-auto px-4">
-        <BackHeader title="일정 짜는 중..." />
-        <div className="py-16">
-          <div className="flex flex-col items-center justify-center text-center">
-            <Spin indicator={indicator} size="large" className="mb-2" />
-            <div className="mt-1 text-base font-semibold">
-              일정을 최적화하고 있어요...
-            </div>
-            <div className="mt-3 text-sm text-gray-500">
-              잠시만 기다려 주세요
-            </div>
-            <div className="mt-6 text-[12px] text-gray-400">
-              장바구니를 기반으로 이동 동선과 순서를 정리하고 있어요.
+      {/* ScheduleViewPage처럼 헤더를 래퍼 밖에 */}
+      <BackHeader title="일정 짜는 중..." />
+
+      {/* 그리고 본문 래퍼는 min-h-screen + pb-16, 공통 패딩 */}
+      <div className="w-full mx-auto pb-16 min-h-screen">
+        <div className="px-4 sm:px-6 md:px-8">
+          <div className="py-16">
+            <div className="flex flex-col items-center justify-center text-center">
+              <Spin indicator={indicator} size="large" className="mb-2" />
+              <div className="mt-1 text-base font-semibold">
+                일정을 최적화하고 있어요...
+              </div>
+              <div className="mt-3 text-sm text-gray-500">
+                잠시만 기다려 주세요
+              </div>
+              <div className="mt-6 text-[12px] text-gray-400">
+                장바구니를 기반으로 이동 동선과 순서를 정리하고 있어요.
+              </div>
             </div>
           </div>
         </div>

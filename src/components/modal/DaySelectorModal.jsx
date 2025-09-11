@@ -48,7 +48,7 @@ const DaySelectorModal = ({
         {scheduleInfo && (
           <div className="p-4 bg-gray-50 border-b">
             <h3 className="font-medium text-gray-800">{scheduleInfo.scheduleName}</h3>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-500 ">
               {scheduleInfo.startDate} ~ {scheduleInfo.endDate}
             </p>
           </div>
@@ -72,14 +72,11 @@ const DaySelectorModal = ({
                       <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-sm font-semibold">
                         {index + 1}
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-800">
-                          Day {index + 1}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {calculateDate(scheduleInfo?.startDate, index)}
-                        </p>
+                      <div className="flex items-center gap-2 text-gray-700 text-sm">
+                        <span className="font-medium">Day {index + 1}</span>
+                        <span className="text-gray-500">{calculateDate(scheduleInfo?.startDate, index)}</span>
                       </div>
+
                     </div>
                     
                     {/* 해당 날짜의 장소 개수 */}
