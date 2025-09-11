@@ -84,28 +84,48 @@ const SideMenu = ({
     }
   }, [accessToken, logout, closeDelete, closeNow, navigate, setDeleting]);
 
-  // body 스크롤 잠금 (열릴 때만)
   useEffect(() => {
-    const original = document.body.style.overflow;
-    if (open) document.body.style.overflow = 'hidden';
+    const html = document.documentElement;
+    const body = document.body;
+
+    const prevHtmlOverflow = html.style.overflow;
+    const prevBodyOverflow = body.style.overflow;
+    const prevBodyOverscroll = body.style.overscrollBehavior;
+
+    const current = Number(html.dataset.lockCount || 0);
+
+    if (open) {
+      html.dataset.lockCount = String(current + 1);
+      html.style.overflow = 'hidden';
+      body.style.overflow = 'hidden'; // iOS 대응
+      body.style.overscrollBehavior = 'contain'; // 바운스 방지
+    }
+
     return () => {
-      document.body.style.overflow = original;
+      if (open) {
+        const next = Math.max(0, Number(html.dataset.lockCount || 1) - 1);
+        if (next === 0) {
+          delete html.dataset.lockCount;
+          html.style.overflow = prevHtmlOverflow;
+          body.style.overflow = prevBodyOverflow;
+          body.style.overscrollBehavior = prevBodyOverscroll;
+        } else {
+          html.dataset.lockCount = String(next);
+        }
+      }
     };
   }, [open]);
 
   return (
     <>
       {/* 오버레이 */}
-      <div
-        className={[
-          'fixed inset-0 z-40 bg-black/40 transition-opacity duration-300',
-          open
-            ? 'opacity-100 pointer-events-auto'
-            : 'opacity-0 pointer-events-none',
-        ].join(' ')}
-        onClick={closeNow}
-        aria-hidden="true"
-      />
+      {open && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 opacity-100"
+          onClick={closeNow}
+          aria-hidden="true"
+        />
+      )}
 
       {/* 패널: 항상 마운트, 클래스만 변경해서 스르륵 */}
       <div
