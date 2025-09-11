@@ -1,4 +1,3 @@
-// src/components/schedule/PlanCard.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PlaceDetailModal from './PlaceDetailModal';
@@ -7,7 +6,8 @@ import useScheduleStore from '../../store/scheduleStore';
 import { updateScheduleItem } from '../../api';
 import { message } from 'antd';
 
-const PlanCard = ({ plan, index, isLast }) => {
+const PlanCard = ({ plan, index, isLast, canEdit = false }) => {
+
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [showMemoModal, setShowMemoModal] = useState(false);
@@ -17,7 +17,6 @@ const PlanCard = ({ plan, index, isLast }) => {
   const scheduleId = String(detail?.scheduleId ?? detail?.id ?? '');
   const patchItems = useScheduleStore((s) => s.patchItems);
 
-  // ✅ 서버 0-베이스 여부
   const isZeroBased = (() => {
     const items = Array.isArray(detail?.scheduleItems)
       ? detail.scheduleItems
@@ -40,6 +39,8 @@ const PlanCard = ({ plan, index, isLast }) => {
       .join(' | ');
 
   const handleSaveMemo = async (newMemo) => {
+    if (!canEdit) return;
+    
     try {
       const serverDay = isZeroBased
         ? Math.max(0, Number(plan.dayNumber) - 1) // plan.dayNumber는 UI 1-베이스
@@ -68,8 +69,22 @@ const PlanCard = ({ plan, index, isLast }) => {
     }
   };
 
+  const handleAddPlace = () => {
+    if (!canEdit) return; 
+    
+    navigate('/plan/add', {
+      state: {
+        scheduleId,
+        dayNumber: Number(plan?.dayNumber) || 1,
+        // 지역코드는 없으면 AddPlace가 상세 조회로 보완
+      },
+    });
+  };
+
   return (
     <div className="relative ">
+
+
       {/* 번호 + 세로선 */}
       <div className="absolute left-4 top-3 flex flex-col items-center z-10">
         <div
@@ -103,33 +118,26 @@ const PlanCard = ({ plan, index, isLast }) => {
           </div>
         )}
 
-        {/* 메모 버튼 */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowMemoModal(true);
-          }}
-          className="absolute bottom-2 right-2 text-[11px] text-blue-300 border border-gray-300 px-2 py-0.5 rounded"
-        >
-          +메모
-        </button>
+        {canEdit && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowMemoModal(true);
+            }}
+            className="absolute bottom-2 right-2 text-[11px] text-blue-300 border border-gray-300 px-2 py-0.5 rounded"
+          >
+            +메모
+          </button>
+        )}
       </div>
 
-      {/* 마지막 카드에만 하단 버튼 */}
+      {/* 마지막 카드에만 하단 버튼 - canEdit 권한이 있을 때만 표시 */}
       <div className="ml-16">
-        {isLast && (
+        {isLast && canEdit && (
           <div className="mt-2 flex gap-2 ">
             <button
               className="flex-1 text-xs text-gray-400 border border-gray-200 py-1 rounded"
-              onClick={() =>
-                navigate('/plan/add', {
-                  state: {
-                    scheduleId,
-                    dayNumber: Number(plan?.dayNumber) || 1,
-                    // 지역코드는 없으면 AddPlace가 상세 조회로 보완
-                  },
-                })
-              }
+              onClick={handleAddPlace}
             >
               장소 추가
             </button>
@@ -149,8 +157,8 @@ const PlanCard = ({ plan, index, isLast }) => {
         />
       )}
 
-      {/* 메모 모달 */}
-      {showMemoModal && (
+      {/* 메모 모달 - canEdit 권한이 있을 때만 표시 */}
+      {showMemoModal && canEdit && (
         <MemoModal
           defaultValue={memo}
           onClose={() => setShowMemoModal(false)}
