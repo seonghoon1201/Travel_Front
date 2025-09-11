@@ -102,9 +102,11 @@ const MyTravelSection = () => {
   const confirmDeleteTrip = useCallback(async () => {
     if (!deleteTarget) return;
     try {
-      await deleteSchedule(deleteTarget, accessToken); // ✅ 단 한 번만 호출
+      await deleteSchedule(deleteTarget); // ✅ 단 한 번만 호출
       await loadData();
-      messageApi.success('일정이 삭제되었습니다.');
+      messageApi.success(
+        '일정을 나갔습니다. (마지막 참여자라면 일정이 삭제됩니다.)'
+      );
     } catch (error) {
       console.error('일정 삭제 실패:', error);
       messageApi.warning('일정 삭제에 실패했습니다.');
@@ -112,7 +114,7 @@ const MyTravelSection = () => {
       setShowConfirm(false);
       setDeleteTarget(null);
     }
-  }, [deleteTarget, accessToken, loadData, messageApi]);
+  }, [deleteTarget, loadData, messageApi]);
 
   return (
     <div className="px-4 pt-2 m-2 sm:px-6 md:px-8">
@@ -163,8 +165,8 @@ const MyTravelSection = () => {
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}
         onConfirm={confirmDeleteTrip}
-        title="일정 삭제"
-        message="정말 이 일정을 삭제하시겠습니까?"
+        title="일정 나가기"
+        message="이 일정을 나가시겠습니까? (마지막 참여자라면 일정이 삭제됩니다.)"
         confirmText="삭제"
         cancelText="취소"
         confirmButtonClass="bg-red-500 hover:bg-red-600"
