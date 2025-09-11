@@ -94,7 +94,14 @@ const PlanLocationPage = () => {
     setLocationIds([selected.id]);
     setLocationCodes([{ ldongRegnCd: selected.ldongRegnCd, ldongSignguCd: selected.ldongSignguCd }]);
     setSelectedRegionMeta({ name: selected.name, imageUrl: selected.imageUrl });
-    navigate('/plan/date');
+    navigate('/plan/date' , {
+       state: {
+      ldongRegnCd: selected.ldongRegnCd,
+      ldongSignguCd: selected.ldongSignguCd,
+      city: selected.name,
+      imageUrl: selected.imageUrl,
+    },
+    },);
   };
 
   // 검색

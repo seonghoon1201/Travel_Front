@@ -90,17 +90,16 @@ const PlanDatePage = () => {
     navigate('/plan/style');
   };
 
-  return (
+   return (
     <DefaultLayout>
       <div className="w-full mx-auto pb-28">
         <BackHeader title="여행 기간 선택" />
-        <div className="px-4 sm:px-6 md:px-8">
+        <div className="px-4 sm:px-6 md:px-8 ">
           <RangePicker
-            className="w-full"
+            className="w-full rounded-lg border-gray-300 shadow-sm"
             format="YYYY-MM-DD"
             value={dates}
             onChange={setDates}
-            /* 오늘 이전 날짜 비활성화 */
             disabledDate={(current) =>
               !!current && current.startOf('day').isBefore(todayStart)
             }
@@ -121,8 +120,9 @@ const PlanDatePage = () => {
               }
             }}
             panelRender={(panelNode) => (
-              <div>
-                <div className="flex items-center justify-between px-3 py-2">
+              <div className="p-4 bg-white rounded-xl shadow-md border border-gray-200">
+                {/* 상단 헤더 */}
+                <div className="flex items-center justify-between mb-3">
                   <button
                     type="button"
                     onClick={() => {
@@ -132,9 +132,9 @@ const PlanDatePage = () => {
                         r.subtract(1, 'month'),
                       ]);
                     }}
-                    className={`text-sm ${
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
                       canGoPrevMonth
-                        ? 'text-gray-600 hover:text-gray-900'
+                        ? 'text-gray-700 hover:bg-gray-100'
                         : 'text-gray-300 cursor-not-allowed'
                     }`}
                     disabled={!canGoPrevMonth}
@@ -142,8 +142,8 @@ const PlanDatePage = () => {
                     ← 이전달
                   </button>
 
-                  <div className="text-sm font-medium">
-                    {pickerValue?.[0]?.format?.('YYYY MMM')}
+                  <div className="text-base font-semibold text-gray-800">
+                    {pickerValue?.[0]?.format?.('YYYY년 M월')}
                   </div>
 
                   <button
@@ -154,54 +154,73 @@ const PlanDatePage = () => {
                         r.add(1, 'month'),
                       ])
                     }
-                    className="text-sm text-gray-600 hover:text-gray-900"
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
                   >
                     다음달 →
                   </button>
                 </div>
-                {panelNode}
+
+                {/* 달력 패널 */}
+                <div className="border-t pt-3">{panelNode}</div>
               </div>
             )}
             getPopupContainer={(trigger) => trigger.parentNode}
           />
 
-          <Input
-            className="mt-4"
-            placeholder="출발 장소를 입력하세요 (예: 서울역)"
-            value={departurePlace}
-            onChange={(e) => setDeparturePlace(e.target.value)}
-          />
 
-          <div className="mt-2 flex gap-2">
-            <Select
-              value={ampm}
-              onChange={setAmpm}
-              className="w-1/3"
-              options={[
-                { value: 'AM', label: '오전' },
-                { value: 'PM', label: '오후' },
-              ]}
-            />
-            <Select
-              value={hour}
-              onChange={setHour}
-              className="w-1/3"
-              placeholder="시"
-              options={Array.from({ length: 12 }, (_, i) => ({
-                value: String(i + 1).padStart(2, '0'),
-                label: `${i + 1}시`,
-              }))}
-            />
-            <Select
-              value={minute}
-              onChange={setMinute}
-              className="w-1/3"
-              placeholder="분"
-              options={['00', '10', '20', '30', '40', '50'].map((m) => ({
-                value: m,
-                label: `${m}분`,
-              }))}
-            />
+           {/* 출발/도착 */}
+          <div className="grid grid-cols-2 gap-3 mb-4 mt-4 ">
+            <div className="p-4 rounded-xl border bg-white shadow-sm">
+              <div className="text-gray-600 text-sm font-medium mb-1">출발</div>
+              <Input
+                placeholder="예: 서울역"
+                value={departurePlace}
+                onChange={(e) => setDeparturePlace(e.target.value)}
+                className=" text-gray-800"
+              />
+            </div>
+            <div className="p-4 rounded-xl border bg-white shadow-sm">
+              <div className="text-gray-600 text-sm font-medium mb-1">도착</div>
+              <div className="text-base font-semibold text-blue-500">
+                {city || '여행지 선택됨'}
+              </div>
+            </div>
+          </div>
+
+          {/* 출발 시간 */}
+          <div className="p-4 rounded-xl border bg-white shadow-sm">
+            <div className="text-gray-600 text-sm font-medium mb-2">출발 시간</div>
+            <div className="flex gap-2">
+              <Select
+                value={ampm}
+                onChange={setAmpm}
+                className="flex-1"
+                options={[
+                  { value: 'AM', label: '오전' },
+                  { value: 'PM', label: '오후' },
+                ]}
+              />
+              <Select
+                value={hour}
+                onChange={setHour}
+                className="flex-1"
+                placeholder="시"
+                options={Array.from({ length: 12 }, (_, i) => ({
+                  value: String(i + 1).padStart(2, '0'),
+                  label: `${i + 1}시`,
+                }))}
+              />
+              <Select
+                value={minute}
+                onChange={setMinute}
+                className="flex-1"
+                placeholder="분"
+                options={['00', '10', '20', '30', '40', '50'].map((m) => ({
+                  value: m,
+                  label: `${m}분`,
+                }))}
+              />
+            </div>
           </div>
         </div>
       </div>
