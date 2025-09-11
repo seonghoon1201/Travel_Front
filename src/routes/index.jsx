@@ -87,8 +87,11 @@ const AppRoutes = () => (
         <Route path="add" element={<AddPlace />} />
       </Route>
       <Route path="/schedule/view/:scheduleId" element={<ScheduleViewPage />} />
-      <Route path="/schedule/invite/:scheduleId" element={<ScheduleInvitePage />} />
-      
+      <Route
+        path="/schedule/invite/:scheduleId"
+        element={<ScheduleInvitePage />}
+      />
+
       <Route path="/kakao/callback" element={<KakaoCallbackPage />} />
       <Route path="/invite" element={<InviteAcceptPage />} />
     </Routes>

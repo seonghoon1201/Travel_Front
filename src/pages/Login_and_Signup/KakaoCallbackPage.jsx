@@ -4,6 +4,33 @@ import { message } from 'antd';
 import { kakaoCallback } from '../../api';
 import useUserStore from '../../store/userStore';
 
+// ✅ state에서 redirect를 복원하는 유틸
+function parseRedirectFromState(state) {
+  if (!state) return null;
+  try {
+    const decoded = decodeURIComponent(state);
+
+    // 1) JSON 형태: {"redirect":"/invite?scheduleId=..."}
+    if (decoded.startsWith('{')) {
+      const obj = JSON.parse(decoded);
+      return obj.redirect || null;
+    }
+
+    // 2) 쿼리스트링 형태: "redirect=/invite?scheduleId=..."
+    if (decoded.includes('redirect=')) {
+      const sp = new URLSearchParams(decoded);
+      return sp.get('redirect');
+    }
+
+    // 3) 경로만 온 경우: "/invite?scheduleId=..."
+    if (decoded.startsWith('/')) return decoded;
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 const KakaoCallbackPage = () => {
   const navigate = useNavigate();
   const login = useUserStore((state) => state.login);
@@ -19,6 +46,9 @@ const KakaoCallbackPage = () => {
 
       const url = new URL(window.location.href);
       const code = url.searchParams.get('code');
+      const redirectQuery = url.searchParams.get('redirect'); // ✅ 쿼리로 전달된 redirect
+      const stateParam = url.searchParams.get('state'); // ✅ OAuth 표준 state
+      const stateRedirect = parseRedirectFromState(stateParam);
 
       if (!code) {
         msg.error('카카오 인증 코드가 없습니다.');
@@ -30,9 +60,7 @@ const KakaoCallbackPage = () => {
       try {
         const data = await kakaoCallback({ code });
         const jwtDto = data?.jwtDto;
-        if (!jwtDto) {
-          throw new Error('jwtDto가 응답에 없습니다.');
-        }
+        if (!jwtDto) throw new Error('jwtDto가 응답에 없습니다.');
 
         const { accessToken, refreshToken } = jwtDto;
         const nickname = data?.userNickname || '';
@@ -41,6 +69,7 @@ const KakaoCallbackPage = () => {
         const userEmail = data?.userEmail || '';
         const userName = data?.userName || '';
 
+        // 스토어 세팅
         login({
           accessToken,
           refreshToken,
@@ -52,9 +81,25 @@ const KakaoCallbackPage = () => {
           isLoggedIn: true,
         });
 
+        // ✅ 이동 대상 계산
+        let next = redirectQuery || stateRedirect || '/';
+        try {
+          const raw = localStorage.getItem('pendingScheduleInvite');
+          const saved = raw ? JSON.parse(raw) : null;
+          if (!redirectQuery && !stateRedirect) {
+            if (saved?.redirect) next = saved.redirect;
+            else if (saved?.scheduleId)
+              next = `/invite?scheduleId=${saved.scheduleId}`;
+          }
+          // 사용한 pending은 정리
+          localStorage.removeItem('pendingScheduleInvite');
+        } catch {
+          // noop
+        }
+
         hide();
         msg.success('카카오 로그인에 성공했습니다.');
-        navigate('/');
+        navigate(next, { replace: true });
       } catch (error) {
         hide();
         msg.error(

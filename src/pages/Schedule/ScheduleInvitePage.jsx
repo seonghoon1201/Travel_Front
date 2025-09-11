@@ -7,6 +7,7 @@ import { message } from 'antd';
 import { loadKakao } from '../../utils/kakao';
 import useScheduleStore from '../../store/scheduleStore';
 import usePlanStore from '../../store/planStore';
+import useUserStore from '../../store/userStore';
 import { getSchedule } from '../../api';
 
 const fmt = (d) => {
@@ -27,6 +28,45 @@ const ScheduleInvitePage = () => {
 
   // detail 없을 때 제목 폴백
   const fallbackScheduleName = usePlanStore((s) => s.scheduleName);
+
+  const meId = useUserStore((s) => s.userId);
+
+  // ✅ 참여자 파싱
+  const participants = useMemo(() => {
+    const arr = Array.isArray(detail?.users) ? detail.users : [];
+    return arr.map((u) => ({
+      id: String(u.userId || ''),
+      name: u.userName || '참여자',
+      avatar: u.userProfileImage || '',
+    }));
+  }, [detail?.users]);
+
+  // ✅ 본인 제외한 다른 참여자
+  const otherMembers = useMemo(
+    () =>
+      participants.filter((p) => p.id && meId && String(p.id) !== String(meId)),
+    [participants, meId]
+  );
+
+  const Avatar = ({ name, avatar }) => (
+    <div className="flex items-center gap-2 px-2 py-1 rounded-lg border bg-white">
+      <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-200 ring-1 ring-gray-200">
+        {avatar ? (
+          <img
+            src={avatar}
+            alt={name}
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="h-full w-full flex items-center justify-center text-xs text-gray-600">
+            {name?.[0] || '유'}
+          </div>
+        )}
+      </div>
+      <span className="text-sm text-gray-800">{name}</span>
+    </div>
+  );
 
   // ✅ Kakao SDK를 페이지 진입 시 미리 로드 (버튼 클릭 전에 준비)
   useEffect(() => {
@@ -191,6 +231,67 @@ const ScheduleInvitePage = () => {
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* ✅ 참여자 섹션 */}
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-sm font-semibold text-gray-800">
+                참여자{' '}
+                <span className="text-gray-500 font-normal">
+                  ({participants.length}명)
+                </span>
+              </h2>
+              {/* 필요 시: 초대 페이지에서도 겹친 아바타 요약 */}
+              {participants.length > 0 && (
+                <div className="flex -space-x-2">
+                  {participants.slice(0, 5).map((p) => (
+                    <div
+                      key={p.id}
+                      className="inline-flex h-7 w-7 rounded-full ring-2 ring-white overflow-hidden bg-gray-200"
+                    >
+                      {p.avatar ? (
+                        <img
+                          src={p.avatar}
+                          alt={p.name}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center text-[10px] text-gray-600">
+                          {p.name?.[0] || '유'}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {participants.length > 5 && (
+                    <div className="inline-flex h-7 w-7 rounded-full ring-2 ring-white bg-gray-300 text-gray-700 text-[11px] items-center justify-center">
+                      +{participants.length - 5}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {participants.length === 0 ? (
+              <div className="rounded-xl border bg-gray-50 text-gray-600 text-sm p-4">
+                아직 참여자가 없어요. 초대해서 일정을 함께 만들어보세요!
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {participants.map((p) => (
+                  <Avatar key={p.id} name={p.name} avatar={p.avatar} />
+                ))}
+              </div>
+            )}
+
+            {/* 본인 외 다른 사람 강조 메시지 (선택) */}
+            {otherMembers.length > 0 && (
+              <p className="text-xs text-gray-600 mt-2">
+                본인 외 <b>{otherMembers.length}명</b>이 이 일정에 참여
+                중입니다.
+              </p>
+            )}
           </div>
 
           {/* 가이드 섹션 */}
