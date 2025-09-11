@@ -91,14 +91,6 @@ const PlanLocationPage = () => {
         if (loc.id === id) return { ...loc, selected: willSelect };
         return { ...loc, selected: false };
       });
-
-      const target = next.find((l) => l.id === id);
-      console.log('[Location] 단일 선택 토글', {
-        regionId: target?.id,
-        name: target?.name,
-        selected: target?.selected,
-      });
-
       return next;
     });
   };

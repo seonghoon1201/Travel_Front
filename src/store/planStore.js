@@ -75,7 +75,6 @@ const usePlanStore = create(
       setPeople: (v) => set({ people: Math.max(1, Number(v) || 1) }),
       setBudget: (v) => {
         const next = Math.max(0, Number.isFinite(+v) ? +v : 0);
-        console.log('[planStore.setBudget] input:', v, '→ saved:', next);
         set({ budget: next });
       },
 
