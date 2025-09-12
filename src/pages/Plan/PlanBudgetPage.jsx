@@ -6,6 +6,13 @@ import BackHeader from '../../components/header/BackHeader';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import usePlanStore from '../../store/planStore';
 
+// 같은 세션인지 확인 (sessionStorage.planSessionId ↔ store.planSessionId)
+const isSamePlanSession = () => {
+  const ss = sessionStorage.getItem('planSessionId');
+  const { inPlanFlow, planSessionId } = usePlanStore.getState();
+  return inPlanFlow && ss && String(ss) === String(planSessionId);
+};
+
 const PlanBudgetPage = () => {
   const navigate = useNavigate();
 
@@ -18,6 +25,7 @@ const PlanBudgetPage = () => {
   const [budget, setBudget] = useState('');
 
   useEffect(() => {
+    if (!isSamePlanSession()) return; // 새 시작이면 복원 스킵
     if (storePeople && Number(storePeople) > 0) setPeople(storePeople);
     if (Number.isFinite(storeBudget) && storeBudget >= 0)
       setBudget(storeBudget);

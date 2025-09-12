@@ -55,6 +55,9 @@ const RegionDetailPage = () => {
   const [hasMore, setHasMore] = useState(true);
   const idSetRef = useRef(new Set());
 
+  const normalizeHttps = (u) =>
+    typeof u === 'string' ? u.trim().replace(/^http:\/\//i, 'https://') : '';
+
   const handleCreateSchedule = () => {
     if (!accessToken) {
       messageApi.warning(
@@ -71,8 +74,14 @@ const RegionDetailPage = () => {
       return;
     }
 
+    // ✅ RegionSummary에서 쓰던 이미지(또는 state로 들어온 이미지)가 있으면 같이 전달
+    const imageUrl =
+      normalizeHttps(regionInfo?.regionImage) ||
+      normalizeHttps(state?.imageUrl) ||
+      '';
+
     navigate('/plan/date', {
-      state: { ldongRegnCd, ldongSignguCd, city: decodedCity },
+      state: { ldongRegnCd, ldongSignguCd, city: decodedCity, imageUrl },
     });
   };
 
@@ -228,7 +237,9 @@ const RegionDetailPage = () => {
             <h3 className="text-base font-semibold text-gray-800 mb-2">날씨</h3>
             {weatherLoading ? (
               <div className="flex items-center justify-center px-4 py-3 bg-white rounded-lg shadow">
-                <p className="text-sm text-gray-500">날씨 정보를 불러오는 중...</p>
+                <p className="text-sm text-gray-500">
+                  날씨 정보를 불러오는 중...
+                </p>
               </div>
             ) : weather ? (
               <div className="flex items-center justify-between px-4 py-3 bg-white rounded-lg shadow">
@@ -261,7 +272,9 @@ const RegionDetailPage = () => {
               </div>
             ) : (
               <div className="flex items-center justify-between px-4 py-3 bg-white rounded-lg shadow">
-                <p className="text-sm text-gray-400">날씨 정보를 불러올 수 없습니다.</p>
+                <p className="text-sm text-gray-400">
+                  날씨 정보를 불러올 수 없습니다.
+                </p>
                 <button
                   onClick={fetchWeather}
                   className="text-blue-500 text-sm hover:underline"
@@ -274,7 +287,9 @@ const RegionDetailPage = () => {
 
           {/* 즐길거리 */}
           <div>
-            <h3 className="text-base font-semibold text-gray-800 mb-2">즐길거리</h3>
+            <h3 className="text-base font-semibold text-gray-800 mb-2">
+              즐길거리
+            </h3>
             <div className="space-y-3">
               {places.length > 0 ? (
                 <>
@@ -301,15 +316,21 @@ const RegionDetailPage = () => {
                         {loading ? '불러오는 중…' : '더 보기'}
                       </button>
                     ) : (
-                      <span className="text-xs text-gray-400">마지막입니다.</span>
+                      <span className="text-xs text-gray-400">
+                        마지막입니다.
+                      </span>
                     )}
                   </div>
                 </>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-sm text-gray-400 mb-2">즐길거리가 없습니다.</p>
+                  <p className="text-sm text-gray-400 mb-2">
+                    즐길거리가 없습니다.
+                  </p>
                   {(!ldongRegnCd || !ldongSignguCd) && (
-                    <p className="text-xs text-red-400">법정동 코드가 누락되었습니다.</p>
+                    <p className="text-xs text-red-400">
+                      법정동 코드가 누락되었습니다.
+                    </p>
                   )}
                 </div>
               )}
@@ -324,8 +345,7 @@ const RegionDetailPage = () => {
               onClick={handleCreateSchedule}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm shadow"
             >
-              <CalendarPlus className="w-4 h-4" />
-              이 지역으로 일정 만들기
+              <CalendarPlus className="w-4 h-4" />이 지역으로 일정 만들기
             </PrimaryButton>
           </div>
         </div>
