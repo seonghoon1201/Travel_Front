@@ -96,22 +96,45 @@ const usePlanStore = create(
         }),
 
       // ✅ 플랜 시작(플로우 진입 표시)
-      beginPlanFlow: () => set({ inPlanFlow: true, planSessionId: Date.now() }),
+      beginPlanFlow: () => {
+        const id = Date.now();
+        set({ inPlanFlow: true, planSessionId: id });
+        try {
+          sessionStorage.setItem('planSessionId', String(id));
+        } catch {}
+      },
 
       // ❌ 자동 초기화 금지: /plan/* 벗어나도 여기서는 비우지 않음
       endPlanFlow: () => set({ inPlanFlow: false }),
 
       // ✅ 세션 시작: 카트/입력값을 비우되, 지역정보는 유지
-      startNewPlanSession: async () => {
+      beginNewPlanSession: async (
+        preserve = { location: true, regionMeta: true }
+      ) => {
+        const keepLocation = !!preserve?.location;
+        const keepRegionMeta = !!preserve?.regionMeta;
+
+        // 새 세션 아이디 부여
+        const id = Date.now();
+        set({ inPlanFlow: true, planSessionId: id });
+        try {
+          sessionStorage.setItem('planSessionId', String(id));
+        } catch {}
+
+        // 카트 비우기
         await useCartStore
           .getState()
           .resetForNewPlan()
           .catch(() => {});
+
         set((state) => ({
-          // 지역은 유지
-          locationIds: state.locationIds,
-          locationCodes: state.locationCodes,
-          // 나머지 입력값 초기화
+          // ⬇ 위치/지역메타는 선택적으로 유지
+          locationIds: keepLocation ? state.locationIds : [],
+          locationCodes: keepLocation ? state.locationCodes : [],
+          selectedRegionName: keepRegionMeta ? state.selectedRegionName : '',
+          selectedRegionImage: keepRegionMeta ? state.selectedRegionImage : '',
+
+          // ⬇ 나머지는 초기화
           startDate: null,
           endDate: null,
           companion: '',
@@ -124,9 +147,7 @@ const usePlanStore = create(
           departureTime: '',
           scheduleName: '',
           scheduleStyle: '',
-          selectedRegionName: state.selectedRegionName, // 지역 메타 유지
-          selectedRegionImage: state.selectedRegionImage,
-          // favorites는 그대로 둠
+          // favorites는 유지
         }));
       },
 

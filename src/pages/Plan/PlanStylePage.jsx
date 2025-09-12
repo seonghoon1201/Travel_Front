@@ -34,6 +34,13 @@ const STYLE_MAP = {
   '힐링 여행': 'Healing',
 };
 
+// 같은 세션인지 확인 (sessionStorage.planSessionId ↔ store.planSessionId)
+const isSamePlanSession = () => {
+  const ss = sessionStorage.getItem('planSessionId');
+  const { inPlanFlow, planSessionId } = usePlanStore.getState();
+  return inPlanFlow && ss && String(ss) === String(planSessionId);
+};
+
 const PlanStylePage = () => {
   const navigate = useNavigate();
 
@@ -52,8 +59,9 @@ const PlanStylePage = () => {
   const setTransport = usePlanStore((s) => s.setTransport);
   const setScheduleStyle = usePlanStore((s) => s.setScheduleStyle);
 
-  // 초기 복원
+  // 초기 복원(같은 세션일 때만)
   useEffect(() => {
+    if (!isSamePlanSession()) return; // 새 시작이면 복원하지 않음
     if (companionFromStore) setSelectedCompanion(companionFromStore);
     if (Array.isArray(stylesFromStore) && stylesFromStore.length) {
       setSelectedStyles(stylesFromStore);
@@ -61,7 +69,7 @@ const PlanStylePage = () => {
     if (transportFromStore) setSelectedTransport(transportFromStore);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
+  
   const toggleStyle = (style) => {
     setSelectedStyles((prev) =>
       prev.includes(style) ? prev.filter((s) => s !== style) : [...prev, style]
