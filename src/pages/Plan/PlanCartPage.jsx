@@ -63,6 +63,8 @@ const PlanCartPage = () => {
   const [remainingBudget, setRemainingBudget] = useState(safeBudget);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState(null);
+  const selectedRegionName = usePlanStore((s) => s.selectedRegionName);
+  const [titleRegion, setTitleRegion] = useState(null);
 
   const [codePair, setCodePair] = useState(null);
   const [codeInvalid, setCodeInvalid] = useState(false);
@@ -582,7 +584,6 @@ const PlanCartPage = () => {
   }
 
   // 타이틀용 지역명
-  const [titleRegion, setTitleRegion] = useState(null);
   useEffect(() => {
     (async () => {
       try {
@@ -615,7 +616,7 @@ const PlanCartPage = () => {
   return (
     <DefaultLayout>
       <div className="w-full mx-auto pb-32">
-        <BackHeader title={`${titleRegion || '여행지'} 여행`} />
+        <BackHeader title={`${selectedRegionName  || '여행지'} 여행`} />
         <div className="px-4 sm:px-6 md:px-8">
           {/* 지도 */}
           <div className="w-full h-64 rounded-lg bg-gray-200 overflow-hidden">

@@ -11,10 +11,9 @@ const LocationSection = ({ navigateTo = '/board/hot', limit = 10 }) => {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      
+
       const res = await getHotRegions(limit);
       if (res.success) {
-        
         const dedup = [];
         const seen = new Set();
         for (const item of res.data) {
@@ -28,15 +27,15 @@ const LocationSection = ({ navigateTo = '/board/hot', limit = 10 }) => {
               regionId: item.regionId,
               regionCode: item.regionCode,
               ldongRegnCd: item.ldongRegnCd,
-              ldongSignguCd: item.ldongSignguCd, 
+              ldongSignguCd: item.ldongSignguCd,
             };
-            
+
             dedup.push(processedItem);
           }
         }
         setPlaces(dedup);
       } else {
-        setPlaces([]); 
+        setPlaces([]);
       }
       setLoading(false);
     };
@@ -45,16 +44,16 @@ const LocationSection = ({ navigateTo = '/board/hot', limit = 10 }) => {
 
   const handleClick = (city, ldongRegnCd, ldongSignguCd) => {
     navigate(`/region/detail/${encodeURIComponent(city)}`, {
-      state: { 
-        ldongRegnCd, 
+      state: {
+        ldongRegnCd,
         ldongSignguCd,
-        from: 'hotplace' 
+        from: 'hotplace',
       },
     });
   };
 
   const handleImageError = (index) => {
-    setImageErrors(prev => new Set(prev).add(index));
+    setImageErrors((prev) => new Set(prev).add(index));
   };
 
   return (
@@ -73,7 +72,10 @@ const LocationSection = ({ navigateTo = '/board/hot', limit = 10 }) => {
       {loading ? (
         <div className="flex gap-2 sm:gap-3 overflow-x-auto px-3 mt-2">
           {Array.from({ length: 7 }).map((_, i) => (
-            <div key={i} className="flex-shrink-0 w-16 sm:w-20 md:w-24 text-center">
+            <div
+              key={i}
+              className="flex-shrink-0 w-16 sm:w-20 md:w-24 text-center"
+            >
               <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-gray-200 animate-pulse mb-1" />
               <div className="h-3 w-12 mx-auto bg-gray-200 rounded animate-pulse" />
             </div>
@@ -82,18 +84,18 @@ const LocationSection = ({ navigateTo = '/board/hot', limit = 10 }) => {
       ) : (
         <div className="flex gap-2 sm:gap-3 overflow-x-auto  mt-2 scrollbar-hide">
           {places.slice(0, 10).map((item, idx) => (
-            <div 
+            <div
               key={idx}
               className="flex-shrink-0 w-16 sm:w-20 md:w-24 text-center cursor-pointer"
-              onClick={() => handleClick(
-                item.city, 
-                item.ldongRegnCd, 
-                item.ldongSignguCd,  
-              )}
+              onClick={() =>
+                handleClick(item.city, item.ldongRegnCd, item.ldongSignguCd)
+              }
             >
               {!item.image || imageErrors.has(idx) ? (
                 <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-gray-200 flex items-center justify-center mb-1">
-                  <span className="text-xs sm:text-sm text-gray-500 font-medium">No Image</span>
+                  <span className="text-xs sm:text-sm text-gray-500 font-medium">
+                    No Image
+                  </span>
                 </div>
               ) : (
                 <img
@@ -109,11 +111,12 @@ const LocationSection = ({ navigateTo = '/board/hot', limit = 10 }) => {
 
           {/* 데이터가 없을 때 안내 */}
           {places.length === 0 && !loading && (
-            <div className="text-sm text-gray-500 px-2 py-4">현재 인기 지역이 없어요.</div>
+            <div className="text-sm text-gray-500 px-2 py-4">
+              현재 인기 지역이 없어요.
+            </div>
           )}
         </div>
       )}
-      
     </section>
   );
 };
