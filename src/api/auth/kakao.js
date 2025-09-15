@@ -12,3 +12,4 @@ export const kakaoCallback = async (arg) => {
   const { data } = await http.post('/auth/kakao/callback', { code });
   return data; // { jwtDto, userNickname, ... }
 };
+// 롤백
