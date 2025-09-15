@@ -1,6 +1,8 @@
 // src/routes/index.jsx
-import { Routes, Route } from 'react-router-dom';
-// ❌ BrowserRouter as Router 임포트/사용 제거
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import AppBackHandler from '../components/AppBackHandler';
+import AuthChecker from '../components/auth/AuthChecker';
+// BrowserRouter 임포트/사용 ❌
 
 import HomePage from '../pages/HomePage';
 import SearchPage from '../pages/SearchPage';
@@ -14,7 +16,6 @@ import VerifyCodePage from '../pages/Login_and_Signup/VerifyCodePage';
 import ResetPasswordPage from '../pages/Login_and_Signup/ResetPasswordPage';
 import MyPage from '../pages/MyPage';
 import EditProfile from '../pages/EditProfilePage';
-import AuthChecker from '../components/auth/AuthChecker';
 
 import HotBoardPage from '../pages/Board/HotBoardPage';
 import RegionDetailPage from '../pages/Board/RegionDetailPage';
@@ -40,65 +41,60 @@ import AddPlace from '../pages/Schedule/AddPlace';
 
 import InviteAcceptPage from '../pages/InviteAcceptPage';
 
-const AppRoutes = () => (
-  <>
-    <AuthChecker />
-    <Routes>
-      <Route path="/splash" element={<Splash />} />
-      <Route path="/" element={<HomePage />} />
-
-      <Route path="/search" element={<SearchPage />} />
-
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignUpPage />} />
-      <Route path="/guide" element={<GuidePage />} />
-
-      <Route path="/find-password" element={<FindPasswordPage />} />
-      <Route path="/find-password/verify" element={<VerifyCodePage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
-
-      <Route path="/mypage" element={<MyPage />} />
-      <Route path="/edit/profile" element={<EditProfile />} />
-
-      <Route path="/board/hot" element={<HotBoardPage />} />
-      <Route path="/region/detail/:city" element={<RegionDetailPage />} />
-      <Route path="/place/detail/:contentId" element={<PlaceDetail />} />
-
-      <Route path="/board/travel/diary" element={<TravelDiaryBoardPage />} />
-      <Route
-        path="/board/travel/diary/:id"
-        element={<TravelDiaryDetailPage />}
-      />
-      <Route path="/write/travel/diary" element={<WriteTravelDiaryPage />} />
-      <Route
-        path="/update/travel/diary/:boardId"
-        element={<UpdateTravelDiaryPage />}
-      />
-
-      <Route path="/plan" element={<PlanFlowBoundary />}>
-        <Route path="location" element={<PlanLocationPage />} />
-        <Route path="date" element={<PlanDatePage />} />
-        <Route path="style" element={<PlanStylePage />} />
-        <Route path="budget" element={<PlanBudgetPage />} />
-        <Route path="cart" element={<PlanCartPage />} />
-        <Route path="auto" element={<ScheduleAutoPage />} />
+export default function AppRoutes() {
+  return (
+    <Router>
+      <AppBackHandler />
+      <AuthChecker />
+      <Routes>
+        <Route path="/splash" element={<Splash />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/guide" element={<GuidePage />} />
+        <Route path="/find-password" element={<FindPasswordPage />} />
+        <Route path="/find-password/verify" element={<VerifyCodePage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/mypage" element={<MyPage />} />
+        <Route path="/edit/profile" element={<EditProfile />} />
+        <Route path="/board/hot" element={<HotBoardPage />} />
+        <Route path="/region/detail/:city" element={<RegionDetailPage />} />
+        <Route path="/place/detail/:contentId" element={<PlaceDetail />} />
+        <Route path="/board/travel/diary" element={<TravelDiaryBoardPage />} />
         <Route
-          path="schedule/result/:scheduleId"
-          element={<ScheduleResultPage />}
+          path="/board/travel/diary/:id"
+          element={<TravelDiaryDetailPage />}
         />
-        <Route path="add" element={<AddPlace />} />
-      </Route>
-
-      <Route path="/schedule/view/:scheduleId" element={<ScheduleViewPage />} />
-      <Route
-        path="/schedule/invite/:scheduleId"
-        element={<ScheduleInvitePage />}
-      />
-
-      <Route path="/kakao/callback" element={<KakaoCallbackPage />} />
-      <Route path="/invite" element={<InviteAcceptPage />} />
-    </Routes>
-  </>
-);
-
-export default AppRoutes;
+        <Route path="/write/travel/diary" element={<WriteTravelDiaryPage />} />
+        <Route
+          path="/update/travel/diary/:boardId"
+          element={<UpdateTravelDiaryPage />}
+        />
+        <Route path="/plan" element={<PlanFlowBoundary />}>
+          <Route path="location" element={<PlanLocationPage />} />
+          <Route path="date" element={<PlanDatePage />} />
+          <Route path="style" element={<PlanStylePage />} />
+          <Route path="budget" element={<PlanBudgetPage />} />
+          <Route path="cart" element={<PlanCartPage />} />
+          <Route path="auto" element={<ScheduleAutoPage />} />
+          <Route
+            path="schedule/result/:scheduleId"
+            element={<ScheduleResultPage />}
+          />
+          <Route path="add" element={<AddPlace />} />
+        </Route>
+        <Route
+          path="/schedule/view/:scheduleId"
+          element={<ScheduleViewPage />}
+        />
+        <Route
+          path="/schedule/invite/:scheduleId"
+          element={<ScheduleInvitePage />}
+        />
+        <Route path="/kakao/callback" element={<KakaoCallbackPage />} />
+        <Route path="/invite" element={<InviteAcceptPage />} />
+      </Routes>
+    </Router>
+  );
+}
