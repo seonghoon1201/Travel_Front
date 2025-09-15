@@ -227,7 +227,58 @@ const RegionDetailPage = () => {
           </div>
 
           {/* 날씨 */}
-          {/* ... 생략 (기존 동일) */}
+           {/* 날씨 */}
+          <div className="pb-6">
+            <h3 className="text-base font-semibold text-gray-800 mb-2">날씨</h3>
+            {weatherLoading ? (
+              <div className="flex items-center justify-center px-4 py-3 bg-white rounded-lg shadow">
+                <p className="text-sm text-gray-500">
+                  날씨 정보를 불러오는 중...
+                </p>
+              </div>
+            ) : weather ? (
+              <div className="flex items-center justify-between px-4 py-3 bg-white rounded-lg shadow">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={`https://openweathermap.org/img/wn/${weather?.weather?.[0]?.icon}@2x.png`}
+                    alt={weather?.weather?.[0]?.description || 'weather'}
+                    className="w-10 h-10"
+                  />
+                  <div className="text-sm text-gray-700">
+                    <p className="font-medium">
+                      최저 {weather?.main?.temp_min ?? '-'}°C <br />
+                      최고 {weather?.main?.temp_max ?? '-'}°C
+                    </p>
+                    <p className="text-gray-500">
+                      현재상태 : {weather?.weather?.[0]?.description ?? ''}
+                    </p>
+                  </div>
+                </div>
+                <a
+                  href={`https://search.naver.com/search.naver?query=${encodeURIComponent(
+                    decodedCity
+                  )}+날씨`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 text-sm hover:underline"
+                >
+                  날씨 보러가기
+                </a>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between px-4 py-3 bg-white rounded-lg shadow">
+                <p className="text-sm text-gray-400">
+                  날씨 정보를 불러올 수 없습니다.
+                </p>
+                <button
+                  onClick={fetchWeather}
+                  className="text-blue-500 text-sm hover:underline"
+                >
+                  다시 시도
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* 즐길거리 */}
           <div>

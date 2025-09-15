@@ -149,7 +149,6 @@ const AddPlace = () => {
       setFavorites(
           list.map((x) => {
             const cid = String(x.contentId ?? x.id);
-            // 숫자 문자열만 들어온 경우 제목 대체
             const rawTitle = x.placeTitle || x.title || '';
             const destination =
               /^\d+$/.test(String(rawTitle)) && cid === String(rawTitle)
@@ -164,7 +163,7 @@ const AddPlace = () => {
               location: x.address || '',
               opentime: x.openTime || '-',
               closetime: x.closeTime || '-',
-              tel: x.tel || '정보 없음',
+              tel: x.tel || '',
               imageUrl: x.placeImage || x.imageUrl || x.firstImage || '',
               __isFavorite: true,
             };
@@ -405,11 +404,19 @@ const AddPlace = () => {
     const term = searchTerm.toLowerCase();
     return favorites.filter(
       (item) =>
-        item.destination.toLowerCase().includes(term) ||
-        item.category.toLowerCase().includes(term) ||
-        item.location.toLowerCase().includes(term)
+        item.destination && item.destination.toLowerCase().includes(term)
     );
   }, [favorites, searchTerm]);
+
+
+const filteredPlaces = useMemo(() => {
+  if (!searchTerm.trim()) return places;
+  const term = searchTerm.toLowerCase();
+  return places.filter(
+    (item) =>
+      item.destination && item.destination.toLowerCase().includes(term)
+  );
+}, [places, searchTerm]);
 
   // 힌트 문구도 regionCodes 기준
   const regionHint = useMemo(() => {
@@ -510,7 +517,7 @@ const AddPlace = () => {
                 ) : (
                   <>
                     <div className="space-y-2">
-                      {places.map((p) => (
+                      {filteredPlaces.map((p) => (
                         <SelectableRow key={p.contentId} item={p} />
                       ))}
                     </div>
