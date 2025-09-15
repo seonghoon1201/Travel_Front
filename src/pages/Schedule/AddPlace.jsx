@@ -149,7 +149,6 @@ const AddPlace = () => {
       setFavorites(
           list.map((x) => {
             const cid = String(x.contentId ?? x.id);
-            // 숫자 문자열만 들어온 경우 제목 대체
             const rawTitle = x.placeTitle || x.title || '';
             const destination =
               /^\d+$/.test(String(rawTitle)) && cid === String(rawTitle)
@@ -164,7 +163,7 @@ const AddPlace = () => {
               location: x.address || '',
               opentime: x.openTime || '-',
               closetime: x.closeTime || '-',
-              tel: x.tel || '정보 없음',
+              tel: x.tel || '',
               imageUrl: x.placeImage || x.imageUrl || x.firstImage || '',
               __isFavorite: true,
             };
