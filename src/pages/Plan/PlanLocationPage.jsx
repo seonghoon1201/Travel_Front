@@ -1,5 +1,11 @@
 // src/pages/Plan/PlanLocationPage.jsx
-import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+  useCallback,
+} from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import DefaultLayout from '../../layouts/DefaultLayout';
@@ -17,7 +23,9 @@ const FALLBACK_IMG = '/assets/logo.jpg';
 
 const normalizeImageUrl = (raw) => {
   if (!raw) return FALLBACK_IMG;
-  let src = String(raw).trim().replace(/^"(.*)"$/, '$1');
+  let src = String(raw)
+    .trim()
+    .replace(/^"(.*)"$/, '$1');
   if (/^data:/.test(src)) return src;
   if (/^https?:\/\//i.test(src)) {
     return src.replace(/^http:\/\//i, 'https://');
@@ -30,7 +38,9 @@ const normalizeImageUrl = (raw) => {
       url = url.replace(/^http:\/\//i, 'https://');
     return url;
   }
-  return new URL(src, baseUrl.href).toString().replace(/^http:\/\//i, 'https://');
+  return new URL(src, baseUrl.href)
+    .toString()
+    .replace(/^http:\/\//i, 'https://');
 };
 
 const PlanLocationPage = () => {
@@ -75,7 +85,9 @@ const PlanLocationPage = () => {
   const handleSelect = (id) => {
     setLocations((prev) =>
       prev.map((loc) =>
-        loc.id === id ? { ...loc, selected: !loc.selected } : { ...loc, selected: false }
+        loc.id === id
+          ? { ...loc, selected: !loc.selected }
+          : { ...loc, selected: false }
       )
     );
   };
@@ -87,21 +99,28 @@ const PlanLocationPage = () => {
     }
 
     if (!selected.ldongRegnCd || !selected.ldongSignguCd) {
-      message.error('선택한 지역의 코드가 비어 있어요. 다른 지역을 선택해 주세요.');
+      message.error(
+        '선택한 지역의 코드가 비어 있어요. 다른 지역을 선택해 주세요.'
+      );
       return;
     }
 
     setLocationIds([selected.id]);
-    setLocationCodes([{ ldongRegnCd: selected.ldongRegnCd, ldongSignguCd: selected.ldongSignguCd }]);
+    setLocationCodes([
+      {
+        ldongRegnCd: selected.ldongRegnCd,
+        ldongSignguCd: selected.ldongSignguCd,
+      },
+    ]);
     setSelectedRegionMeta({ name: selected.name, imageUrl: selected.imageUrl });
-    navigate('/plan/date' , {
-       state: {
-      ldongRegnCd: selected.ldongRegnCd,
-      ldongSignguCd: selected.ldongSignguCd,
-      city: selected.name,
-      imageUrl: selected.imageUrl,
-    },
-    },);
+    navigate('/plan/date', {
+      state: {
+        ldongRegnCd: selected.ldongRegnCd,
+        ldongSignguCd: selected.ldongSignguCd,
+        city: selected.name,
+        imageUrl: selected.imageUrl,
+      },
+    });
   };
 
   // 검색
@@ -158,7 +177,10 @@ const PlanLocationPage = () => {
             <>
               <div className="mt-4 space-y-4">
                 {shown.map((loc) => (
-                  <div key={loc.id} className="flex items-center justify-between">
+                  <div
+                    key={loc.id}
+                    className="flex items-center justify-between"
+                  >
                     <div className="flex items-center gap-3">
                       <img
                         src={loc.imageUrl || FALLBACK_IMG}
@@ -168,7 +190,9 @@ const PlanLocationPage = () => {
                         referrerPolicy="no-referrer"
                       />
                       <div>
-                        <div className="font-bold text-gray-800 text-sm">{loc.name}</div>
+                        <div className="font-bold text-gray-800 text-sm">
+                          {loc.name}
+                        </div>
                       </div>
                     </div>
                     <CategoryButton
@@ -179,7 +203,9 @@ const PlanLocationPage = () => {
                   </div>
                 ))}
                 {!shown.length && (
-                  <div className="text-xs text-gray-500">검색 결과가 없어요.</div>
+                  <div className="text-xs text-gray-500">
+                    검색 결과가 없어요.
+                  </div>
                 )}
               </div>
 
@@ -193,7 +219,11 @@ const PlanLocationPage = () => {
       {/* 하단 고정 버튼 바 */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
         <div className="mx-auto w-full px-4 sm:px-6 md:px-8 py-3">
-          <PrimaryButton onClick={handleNext} className="w-full" disabled={!anySelected}>
+          <PrimaryButton
+            onClick={handleNext}
+            className="w-full"
+            disabled={!anySelected}
+          >
             선택 완료
           </PrimaryButton>
         </div>
