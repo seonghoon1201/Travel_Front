@@ -1,4 +1,7 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+// src/routes/index.jsx
+import { Routes, Route } from 'react-router-dom';
+// ❌ BrowserRouter as Router 임포트/사용 제거
+
 import HomePage from '../pages/HomePage';
 import SearchPage from '../pages/SearchPage';
 import Splash from '../pages/Splash';
@@ -21,6 +24,7 @@ import TravelDiaryBoardPage from '../pages/Travel_Diary/TravelDiaryBoardPage';
 import TravelDiaryDetailPage from '../pages/Travel_Diary/TravelDiaryDetailPage';
 import WriteTravelDiaryPage from '../pages/Travel_Diary/WriteTravelDiaryPage';
 import UpdateTravelDiaryPage from '../pages/Travel_Diary/UpdateTravelDiaryPage';
+
 import PlanLocationPage from '../pages/Plan/PlanLocationPage';
 import PlanDatePage from '../pages/Plan/PlanDatePage';
 import PlanStylePage from '../pages/Plan/PlanStylePage';
@@ -37,7 +41,7 @@ import AddPlace from '../pages/Schedule/AddPlace';
 import InviteAcceptPage from '../pages/InviteAcceptPage';
 
 const AppRoutes = () => (
-  <Router>
+  <>
     <AuthChecker />
     <Routes>
       <Route path="/splash" element={<Splash />} />
@@ -84,6 +88,7 @@ const AppRoutes = () => (
         />
         <Route path="add" element={<AddPlace />} />
       </Route>
+
       <Route path="/schedule/view/:scheduleId" element={<ScheduleViewPage />} />
       <Route
         path="/schedule/invite/:scheduleId"
@@ -93,7 +98,7 @@ const AppRoutes = () => (
       <Route path="/kakao/callback" element={<KakaoCallbackPage />} />
       <Route path="/invite" element={<InviteAcceptPage />} />
     </Routes>
-  </Router>
+  </>
 );
 
 export default AppRoutes;
