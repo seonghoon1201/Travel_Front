@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import BackHeader from '../../components/header/BackHeader';
 import PrimaryButton from '../../components/common/PrimaryButton';
+import SearchBar from '../../components/common/SearchBar';
 import { message } from 'antd';
 import useScheduleStore from '../../store/scheduleStore';
 
@@ -47,6 +48,10 @@ const AddPlace = () => {
   const selectedCount = selected.size;
 
   const [baseOrder, setBaseOrder] = useState(1);
+
+  // 검색 관련 상태
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
 
   // ✅ 이 상태만 믿고 동작: 지역코드(없으면 스케줄에서 채움)
   const [regionCodes, setRegionCodes] = useState({
@@ -163,19 +168,26 @@ const AddPlace = () => {
   }, []);
 
   // ===== 2) 지역 장소 로드 (PlaceList 포맷) =====
-  const loadPlaces = async (pageToLoad) => {
+  const loadPlaces = async (pageToLoad, searchKeyword = '') => {
     const { ldongRegnCd, ldongSignguCd } = regionCodes;
     if (!ldongRegnCd || !ldongSignguCd) return;
     if (placeLoading) return;
 
     try {
       setPlaceLoading(true);
-      const res = await getPlacesByRegion({
+      const params = {
         ldongRegnCd: String(ldongRegnCd),
         ldongSignguCd: String(ldongSignguCd),
         page: pageToLoad,
         size: 20,
-      });
+      };
+
+      // 검색어가 있으면 파라미터에 추가
+      if (searchKeyword.trim()) {
+        params.keyword = searchKeyword.trim();
+      }
+
+      const res = await getPlacesByRegion(params);
 
       const content = res?.data?.content ?? res?.content ?? [];
       const next = [];
@@ -206,7 +218,13 @@ const AddPlace = () => {
         };
         dedupBy(next, seenRef.current, mapped);
       }
-      setPlaces((prev) => [...prev, ...next]);
+      
+      if (pageToLoad === 0) {
+        setPlaces(next);
+      } else {
+        setPlaces((prev) => [...prev, ...next]);
+      }
+      
       setHasMore(content.length === 20);
       setPage(pageToLoad);
     } catch (e) {
@@ -223,10 +241,42 @@ const AddPlace = () => {
     setHasMore(true);
     seenRef.current.clear();
     if (regionCodes.ldongRegnCd && regionCodes.ldongSignguCd) {
-      loadPlaces(0);
+      loadPlaces(0, searchTerm);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [regionCodes.ldongRegnCd, regionCodes.ldongSignguCd]);
+
+  // 검색 처리 함수
+  const handleSearch = () => {
+    if (!regionCodes.ldongRegnCd || !regionCodes.ldongSignguCd) return;
+    
+    setPlaces([]);
+    setPage(0);
+    setHasMore(true);
+    seenRef.current.clear();
+    setIsSearching(true);
+    
+    loadPlaces(0, searchTerm).finally(() => {
+      setIsSearching(false);
+    });
+  };
+
+  // 검색어 변경 시 디바운싱 적용
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (regionCodes.ldongRegnCd && regionCodes.ldongSignguCd) {
+        handleSearch();
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]);
+
+  // 검색어 초기화
+  const clearSearch = () => {
+    setSearchTerm('');
+  };
 
   // ===== 3) 선택/해제 =====
   const toggleSelect = (cid) => {
@@ -316,7 +366,18 @@ const AddPlace = () => {
     );
   };
 
-  // 힌트 문구도 regionCodes 기준
+  // 즐겨찾기 필터링 (검색어가 있을 때)
+  const filteredFavorites = useMemo(() => {
+    if (!searchTerm.trim()) return favorites;
+    const term = searchTerm.toLowerCase();
+    return favorites.filter(
+      (item) =>
+        item.destination.toLowerCase().includes(term) ||
+        item.category.toLowerCase().includes(term) ||
+        item.location.toLowerCase().includes(term)
+    );
+  }, [favorites, searchTerm]);
+
   const regionHint = useMemo(() => {
     if (!regionCodes.ldongRegnCd || !regionCodes.ldongSignguCd)
       return '지역 코드가 없어 즐겨찾기만 표시됩니다.';
@@ -327,15 +388,41 @@ const AddPlace = () => {
     <DefaultLayout>
       <BackHeader title="장소 추가" />
       <div className="px-4 sm:px-6 md:px-8 pb-20">
+        {/* 검색바 */}
+        <div className="mb-6">
+          <SearchBar
+            placeholder="장소를 검색하세요"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          {searchTerm && (
+            <div className="mt-2 flex items-center justify-between">
+              <span className="text-sm text-gray-500">
+                '{searchTerm}' 검색 결과
+              </span>
+              <button
+                onClick={clearSearch}
+                className="text-sm text-blue-500 hover:text-blue-700"
+              >
+                검색 초기화
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* 즐겨찾기 섹션 */}
         <h3 className="text-base font-semibold mb-2">즐겨찾기</h3>
         {favLoading ? (
           <div className="text-sm text-gray-400 py-6">불러오는 중…</div>
-        ) : favorites.length ? (
+        ) : filteredFavorites.length ? (
           <div className="space-y-2 mb-6">
-            {favorites.map((f) => (
+            {filteredFavorites.map((f) => (
               <SelectableRow key={f.contentId} item={f} />
             ))}
+          </div>
+        ) : searchTerm ? (
+          <div className="text-sm text-gray-400 mb-6">
+            검색된 즐겨찾기가 없어요.
           </div>
         ) : (
           <div className="text-sm text-gray-400 mb-6">즐겨찾기가 없어요.</div>
@@ -351,25 +438,37 @@ const AddPlace = () => {
 
         {regionCodes.ldongRegnCd && regionCodes.ldongSignguCd ? (
           <>
-            <div className="space-y-2">
-              {places.map((p) => (
-                <SelectableRow key={p.contentId} item={p} />
-              ))}
-            </div>
+            {isSearching && page === 0 ? (
+              <div className="text-sm text-gray-400 py-6">검색 중…</div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  {places.map((p) => (
+                    <SelectableRow key={p.contentId} item={p} />
+                  ))}
+                </div>
 
-            <div className="text-center mt-3">
-              {hasMore ? (
-                <button
-                  disabled={placeLoading}
-                  onClick={() => loadPlaces(page + 1)}
-                  className="px-3 py-2 text-sm rounded-lg bg-white shadow border hover:bg-gray-50 disabled:opacity-60"
-                >
-                  {placeLoading ? '불러오는 중…' : '더 보기'}
-                </button>
-              ) : (
-                <span className="text-xs text-gray-400">마지막입니다.</span>
-              )}
-            </div>
+                {places.length === 0 && !isSearching ? (
+                  <div className="text-sm text-gray-400 py-6">
+                    {searchTerm ? '검색 결과가 없어요.' : '장소가 없어요.'}
+                  </div>
+                ) : (
+                  <div className="text-center mt-3">
+                    {hasMore ? (
+                      <button
+                        disabled={placeLoading}
+                        onClick={() => loadPlaces(page + 1, searchTerm)}
+                        className="px-3 py-2 text-sm rounded-lg bg-white shadow border hover:bg-gray-50 disabled:opacity-60"
+                      >
+                        {placeLoading ? '불러오는 중…' : '더 보기'}
+                      </button>
+                    ) : places.length > 0 ? (
+                      <span className="text-xs text-gray-400">마지막입니다.</span>
+                    ) : null}
+                  </div>
+                )}
+              </>
+            )}
           </>
         ) : null}
 
