@@ -59,6 +59,7 @@ const PlanCartPage = () => {
   } = useCartStore();
 
   const [activeCategory, setActiveCategory] = useState('관광');
+  const [searchTerm, setSearchTerm] = useState('');
   const safeBudget = Number(budget || 0);
   const [remainingBudget, setRemainingBudget] = useState(safeBudget);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -85,6 +86,21 @@ const PlanCartPage = () => {
   const [loadingList, setLoadingList] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const [prefetching, setPrefetching] = useState(false);
+  const pageRef = useRef(0);
+  const hasMoreRef = useRef(hasMore);
+  const searchRef = useRef(searchTerm);
+
+  useEffect(() => {
+    pageRef.current = page;
+  }, [page]);
+  useEffect(() => {
+    hasMoreRef.current = hasMore;
+  }, [hasMore]);
+  useEffect(() => {
+    searchRef.current = searchTerm;
+  }, [searchTerm]);
 
   // 지도
   const mapContainerRef = useRef(null);
@@ -227,6 +243,42 @@ const PlanCartPage = () => {
     [activeCategory, codePair, codeInvalid]
   );
 
+  // 검색어가 들어오면 남은 페이지 자동으로 계속 불러오기 (상한선 둠)
+  useEffect(() => {
+    const term = searchTerm.trim();
+    if (!term) return; // 검색어 없으면 안 함
+    if (prefetching) return; // 중복 실행 방지
+    if (!hasMoreRef.current) return; // 더 불러올 게 없으면 안 함
+
+    let cancelled = false;
+    (async () => {
+      setPrefetching(true);
+      try {
+        // 너무 많은 호출을 막기 위해 상한선(예: 500개 / 15페이지)을 둠
+        const MAX_PAGES = 15;
+        let loaded = 0;
+        let nextPage = pageRef.current; // 현재까지 로드된 다음 페이지부터
+        while (
+          !cancelled &&
+          searchRef.current.trim() &&
+          hasMoreRef.current &&
+          loaded < MAX_PAGES
+        ) {
+          await loadPage(nextPage, false);
+          nextPage += 1;
+          loaded += 1;
+          // 이벤트 루프 양보
+          await new Promise((r) => setTimeout(r, 0));
+        }
+      } finally {
+        if (!cancelled) setPrefetching(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [searchTerm, prefetching, loadPage]);
+
   // 준비 → 동기화 → 첫 페이지
   useEffect(() => {
     if (!codePair?.ldongRegnCd || !codePair?.ldongSignguCd || codeInvalid)
@@ -329,10 +381,21 @@ const PlanCartPage = () => {
     }
   };
 
-  // 포인트 메모이즈
+  // 검색어가 있을 때 목록 필터링 (이름 포함)
+  const filteredItems = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return apiItems;
+    return apiItems.filter((it) =>
+      String(it.name ?? '')
+        .toLowerCase()
+        .includes(term)
+    );
+  }, [apiItems, searchTerm]);
+
+  // 지도 마커용 포인트는 필터링된 목록 기준
   const points = useMemo(
     () =>
-      apiItems
+      filteredItems
         .map((it) => ({
           id: it.contentId,
           name: it.name,
@@ -347,7 +410,7 @@ const PlanCartPage = () => {
             !Number.isNaN(p.lat) &&
             !Number.isNaN(p.lng)
         ),
-    [apiItems]
+    [filteredItems]
   );
 
   // 마커 렌더
@@ -616,7 +679,7 @@ const PlanCartPage = () => {
   return (
     <DefaultLayout>
       <div className="w-full mx-auto pb-32">
-        <BackHeader title={`${selectedRegionName  || '여행지'} 여행`} />
+        <BackHeader title={`${selectedRegionName || '여행지'} 여행`} />
         <div className="px-4 sm:px-6 md:px-8">
           {/* 지도 */}
           <div className="w-full h-64 rounded-lg bg-gray-200 overflow-hidden">
@@ -660,6 +723,30 @@ const PlanCartPage = () => {
               ))}
             </div>
 
+            {/* 검색 입력 */}
+            <div className="mt-3">
+              <div className="flex gap-2">
+                <input
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') e.currentTarget.blur();
+                  }}
+                  placeholder="여행지 이름으로 검색"
+                  className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-200"
+                  aria-label="여행지 검색"
+                />
+                {searchTerm && (
+                  <button
+                    className="px-3 py-2 text-sm rounded-xl border border-gray-300"
+                    onClick={() => setSearchTerm('')}
+                  >
+                    초기화
+                  </button>
+                )}
+              </div>
+            </div>
+
             <Tooltip
               title={
                 <div className="text-sm leading-5">
@@ -691,7 +778,14 @@ const PlanCartPage = () => {
 
           {/* 목록 */}
           <div className="mt-4 space-y-4">
-            {apiItems.map((item) => {
+            {filteredItems.length === 0 && (
+              <div className="text-sm text-gray-500 px-1">
+                {prefetching
+                  ? '검색을 위해 목록을 더 불러오는 중...'
+                  : '검색 결과가 없어요.'}
+              </div>
+            )}
+            {(filteredItems.length ? filteredItems : []).map((item) => {
               const isAdded = isInCart(String(item.contentId));
               const hasGeo =
                 !!item?.location &&
@@ -820,7 +914,7 @@ const PlanCartPage = () => {
             })}
 
             {/* 더 보기 */}
-            {hasMore && (
+            {!searchTerm && hasMore && (
               <button
                 disabled={loadingList}
                 onClick={() => loadPage(page, false)}
