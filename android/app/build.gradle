@@ -44,9 +44,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
                     'proguard-rules.pro'
         }
-        debug {
-            // 디버그는 서명 불필요
-        }
+        debug { debuggable true }
+        release { debuggable false }
     }
 }
 

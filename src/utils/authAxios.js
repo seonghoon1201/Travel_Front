@@ -5,7 +5,12 @@ import useUserStore from '../store/userStore';
 
 const BASE_URL = API_BASE_URL || '';
 
-const authAxios = axios.create({ baseURL: BASE_URL });
+const authAxios = axios.create({
+  baseURL: BASE_URL, // 절대경로 강제
+  withCredentials: false,
+  headers: { 'Content-Type': 'application/json' },
+  timeout: 15000,
+});
 
 // 👉 토큰이 필요 없는 엔드포인트 목록
 const NO_AUTH_PATHS = [
@@ -13,11 +18,25 @@ const NO_AUTH_PATHS = [
   '/auth/kakao/callback',
   '/user/login',
   '/user/register',
+  '/user/refresh',
   '/user/password',
   '/mail/send',
   '/mail/verify',
   '/mail/check-email',
 ];
+
+function isNoAuthURL(rawUrl) {
+  try {
+    const u = new URL(rawUrl, API_BASE_URL || 'http://localhost');
+    const path = u.pathname.replace(/\/+$/, '');
+    return NO_AUTH_PATHS.some((p) => {
+      const pp = p.replace(/\/+$/, '');
+      return path === pp || path.startsWith(pp + '/');
+    });
+  } catch {
+    return false;
+  }
+}
 
 // ---- helpers ----
 const jwtRegex = /^[A-Za-z0-9\-_]+=*\.[A-Za-z0-9\-_]+=*\.[A-Za-z0-9\-_+=/]*$/;
@@ -32,11 +51,24 @@ function normalizeBearer(raw) {
 let refreshPromise = null;
 
 authAxios.interceptors.request.use((config) => {
+  try {
+    const full = new URL(
+      config?.url ?? '',
+      config?.baseURL ?? API_BASE_URL ?? ''
+    );
+    console.log(
+      '[HTTP]',
+      config.method?.toUpperCase(),
+      full.toString(),
+      'Auth?',
+      !!config.headers?.Authorization
+    );
+  } catch {}
   const raw = useUserStore.getState().accessToken;
   const bearer = normalizeBearer(raw);
   // 공개 엔드포인트는 Authorization을 강제로 제거
   const url = config?.url || '';
-  const isNoAuth = NO_AUTH_PATHS.some((p) => url.startsWith(p));
+  const isNoAuth = isNoAuthURL(url);
   if (isNoAuth) {
     if (config.headers?.Authorization) delete config.headers.Authorization;
     return config;
@@ -69,9 +101,7 @@ authAxios.interceptors.response.use(
 
     try {
       if (!refreshPromise) {
-        refreshPromise = axios.post(`${BASE_URL}/user/refresh`, {
-          refreshToken,
-        });
+        refreshPromise = authAxios.post('/user/refresh', { refreshToken });
       }
       const { data } = await refreshPromise;
       refreshPromise = null;
@@ -93,7 +123,7 @@ authAxios.interceptors.response.use(
     } catch (e) {
       refreshPromise = null;
       useUserStore.getState().logout?.();
-      window.location.replace(`${BASE_URL}/auth/kakao/login`);
+      window.location.href = '/login'; // 프론트 로그인 라우트로
       return Promise.reject(e);
     }
   }
