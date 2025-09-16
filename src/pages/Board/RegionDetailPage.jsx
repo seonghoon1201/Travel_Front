@@ -323,8 +323,16 @@ const RegionDetailPage = () => {
           </div>
         </div>
 
-        {/* 하단 버튼 */}
-        {/* ... 생략 (기존 동일) */}
+        <div className="fixed bottom-0 left-0 w-full px-4 py-3 bg-white shadow-lg z-50 border-t">
+          <div className="mx-auto">
+            <PrimaryButton
+              onClick={handleCreateSchedule}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm shadow"
+            >
+              <CalendarPlus className="w-4 h-4" />이 지역으로 일정 만들기
+            </PrimaryButton>
+          </div>
+        </div>
       </div>
     </DefaultLayout>
   );
