@@ -5,7 +5,8 @@ import { message } from 'antd';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
-import { loginUser, getKakaoLoginUrl } from '../../api';
+import { loginUser, getKakaoLoginUrlWithState } from '../../api';
+import qs from 'qs';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import useUserStore from '../../store/userStore';
 import { Eye, EyeOff } from 'lucide-react';
@@ -48,8 +49,7 @@ const LoginPage = () => {
     return '/';
   };
 
-  // ✅ 카카오 로그인: redirect 유지해서 복귀 가능하게
-  const handleKakaoLogin = () => {
+  const handleKakaoLogin = async () => {
     msg.loading('카카오 로그인 페이지로 이동합니다...', 1);
 
     // 로그인 후 돌아갈 곳: 쿼리에 redirect가 있으면 그곳, 없으면 홈('/')
@@ -63,26 +63,24 @@ const LoginPage = () => {
       'pendingScheduleInvite',
       JSON.stringify({
         scheduleId,
-        redirect: redirectParam || '/', // ← /login 저장 금지
+        redirect: redirectTarget, // ← /login 금지 (위에서 이미 기본값을 '/'로 처리)
         ts: Date.now(),
       })
     );
 
-    // 카카오로 보낼 때 'state'에 redirect 정보를 넣어 보낸다 (카카오가 그대로 콜백에 돌려줌)
-    try {
-      const base = getKakaoLoginUrl(); // ex) https://kauth.kakao.com/oauth/authorize?...&response_type=code
-      const url = new URL(base);
-      url.searchParams.set(
-        'state',
-        encodeURIComponent(JSON.stringify({ redirect: redirectTarget }))
-      );
-      window.location.href = url.toString();
-    } catch {
-      const sep = getKakaoLoginUrl().includes('?') ? '&' : '?';
-      const state = encodeURIComponent(
-        JSON.stringify({ redirect: redirectTarget })
-      );
-      window.location.href = `${getKakaoLoginUrl()}${sep}state=${state}`;
+    // 백엔드 로그인 시작 URL에 state를 붙여서 생성
+    const loginUrl = getKakaoLoginUrlWithState({ redirect: redirectTarget });
+
+    // ✅ 핵심: 네이티브에서는 Browser.open(=Custom Tab)로 열어야
+    // 콜백(https://yeodam.site/kakao/callback)이 App Links로 앱에 '바로' 돌아온다.
+    if (Capacitor.isNativePlatform()) {
+      await Browser.open({
+        url: loginUrl,
+        presentationStyle: 'fullscreen',
+      });
+    } else {
+      // 웹 환경에서는 기존처럼 이동
+      window.location.href = loginUrl;
     }
   };
 

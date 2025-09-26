@@ -21,6 +21,16 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- App Links: 카카오 콜백을 앱이 '가로채서' 받도록 -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https"
+                    android:host="yeodam.vercel.app"
+                    android:pathPrefix="/kakao/callback" />
+            </intent-filter>
         </activity>
 
 <!--        &lt;!&ndash; ✅ 카카오 로그인 Redirect Activity &ndash;&gt;-->
