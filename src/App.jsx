@@ -68,16 +68,16 @@ export default function App() {
   useKakaoAppLinks();
   useEffect(() => {
     if (Capacitor.getPlatform() !== 'web') {
-      // ✅ WebView가 상태바 아래로 깔리지 않게
-      StatusBar.setOverlaysWebView({ overlay: false });
-      // 상태바 색/아이콘
-      StatusBar.setBackgroundColor({ color: '#ffffff' });
-      StatusBar.setStyle({ style: Style.Dark }); // 밝은 배경에 어두운 아이콘
+      StatusBar.setOverlaysWebView({ overlay: false }); // ⬅️ 핵심
+      StatusBar.setBackgroundColor({ color: '#F8FBFF' });
+      StatusBar.setStyle({ style: Style.Dark }); // 밝은 배경 → 어두운 아이콘
     }
+    // ✅ 옵션 1 모드 플래그 (safe-area padding 제거 트리거)
+    document.documentElement.classList.toggle('uses-overlay', false);
   }, []);
 
   return (
-    <div className="min-h-dvh flex flex-col bg-[#F6FBFF] safe-top safe-bottom">
+    <div className="min-h-dvh flex flex-col bg-[#F6FBFF]">
       <AppRoutes />
     </div>
   );
