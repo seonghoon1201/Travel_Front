@@ -7,12 +7,17 @@ import android.webkit.CookieManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
+import androidx.core.view.WindowCompat;
+
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // ✅ 시스템바(상·하단) 영역만큼 자동 inset 적용 → 겹침 해제
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
+
 
         // 디버그 빌드일 때 WebView 디버깅 켜기 (BuildConfig import 없이도 동작)
         boolean isDebuggable = (0 != (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE));

@@ -3,6 +3,8 @@ import logo from '../../assets/logo.png';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { message } from 'antd';
 import PrimaryButton from '../../components/common/PrimaryButton';
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 import { loginUser, getKakaoLoginUrl } from '../../api';
 import DefaultLayout from '../../layouts/DefaultLayout';
 import useUserStore from '../../store/userStore';
