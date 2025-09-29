@@ -104,12 +104,12 @@ const BookmarkItem = ({
           </div>
         </div>
 
-        <div className="flex-1 p-3">
-          <h3 className="text-sm font-bold text-gray-800">{destination}</h3>
-          {address && <p className="text-xs text-gray-500">{address}</p>}
-          {tel && <p className="text-xs text-gray-500">☎ {tel}</p>}
+        <div className="flex-1 p-3 min-w-0">
+          <h3 className="text-sm font-bold text-gray-800 truncate">{destination}</h3>
+          {address && <p className="text-xs text-gray-500 truncate">{address}</p>}
+          {tel && <p className="text-xs text-gray-500 truncate">☎ {tel}</p>}
           {(opentime || closetime) && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-500 truncate">
               {opentime || '-'} ~ {closetime || '-'}
             </p>
           )}
