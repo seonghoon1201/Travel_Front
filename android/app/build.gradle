@@ -43,10 +43,10 @@ android {
             // 권장 proguard 파일(최적화 버전)
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
                     'proguard-rules.pro'
+            
+            debuggable false
         }
-        debug {
-            // 디버그는 서명 불필요
-        }
+        debug { debuggable true }
     }
 }
 
@@ -77,4 +77,29 @@ try {
     }
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}
+
+// 모든 서브모듈을 Java 17로 강제 (Android 모듈)
+subprojects { subproj ->
+    plugins.withId('com.android.application') {
+        subproj.android {
+            compileOptions {
+                sourceCompatibility = JavaVersion.VERSION_17
+                targetCompatibility = JavaVersion.VERSION_17
+            }
+        }
+    }
+    plugins.withId('com.android.library') {
+        subproj.android {
+            compileOptions {
+                sourceCompatibility = JavaVersion.VERSION_17
+                targetCompatibility = JavaVersion.VERSION_17
+            }
+        }
+    }
+
+    // Kotlin을 쓰는 모듈이면 jvmTarget도 17 고정
+    subproj.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions { jvmTarget = '17' }
+    }
 }

@@ -6,11 +6,41 @@ body {
   @apply font-sans;
 }
 
-/* 스크롤바 숨기기 (tailwind 지원x) */
+/* 스크롤바 숨기기 */
 .scrollbar-hide {
   -ms-overflow-style: none; /* IE, Edge */
   scrollbar-width: none; /* Firefox */
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none; /* Chrome, Safari */
+}
+
+:root {
+  --sat: env(safe-area-inset-top);
+  --sab: env(safe-area-inset-bottom);
+}
+.safe-top {
+  padding-top: var(--sat);
+}
+.safe-bottom {
+  padding-bottom: var(--sab);
+}
+.safe-page {
+  padding-top: calc(16px + var(--sat));
+  padding-bottom: calc(16px + var(--sab));
+}
+
+/* ✅ A모드(overlay=true)일 때만 safe-area 적용 — 지금은 사용 안 함 */
+html.uses-overlay .safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+html.uses-overlay .safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 16px);
+}
+
+/* ✅ B모드(overlay=false = 옵션1) → safe-area 패딩 전부 제거 */
+html:not(.uses-overlay) .safe-top,
+html:not(.uses-overlay) .safe-bottom,
+html:not(.uses-overlay) .safe-page {
+  padding: 0 !important;
 }

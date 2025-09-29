@@ -164,27 +164,35 @@ const SideMenu = ({
               </div>
 
               {/* 탭 */}
-              <div className="flex justify-between items-center pt-7 pb-7 px-2 border-t border-b border-gray-200">
+              <div className="flex justify-between items-center pt-7 pb-[env(safe-area-inset-bottom,16px)] px-2 border-t border-gray-200 bg-white">
                 <button
-                  className="flex flex-col items-center gap-1"
+                  className={`flex flex-col items-center gap-1 text-gray-700 hover:text-blue-500 `}
                   onClick={() => handleTabClick('myTrip')}
                 >
                   <MapPinned className="w-6 h-6" />
-                  <span>내 여행</span>
+                  <span className="whitespace-nowrap tracking-normal text-xs sm:text-sm">
+                    내 여행
+                  </span>
                 </button>
+
                 <button
-                  className="flex flex-col items-center gap-1"
+                  className={`flex flex-col items-center gap-1 text-gray-700 hover:text-blue-500 `}
                   onClick={() => handleTabClick('myDiary')}
                 >
                   <Notebook className="w-6 h-6" />
-                  <span>내 여행 일기</span>
+                  <span className="whitespace-nowrap tracking-normal text-xs sm:text-sm">
+                    내 여행 일기
+                  </span>
                 </button>
+
                 <button
-                  className="flex flex-col items-center gap-1"
+                  className={`flex flex-col items-center gap-1 text-gray-700 hover:text-blue-500 `}
                   onClick={() => handleTabClick('myBookmark')}
                 >
                   <Heart className="w-6 h-6" />
-                  <span>즐겨찾기</span>
+                  <span className="whitespace-nowrap tracking-normal text-xs sm:text-sm">
+                    즐겨찾기
+                  </span>
                 </button>
               </div>
 

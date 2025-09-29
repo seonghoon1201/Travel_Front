@@ -9,7 +9,7 @@ export { verifyAuthCode as verifyEmailToken } from './auth/mail';
 export { registerUser, loginUser, resetPassword } from './auth/user';
 
 // 카카오
-export { getKakaoLoginUrl, kakaoCallback } from './auth/kakao';
+export { getKakaoLoginUrl, getKakaoLoginUrlWithState, startKakaoLogin, kakaoCallback } from './auth/kakao';
 
 // 게시판
 export {  getDiary,getDiaryDetail, updateDiary, writeDiary} from './board/diary';
