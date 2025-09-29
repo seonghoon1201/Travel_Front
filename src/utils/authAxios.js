@@ -56,13 +56,13 @@ authAxios.interceptors.request.use((config) => {
       config?.url ?? '',
       config?.baseURL ?? API_BASE_URL ?? ''
     );
-    console.log(
-      '[HTTP]',
-      config.method?.toUpperCase(),
-      full.toString(),
-      'Auth?',
-      !!config.headers?.Authorization
-    );
+    // console.log(
+    //   '[HTTP]',
+    //   config.method?.toUpperCase(),
+    //   full.toString(),
+    //   'Auth?',
+    //   !!config.headers?.Authorization
+    // );
   } catch {}
   const raw = useUserStore.getState().accessToken;
   const bearer = normalizeBearer(raw);

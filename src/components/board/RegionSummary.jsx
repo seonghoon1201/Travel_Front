@@ -1,8 +1,16 @@
-import React from 'react';
+import React, {useState} from 'react';
 
 const DEFAULT_IMAGE = '/images/default_place.jpg';
 
 const RegionSummary = ({ title, description = '', regionImage = '' }) => {
+  const [expanded, setExpanded] = useState(false);
+
+  const MAX_LENGTH = 200;
+  const isLong = description.length > MAX_LENGTH;
+  const displayText = expanded
+    ? description
+    : description.slice(0, MAX_LENGTH) + (isLong ? '...' : '');
+  
   return (
     <div className="bg-white pb-4 rounded-xl shadow">
       {regionImage ? (
@@ -22,9 +30,18 @@ const RegionSummary = ({ title, description = '', regionImage = '' }) => {
 
       <h2 className="px-4  text-xl font-bold text-gray-800">{title}</h2>
 
-      <p className="px-4  mt-2 text-sm text-gray-600 whitespace-pre-line leading-relaxed">
-        {description || '설명이 아직 없습니다.'}
+        <p className="px-4 mt-2 text-sm text-gray-600 whitespace-pre-line leading-relaxed">
+        {displayText || '설명이 아직 없습니다.'} {isLong && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="ml-4 mt-1 text-sm text-blue-500 hover:underline"
+        >
+          {expanded ? '접기' : '더보기'}
+        </button>
+      )}
       </p>
+
+
     </div>
   );
 };
