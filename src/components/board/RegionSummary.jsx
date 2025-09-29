@@ -31,7 +31,8 @@ const RegionSummary = ({ title, description = '', regionImage = '' }) => {
       <h2 className="px-4  text-xl font-bold text-gray-800">{title}</h2>
 
         <p className="px-4 mt-2 text-sm text-gray-600 whitespace-pre-line leading-relaxed">
-        {displayText || '설명이 아직 없습니다.'} {isLong && (
+        {displayText || '설명이 아직 없습니다.'} 
+        {isLong && (
         <button
           onClick={() => setExpanded(!expanded)}
           className="ml-4 mt-1 text-sm text-blue-500 hover:underline"

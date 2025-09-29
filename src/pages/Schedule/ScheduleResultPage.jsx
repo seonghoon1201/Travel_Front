@@ -2,7 +2,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DefaultLayout from '../../layouts/DefaultLayout';
-import BackHeader from '../../components/header/BackHeader';
+import HomeHeader from '../../components/header/HomeHeader';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import DayScheduleSection from '../../components/schedule/DayScheduleSection';
 import KakaoMap from '../../components/map/KakaoMap';
@@ -238,7 +238,7 @@ const ScheduleResultPage = () => {
 
   return (
     <DefaultLayout>
-      <BackHeader />
+      <HomeHeader />
       <div className="w-full mx-auto pb-28">
         {/* === Hero (regionImage 배경) === */}
         <div className="px-4 sm:px-6 md:px-8">
