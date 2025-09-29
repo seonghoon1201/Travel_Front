@@ -166,9 +166,7 @@ const SideMenu = ({
               {/* 탭 */}
               <div className="flex justify-between items-center pt-7 pb-[env(safe-area-inset-bottom,16px)] px-2 border-t border-gray-200 bg-white">
                 <button
-                  className={`flex flex-col items-center gap-1 text-gray-700 hover:text-blue-500 ${
-                    activeTab === 'myTrip' ? 'text-blue-600 font-bold' : ''
-                  }`}
+                  className={`flex flex-col items-center gap-1 text-gray-700 hover:text-blue-500 `}
                   onClick={() => handleTabClick('myTrip')}
                 >
                   <MapPinned className="w-6 h-6" />
@@ -178,9 +176,7 @@ const SideMenu = ({
                 </button>
 
                 <button
-                  className={`flex flex-col items-center gap-1 text-gray-700 hover:text-blue-500 ${
-                    activeTab === 'myDiary' ? 'text-blue-600 font-bold' : ''
-                  }`}
+                  className={`flex flex-col items-center gap-1 text-gray-700 hover:text-blue-500 `}
                   onClick={() => handleTabClick('myDiary')}
                 >
                   <Notebook className="w-6 h-6" />
@@ -190,9 +186,7 @@ const SideMenu = ({
                 </button>
 
                 <button
-                  className={`flex flex-col items-center gap-1 text-gray-700 hover:text-blue-500 ${
-                    activeTab === 'myBookmark' ? 'text-blue-600 font-bold' : ''
-                  }`}
+                  className={`flex flex-col items-center gap-1 text-gray-700 hover:text-blue-500 `}
                   onClick={() => handleTabClick('myBookmark')}
                 >
                   <Heart className="w-6 h-6" />

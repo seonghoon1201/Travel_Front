@@ -104,7 +104,7 @@ const BookmarkItem = ({
           </div>
         </div>
 
-        <div className="flex-1 p-3 win-w-0">
+        <div className="flex-1 p-3 min-w-0">
           <h3 className="text-sm font-bold text-gray-800 truncate">{destination}</h3>
           {address && <p className="text-xs text-gray-500 truncate">{address}</p>}
           {tel && <p className="text-xs text-gray-500 truncate">☎ {tel}</p>}
