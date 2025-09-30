@@ -323,8 +323,8 @@ const RegionDetailPage = () => {
           </div>
         </div>
 
-        <div className="fixed bottom-0 left-0 w-full px-4 py-3 bg-white shadow-lg z-50 border-t">
-          <div className="mx-auto">
+        <div className="fixed bottom-0 left-0 w-full px-4 py-3 bg-white shadow-lg z-50 border-t footer-safe">
+          <div className="mx-auto footer-safe">
             <PrimaryButton
               onClick={handleCreateSchedule}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm shadow"

@@ -132,7 +132,7 @@ const PlanBudgetPage = () => {
       </div>
 
       {/* 하단 고정 버튼 */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t">
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur border-t footer-safe">
         <div className="mx-auto w-full px-4 sm:px-6 md:px-8 py-3">
           <PrimaryButton
             onClick={handleSubmit}

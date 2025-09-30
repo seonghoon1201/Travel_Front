@@ -101,7 +101,7 @@ const WriteTravelDiary = () => {
   // 향상된 이미지 핸들러
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files || []);
-    
+
     if (!files.length) {
       return;
     }
@@ -109,44 +109,50 @@ const WriteTravelDiary = () => {
     // 파일 검증
     const validFiles = [];
     const invalidFiles = [];
-    
-    files.forEach(file => {
-      
+
+    files.forEach((file) => {
       // 이미지 타입 체크
       if (!file.type.startsWith('image/')) {
         invalidFiles.push(`${file.name}: 이미지 파일이 아닙니다`);
         return;
       }
-      
+
       // 파일 크기 체크 (10MB 제한)
       if (file.size > 10 * 1024 * 1024) {
-        invalidFiles.push(`${file.name}: 파일이 너무 큽니다 (${(file.size / (1024 * 1024)).toFixed(2)}MB)`);
+        invalidFiles.push(
+          `${file.name}: 파일이 너무 큽니다 (${(
+            file.size /
+            (1024 * 1024)
+          ).toFixed(2)}MB)`
+        );
         return;
       }
-      
+
       validFiles.push(file);
     });
-    
+
     if (invalidFiles.length > 0) {
-      messageApi.warning(`다음 파일들을 업로드할 수 없습니다:\n${invalidFiles.join('\n')}`);
+      messageApi.warning(
+        `다음 파일들을 업로드할 수 없습니다:\n${invalidFiles.join('\n')}`
+      );
     }
-    
+
     if (validFiles.length === 0) {
       return;
     }
-    
+
     const nextFiles = [...selectedFiles, ...validFiles];
     const nextPreviews = [
       ...previewUrls,
       ...validFiles.map((f) => {
         const url = URL.createObjectURL(f);
         return url;
-      })
+      }),
     ];
-    
+
     setSelectedFiles(nextFiles);
     setPreviewUrls(nextPreviews);
-    
+
     // input 초기화 (같은 파일 다시 선택 가능하게)
     e.target.value = '';
   };
@@ -162,13 +168,13 @@ const WriteTravelDiary = () => {
   };
 
   const handleDaySelect = (dayIndex) => {
-  if (dayIndex === 'all') {
-    navigate(`/schedule/view/${scheduleInfo.scheduleId}`);
-  } else {
-    navigate(`/schedule/view/${scheduleInfo.scheduleId}?day=${dayIndex}`);
-  }
-  setShowDaySelector(false); 
-};
+    if (dayIndex === 'all') {
+      navigate(`/schedule/view/${scheduleInfo.scheduleId}`);
+    } else {
+      navigate(`/schedule/view/${scheduleInfo.scheduleId}?day=${dayIndex}`);
+    }
+    setShowDaySelector(false);
+  };
 
   // 제출 함수
   const handleSubmit = async () => {
@@ -177,36 +183,40 @@ const WriteTravelDiary = () => {
       return;
     }
     if (!selectedScheduleId) {
-      messageApi.error('연결된 일정이 없습니다. 일정 선택 후 작성 페이지로 들어오세요.');
+      messageApi.error(
+        '연결된 일정이 없습니다. 일정 선택 후 작성 페이지로 들어오세요.'
+      );
       return;
     }
 
     try {
       let imageUrls = [...existingImageUrls];
-      
-      if (selectedFiles.length > 0) {
 
+      if (selectedFiles.length > 0) {
         messageApi.info(`${selectedFiles.length}개 이미지 업로드 중...`);
-        
+
         // 하나씩 업로드해서 어느 파일에서 문제가 생기는지 확인
         for (let i = 0; i < selectedFiles.length; i++) {
           const file = selectedFiles[i];
-          
+
           try {
             const result = await uploadProfileImage(file);
-            
+
             if (result?.success && result?.imageUrl) {
               imageUrls.push(result.imageUrl);
             } else {
-              messageApi.error(`이미지 ${i + 1} 업로드 실패: 응답이 올바르지 않습니다.`);
+              messageApi.error(
+                `이미지 ${i + 1} 업로드 실패: 응답이 올바르지 않습니다.`
+              );
               return;
             }
           } catch (fileError) {
-            messageApi.error(`이미지 ${i + 1} 업로드 실패: ${fileError.message || fileError}`);
+            messageApi.error(
+              `이미지 ${i + 1} 업로드 실패: ${fileError.message || fileError}`
+            );
             return;
           }
         }
-        
       }
 
       const payload = {
@@ -218,7 +228,7 @@ const WriteTravelDiary = () => {
       };
 
       const result = await writeDiary(payload);
-      
+
       if (result?.success && result?.data?.boardId) {
         previewUrls.forEach((u) => URL.revokeObjectURL(u));
         messageApi.success('여행일기가 작성되었습니다!');
@@ -229,7 +239,10 @@ const WriteTravelDiary = () => {
         messageApi.error('일기 작성에 실패했습니다.');
       }
     } catch (err) {
-      messageApi.error('오류 발생: ' + (err?.response?.data?.message || err?.message || String(err)));
+      messageApi.error(
+        '오류 발생: ' +
+          (err?.response?.data?.message || err?.message || String(err))
+      );
     }
   };
 
@@ -348,7 +361,7 @@ const WriteTravelDiary = () => {
           </div>
 
           {/* 작성 버튼 */}
-          <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-40 bg-white/90 backdrop-blur border-t">
+          <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full z-40 bg-white/90 backdrop-blur border-t footer-safe">
             <div className="px-4 py-3">
               <PrimaryButton
                 className="w-full py-3 text-sm rounded-xl shadow"

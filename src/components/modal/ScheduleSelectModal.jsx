@@ -147,7 +147,7 @@ const ScheduleSelectModal = ({
             </div>
 
 
-            <div className="mt-4 flex gap-2">
+            <div className="mt-4 flex gap-2 footer-safe">
               <button
                 onClick={onClose}
                 className="w-1/2 py-2 rounded-xl border border-gray-200 text-sm"

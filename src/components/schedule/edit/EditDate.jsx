@@ -46,7 +46,7 @@ const EditDate = ({ currentDates, onClose, onSave }) => {
           />
         </div>
 
-        <div className="border-t mt-6 flex justify-between text-sm text-gray-500">
+        <div className="border-t mt-6 flex justify-between text-sm text-gray-500 footer-safe">
           <button
             onClick={onClose}
             className="w-1/2 py-3 border-r hover:bg-gray-50"

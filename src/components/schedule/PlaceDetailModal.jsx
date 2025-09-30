@@ -56,7 +56,7 @@ const PlaceDetailModal = ({ place, onClose }) => {
         </div>
 
         {/* 푸터 버튼: 자세히 보기 | 길찾기 */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 footer-safe">
           <button
             onClick={handleDetail}
             className="flex-1 h-11 rounded-lg border border-gray-200 text-sm"

@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 기본 폰트 */
 body {
   @apply font-sans;
 }
@@ -15,32 +16,48 @@ body {
   display: none; /* Chrome, Safari */
 }
 
+/* ───────────────────────────────────────────────
+   Safe Area 유틸 (overlay=false 기준, 상시 사용)
+   - env() 미지원 기기에서도 fallback 0으로 안전
+   - 상단/하단 패딩과 페이지 기본 여백, 하단 고정바 보강
+   ─────────────────────────────────────────────── */
+
 :root {
-  --sat: env(safe-area-inset-top);
-  --sab: env(safe-area-inset-bottom);
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
 }
+
+/* 상단/하단 안전 영역만 */
 .safe-top {
   padding-top: var(--sat);
 }
 .safe-bottom {
   padding-bottom: var(--sab);
 }
+
+/* 페이지 단위: 기본 여백 + safe-area */
 .safe-page {
   padding-top: calc(16px + var(--sat));
   padding-bottom: calc(16px + var(--sab));
+  padding-left: max(16px, var(--sal));
+  padding-right: max(16px, var(--sar));
 }
 
-/* ✅ A모드(overlay=true)일 때만 safe-area 적용 — 지금은 사용 안 함 */
-html.uses-overlay .safe-top {
-  padding-top: env(safe-area-inset-top);
-}
-html.uses-overlay .safe-bottom {
-  padding-bottom: max(env(safe-area-inset-bottom), 16px);
+/* 하단 고정 바/버튼 컨테이너 전용:
+   네비게이션바+제스처 바와 겹치지 않도록 여유 8px 추가 */
+.footer-safe {
+  padding-bottom: calc(var(--sab));
 }
 
-/* ✅ B모드(overlay=false = 옵션1) → safe-area 패딩 전부 제거 */
-html:not(.uses-overlay) .safe-top,
-html:not(.uses-overlay) .safe-bottom,
-html:not(.uses-overlay) .safe-page {
-  padding: 0 !important;
+/* (선택) 상단 고정 헤더가 상태바와 겹치지 않게 */
+.header-safe {
+  padding-top: calc(var(--sat) + 8px);
+}
+
+/* (선택) 좌우 제스처 영역이 큰 기기 대비 */
+.gutter-safe {
+  padding-left: max(12px, var(--sal));
+  padding-right: max(12px, var(--sar));
 }

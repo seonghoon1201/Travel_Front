@@ -1,23 +1,30 @@
 // src/App.jsx
 import React, { useEffect } from 'react';
 import AppRoutes from './routes';
+
 import { App as CapApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
+
 import qs from 'qs';
 import http from './utils/authAxios';
 import useUserStore from './store/userStore';
-import { StatusBar, Style } from '@capacitor/status-bar';
 
 function useKakaoAppLinks() {
   const login = useUserStore((s) => s.login);
+
   useEffect(() => {
     const sub = CapApp.addListener('appUrlOpen', async ({ url }) => {
-      // ex) https://yeodam.site/kakao/callback?code=xxx&state=yyy
-      if (!url?.startsWith('https://yeodam.vercel.app/kakao/callback')) return;
+      // 허용 콜백 도메인(둘 다 지원)
+      const allow = [
+        'https://yeodam.site/kakao/callback',
+        'https://yeodam.vercel.app/kakao/callback',
+      ];
+      if (!url || !allow.some((u) => url.startsWith(u))) return;
 
       try {
-        // 1) 커스텀 탭 닫기
+        // 1) 커스텀 탭 닫기(네이티브에서만)
         if (Capacitor.isNativePlatform()) await Browser.close();
 
         // 2) code/state 파싱
@@ -41,7 +48,7 @@ function useKakaoAppLinks() {
           isLoggedIn: true,
         });
 
-        // 4) state에 담았던 redirect 복원 (선택)
+        // 4) state 기반 리다이렉트(있으면)
         let next = '/';
         if (state) {
           try {
@@ -52,32 +59,42 @@ function useKakaoAppLinks() {
             else if (s.startsWith('/')) next = s;
           } catch {}
         }
-        // navigate(next, { replace: true }); // 라우터 사용 시
         window.location.replace(next);
       } catch (e) {
         console.error(e);
-        // 실패 시 로그인 페이지 등으로
         window.location.replace('/login');
       }
     });
-    return () => sub.remove();
+
+    return () => {
+      try {
+        sub.remove();
+      } catch {}
+    };
   }, [login]);
 }
 
 export default function App() {
   useKakaoAppLinks();
+
   useEffect(() => {
-    if (Capacitor.getPlatform() !== 'web') {
-      StatusBar.setOverlaysWebView({ overlay: false }); // ⬅️ 핵심
-      StatusBar.setBackgroundColor({ color: '#F8FBFF' });
+    // 네이티브(안드/IOS)에서만 상태바 설정
+    if (Capacitor.isNativePlatform()) {
+      // 핵심: WebView가 상태바 뒤로 깔리지 않게
+      StatusBar.setOverlaysWebView({ overlay: false });
+
+      // 보기 좋은 배경/아이콘 설정(앱 톤&매너에 맞게 조정 가능)
+      StatusBar.setBackgroundColor({ color: '#F6FBFF' });
       StatusBar.setStyle({ style: Style.Dark }); // 밝은 배경 → 어두운 아이콘
     }
-    // ✅ 옵션 1 모드 플래그 (safe-area padding 제거 트리거)
-    document.documentElement.classList.toggle('uses-overlay', false);
+
+    // uses-overlay 플래그는 더 이상 사용하지 않음(전역 CSS 단순화)
+    // document.documentElement.classList.toggle('uses-overlay', false);
   }, []);
 
   return (
-    <div className="min-h-dvh flex flex-col bg-[#F6FBFF]">
+    // safe-area 유틸 적용(상/하단 겹침 방지)
+    <div className="min-h-dvh flex flex-col bg-[#F6FBFF] safe-top safe-bottom">
       <AppRoutes />
     </div>
   );

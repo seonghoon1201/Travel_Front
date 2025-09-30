@@ -549,7 +549,7 @@ const filteredPlaces = useMemo(() => {
         )}
 
         {/* 하단 고정 추가 버튼 */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t px-4 py-3">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t px-4 py-3 footer-safe">
           <PrimaryButton
             disabled={saving || selectedCount === 0}
             onClick={handleAddSelected}
