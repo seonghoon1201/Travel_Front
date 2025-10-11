@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- ✅ 카카오톡 패키지 가시성: intent://kakaolink 호출 시 필요 -->
+    <queries>
+        <package android:name="com.kakao.talk" />
+    </queries>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -22,32 +27,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- App Links: 카카오 콜백을 앱이 '가로채서' 받도록 -->
+            <!-- ✅ App Links: 카카오 콜백(HTTPS)을 앱에서 직접 받기 -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https"
+                <data
+                    android:scheme="https"
                     android:host="yeodam.vercel.app"
                     android:pathPrefix="/kakao/callback" />
             </intent-filter>
         </activity>
-
-<!--        &lt;!&ndash; ✅ 카카오 로그인 Redirect Activity &ndash;&gt;-->
-<!--        <activity-->
-<!--            android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"-->
-<!--            android:exported="true">-->
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.VIEW" />-->
-<!--                <category android:name="android.intent.category.DEFAULT" />-->
-<!--                <category android:name="android.intent.category.BROWSABLE" />-->
-
-<!--                &lt;!&ndash; 네이티브 앱 키 기반 스킴 &ndash;&gt;-->
-<!--                <data-->
-<!--                    android:host="oauth"-->
-<!--                    android:scheme="kakao0efe8330eda4543daba007fcf36c9d0a" />-->
-<!--            </intent-filter>-->
-<!--        </activity>-->
 
         <provider
             android:name="androidx.core.content.FileProvider"

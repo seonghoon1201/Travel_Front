@@ -104,24 +104,41 @@ const ScheduleInvitePage = () => {
       ? `${fmt(detail.startDate)} - ${fmt(detail.endDate)}`
       : '여행 날짜 미정';
 
+  // ✅ .env에 둘 다 지원
+  // REACT_APP_PUBLIC_WEB_BASE_URL=https://yeodam.site
+  // VITE_PUBLIC_WEB_BASE_URL=https://yeodam.site
+  const PUBLIC_WEB_BASE_URL =
+    process.env.REACT_APP_PUBLIC_WEB_BASE_URL ||
+    import.meta?.env?.VITE_PUBLIC_WEB_BASE_URL ||
+    'https://yeodam.site';
+
   // 초대 URL
   const inviteUrl = useMemo(() => {
-    const u = new URL(`${window.location.origin}/invite`);
+    const u = new URL(`${PUBLIC_WEB_BASE_URL}/invite`);
     u.searchParams.set('scheduleId', String(scheduleId || ''));
     return u.toString();
   }, [scheduleId]);
 
-  // ✅ 공유/헤더에서 쓸 썸네일: regionImage 우선
+  const toHttps = (url) => {
+    if (!url) return url;
+    try {
+      const u = new URL(url);
+      if (u.protocol === 'http:') u.protocol = 'https:';
+      return u.toString();
+    } catch {
+      return url;
+    }
+  };
+
   const thumbUrl = useMemo(() => {
     const fromDetail =
       detail?.regionImage || detail?.imageUrl || detail?.thumbnail;
     const fromItems = (detail?.scheduleItems || [])
       .map((it) => it.imageUrl || it.firstImage || it.firstimage)
       .find(Boolean);
-    // 마지막 폴백: 카카오 기본 이미지(HTTPS)
     const fallback =
       'https://k.kakaocdn.net/dn/bkNtzF/btsQmfsu0l7/kakaolink40_original.png';
-    return fromDetail || fromItems || fallback;
+    return toHttps(fromDetail || fromItems || fallback);
   }, [detail]);
 
   const handleCopyLink = async () => {

@@ -24,5 +24,11 @@ export async function loadKakao() {
   if (!window.Kakao.isInitialized()) {
     window.Kakao.init(JS_KEY); // 반드시 JavaScript 키
   }
+  console.log(
+    '[Kakao] init ok?',
+    window.Kakao.isInitialized(),
+    'key(len)=',
+    (JS_KEY || '').length
+  );
   return window.Kakao;
 }
