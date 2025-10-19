@@ -114,7 +114,7 @@ const ScheduleInvitePage = () => {
 
   // 초대 URL - 카카오
   const inviteUrl = useMemo(() => {
-    const u = new URL(`${PUBLIC_WEB_BASE_URL}/invite`);
+    const u = new URL('https://yeodam.vercel.app/invite');
     u.searchParams.set('scheduleId', String(scheduleId || ''));
     return u.toString();
   }, [scheduleId]);
