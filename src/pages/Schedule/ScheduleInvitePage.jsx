@@ -110,7 +110,7 @@ const ScheduleInvitePage = () => {
   const PUBLIC_WEB_BASE_URL =
     process.env.REACT_APP_PUBLIC_WEB_BASE_URL ||
     import.meta?.env?.VITE_PUBLIC_WEB_BASE_URL ||
-    'https://yeodam.site';
+    'https://yeodam.vercel.app';
 
   // 초대 URL - 카카오
   const inviteUrl = useMemo(() => {

@@ -11,7 +11,7 @@ const config: CapacitorConfig = {
   },
   server: {
     // 프로덕션에선 정적 번들(내장 서버) 사용
-    cleartext: false,
+    cleartext: true,
     // ⬇️ Kakao OAuth/Share에 필요한 도메인 허용
     allowNavigation: [
       'accounts.kakao.com',
